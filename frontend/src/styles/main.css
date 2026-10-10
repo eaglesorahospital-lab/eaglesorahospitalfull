@@ -1,0 +1,1649 @@
+/* ==============================================================================
+   Hospital Platform — Main Global Stylesheet (Phase 1)
+   Integrates variables, typography, layout, component styles, and accessibility.
+   Strictly complies with the 30-rule design blacklist.
+   ============================================================================== */
+
+@import './variables.css';
+@import './typography.css';
+
+/* ------------------------------------------------------------------------------
+   1. Base & Reset
+   ------------------------------------------------------------------------------ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--hospital-bg);
+  color: var(--hospital-text);
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ------------------------------------------------------------------------------
+   2. Layout & Spacing
+   ------------------------------------------------------------------------------ */
+.hospital-layout-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.hospital-main-content {
+  flex: 1 0 auto;
+  padding-top: 0;
+  padding-bottom: var(--space-8);
+}
+
+.hospital-container {
+  width: 100%;
+  max-width: var(--container-max-width, 1560px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4, 1rem);
+  padding-right: var(--space-4, 1rem);
+  box-sizing: border-box;
+}
+
+@media (min-width: 576px) {
+  .hospital-container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .hospital-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hospital-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .hospital-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+.hospital-section {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+}
+
+@media (min-width: 768px) {
+  .hospital-section {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-12);
+  }
+}
+
+.hospital-section-alt {
+  background-color: var(--hospital-bg-alt);
+  border-top: 1px solid var(--hospital-border-light);
+  border-bottom: 1px solid var(--hospital-border-light);
+}
+
+/* ------------------------------------------------------------------------------
+   3. Header / Top Information Bar (Emergency & Hospital Desk)
+   ------------------------------------------------------------------------------ */
+.hospital-topbar {
+  background-color: var(--hospital-primary-dark);
+  color: var(--hospital-text-inverse);
+  font-size: 0.8125rem; /* 13px */
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hospital-topbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.hospital-topbar-label {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.hospital-topbar-value {
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ------------------------------------------------------------------------------
+   4. Navbar Component
+   ------------------------------------------------------------------------------ */
+.hospital-navbar {
+  background-color: var(--hospital-surface);
+  border-bottom: 1px solid var(--hospital-border);
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  box-shadow: var(--shadow-subtle);
+}
+
+.hospital-brand-title {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 700;
+  color: var(--hospital-primary);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  display: block;
+  line-height: 1.2;
+}
+
+.hospital-brand-subtitle {
+  font-size: 0.75rem; /* 12px */
+  color: var(--hospital-text-muted);
+  font-weight: 500;
+  display: block;
+}
+
+.hospital-nav-item {
+  padding: var(--space-2) var(--space-3);
+  color: var(--hospital-text);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  display: inline-block;
+}
+
+.hospital-nav-item:hover {
+  color: var(--hospital-primary);
+}
+
+.hospital-nav-item.active {
+  color: var(--hospital-primary);
+  font-weight: 600;
+  border-bottom-color: var(--hospital-primary);
+}
+
+/* Mobile Toggler */
+.hospital-navbar-toggler {
+  border: 1px solid var(--hospital-border);
+  background-color: transparent;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--radius-md);
+  color: var(--hospital-primary);
+}
+
+.hospital-navbar-toggler:focus {
+  outline: 2px solid var(--hospital-secondary);
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------------------
+   5. Buttons (Accessible, Medical, No Hover Bounces)
+   ------------------------------------------------------------------------------ */
+.hospital-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-stack);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 0.5rem 1.125rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+}
+
+.hospital-btn:disabled,
+.hospital-btn[aria-disabled="true"] {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.hospital-btn-primary {
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  border-color: var(--hospital-primary);
+}
+
+.hospital-btn-primary:hover:not(:disabled) {
+  background-color: var(--hospital-primary-dark);
+  border-color: var(--hospital-primary-dark);
+  color: #ffffff;
+}
+
+.hospital-btn-secondary {
+  background-color: var(--hospital-secondary);
+  color: #ffffff;
+  border-color: var(--hospital-secondary);
+}
+
+.hospital-btn-secondary:hover:not(:disabled) {
+  background-color: var(--hospital-secondary-dark);
+  border-color: var(--hospital-secondary-dark);
+  color: #ffffff;
+}
+
+.hospital-btn-outline {
+  background-color: transparent;
+  color: var(--hospital-primary);
+  border-color: var(--hospital-primary);
+}
+
+.hospital-btn-outline:hover:not(:disabled) {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-primary-dark);
+}
+
+.hospital-btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.hospital-btn-lg {
+  padding: 0.625rem 1.375rem;
+  font-size: 1rem;
+}
+
+/* ------------------------------------------------------------------------------
+   6. Cards & Panels
+   ------------------------------------------------------------------------------ */
+.hospital-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-subtle);
+}
+
+.hospital-card-header {
+  border-bottom: 1px solid var(--hospital-border-light);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.hospital-card-footer {
+  border-top: 1px solid var(--hospital-border-light);
+  padding-top: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+/* ------------------------------------------------------------------------------
+   7. Form Fields & Controls
+   ------------------------------------------------------------------------------ */
+.hospital-form-group {
+  margin-bottom: var(--space-4);
+}
+
+.hospital-form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--hospital-text);
+  margin-bottom: var(--space-1);
+}
+
+.hospital-form-label .required {
+  color: var(--status-cancelled-text);
+  margin-left: 0.25rem;
+}
+
+.hospital-form-control {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  font-family: var(--font-stack);
+  line-height: 1.5;
+  color: var(--hospital-text);
+  background-color: #ffffff;
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+}
+
+.hospital-form-control:focus {
+  border-color: var(--hospital-secondary);
+  outline: 2px solid var(--hospital-secondary);
+  outline-offset: 1px;
+}
+
+.hospital-form-control:disabled {
+  background-color: var(--hospital-bg-alt);
+  cursor: not-allowed;
+}
+
+.hospital-form-hint {
+  font-size: 0.8125rem;
+  color: var(--hospital-text-muted);
+  margin-top: var(--space-1);
+}
+
+.hospital-form-error {
+  font-size: 0.8125rem;
+  color: var(--status-cancelled-text);
+  margin-top: var(--space-1);
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------------------------
+   8. Status Badges (Clinical & Semantic)
+   ------------------------------------------------------------------------------ */
+.hospital-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.hospital-badge-confirmed {
+  background-color: var(--status-confirmed-bg);
+  color: var(--status-confirmed-text);
+  border-color: var(--status-confirmed-border);
+}
+
+.hospital-badge-scheduled {
+  background-color: var(--status-scheduled-bg);
+  color: var(--status-scheduled-text);
+  border-color: var(--status-scheduled-border);
+}
+
+.hospital-badge-pending {
+  background-color: var(--status-pending-bg);
+  color: var(--status-pending-text);
+  border-color: var(--status-pending-border);
+}
+
+.hospital-badge-cancelled {
+  background-color: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
+  border-color: var(--status-cancelled-border);
+}
+
+/* ------------------------------------------------------------------------------
+   9. State Placeholders (Loading, Empty, Error)
+   ------------------------------------------------------------------------------ */
+/* Loading State - Simple, dignified spinner; STRICTLY NO SKELETON LOADERS */
+.hospital-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+}
+
+.hospital-spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 3px solid var(--hospital-border-light);
+  border-top-color: var(--hospital-primary);
+  border-radius: 50%;
+  animation: hospital-spin 0.8s linear infinite;
+  margin-bottom: var(--space-3);
+}
+
+@keyframes hospital-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.hospital-empty-state {
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  background-color: var(--hospital-surface);
+  border: 1px dashed var(--hospital-border);
+  border-radius: var(--radius-md);
+}
+
+/* Error State */
+.hospital-error-state {
+  padding: var(--space-6);
+  background-color: var(--status-cancelled-bg);
+  border: 1px solid var(--status-cancelled-border);
+  border-radius: var(--radius-md);
+  color: var(--status-cancelled-text);
+}
+
+/* ------------------------------------------------------------------------------
+   10. Breadcrumbs & Page Headers
+   ------------------------------------------------------------------------------ */
+.hospital-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0;
+  margin: 0 0 var(--space-3) 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.hospital-breadcrumb-item + .hospital-breadcrumb-item::before {
+  content: "/";
+  padding: 0 var(--space-2);
+  color: var(--hospital-text-light);
+}
+
+.hospital-breadcrumb-item a {
+  color: var(--hospital-secondary);
+  text-decoration: none;
+}
+
+.hospital-breadcrumb-item a:hover {
+  text-decoration: underline;
+}
+
+.hospital-breadcrumb-item.active {
+  color: var(--hospital-text-muted);
+}
+
+.hospital-page-header {
+  border-bottom: 1px solid var(--hospital-border);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+/* ------------------------------------------------------------------------------
+   11. Footer Component (Redesigned Light Neutral Healthcare Theme)
+   ------------------------------------------------------------------------------ */
+.hospital-footer {
+  background-color: #f8fafc;
+  color: #475569;
+  padding-top: var(--space-8, 2rem);
+  padding-bottom: var(--space-4, 1rem);
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+}
+
+.hospital-footer-title {
+  color: #0f2e59;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.hospital-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.hospital-footer-links li {
+  margin-bottom: var(--space-2, 0.5rem);
+}
+
+.hospital-footer-links a {
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+
+.hospital-footer-links a:hover,
+.hover-text-dark:hover {
+  color: #0f2e59 !important;
+  text-decoration: underline;
+}
+
+.hospital-footer-emergency-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #dc2626 !important;
+  border-radius: 6px;
+}
+
+.hospital-footer-bottom {
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* ------------------------------------------------------------------------------
+   12. Admin Layout Foundation Styles
+   ------------------------------------------------------------------------------ */
+.hospital-admin-header {
+  background-color: #0f172a;
+  color: #ffffff;
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid #1e293b;
+}
+
+.hospital-admin-nav {
+  background-color: #1e293b;
+  padding: var(--space-2) var(--space-6);
+  border-bottom: 1px solid #334155;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.hospital-admin-nav-link {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.hospital-admin-nav-link:hover {
+  color: #ffffff;
+  background-color: #334155;
+}
+
+.hospital-admin-nav-link.active {
+  color: #ffffff;
+  background-color: var(--hospital-secondary);
+}
+
+/* ------------------------------------------------------------------------------
+   13. Hospital Hero Section (Phase 2)
+   ------------------------------------------------------------------------------ */
+.hospital-hero {
+  background-color: #0b2545;
+  color: #ffffff;
+  padding-top: var(--space-10);
+  padding-bottom: var(--space-10);
+  border-bottom: 3px solid var(--hospital-secondary);
+}
+
+@media (min-width: 992px) {
+  .hospital-hero {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-16);
+  }
+}
+
+.hospital-hero-badge {
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  margin-bottom: var(--space-3);
+}
+
+.hospital-hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #ffffff;
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .hospital-hero-title {
+    font-size: 2.75rem;
+  }
+}
+
+.hospital-hero-lead {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  margin-bottom: var(--space-6);
+}
+
+.hospital-hero-card {
+  background-color: #10375c;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  color: #ffffff;
+}
+
+/* ------------------------------------------------------------------------------
+   14. Services Grid (Varied & Structured, not generic 3 cards)
+   ------------------------------------------------------------------------------ */
+.hospital-service-box {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.hospital-service-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--hospital-secondary);
+  background-color: #ecfeff;
+  border: 1px solid #cffafe;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  width: fit-content;
+}
+
+/* ------------------------------------------------------------------------------
+   15. Doctor Card & Initial Avatar
+   ------------------------------------------------------------------------------ */
+.doctor-preview-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-avatar-circle {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-md);
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--hospital-border);
+}
+
+/* ------------------------------------------------------------------------------
+   16. Accessible FAQ Accordion
+   ------------------------------------------------------------------------------ */
+.hospital-faq-item {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+}
+
+.hospital-faq-trigger {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: var(--space-4) var(--space-5);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--hospital-primary-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.hospital-faq-trigger:hover {
+  background-color: var(--hospital-bg-alt);
+}
+
+.hospital-faq-trigger:focus-visible {
+  outline: 2px solid var(--hospital-secondary);
+  outline-offset: -2px;
+}
+
+.hospital-faq-body {
+  padding: var(--space-3) var(--space-5) var(--space-4) var(--space-5);
+  color: var(--hospital-text);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  border-top: 1px solid var(--hospital-border-light);
+  background-color: #fafbfc;
+}
+
+/* ------------------------------------------------------------------------------
+   17. Values Block
+   ------------------------------------------------------------------------------ */
+.hospital-value-item {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  height: 100%;
+}
+
+/* ------------------------------------------------------------------------------
+   18. Map Placeholder
+   ------------------------------------------------------------------------------ */
+.hospital-map-placeholder {
+  background-color: #e2e8f0;
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-6);
+}
+
+/* ------------------------------------------------------------------------------
+   19. Department Module Styles (Phase 3)
+   ------------------------------------------------------------------------------ */
+.dept-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dept-card-specialty {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--hospital-secondary);
+  background-color: #ecfeff;
+  border: 1px solid #cffafe;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  width: fit-content;
+}
+
+.dept-filter-bar {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.dept-category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dept-category-btn {
+  background-color: #ffffff;
+  color: var(--hospital-text);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dept-category-btn:hover {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-primary);
+}
+
+.dept-category-btn.active {
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  border-color: var(--hospital-primary);
+  font-weight: 600;
+}
+
+.dept-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.dept-schedule-table th {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-text);
+  font-weight: 600;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--hospital-border);
+  text-align: left;
+}
+
+.dept-schedule-table td {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--hospital-border);
+  color: var(--hospital-text);
+}
+
+.dept-service-item {
+  background-color: #ffffff;
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  height: 100%;
+}
+
+/* ------------------------------------------------------------------------------
+   19. Doctor Directory, Profile & Availability (Phase 4)
+   ------------------------------------------------------------------------------ */
+.doctor-directory-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.doctor-directory-card:hover {
+  border-color: var(--hospital-secondary);
+}
+
+.doctor-avatar-box {
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-md);
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  border: 1px solid var(--hospital-border);
+  overflow: hidden;
+}
+
+.doctor-avatar-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doctor-expertise-tag {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-text);
+  border: 1px solid var(--hospital-border-light);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-block;
+  margin-right: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.doctor-profile-hero {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.doctor-profile-avatar-lg {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: var(--radius-md);
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  border: 1px solid var(--hospital-border);
+  overflow: hidden;
+}
+
+.doctor-profile-avatar-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doctor-info-box {
+  background-color: var(--hospital-bg-alt);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+}
+
+.doctor-leave-alert {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.doctor-slot-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.doctor-slot-card.available {
+  border-color: #86efac;
+  background-color: #f0fdf4;
+}
+
+.doctor-slot-card.unavailable {
+  border-color: var(--hospital-border-light);
+  background-color: var(--hospital-bg-alt);
+  opacity: 0.65;
+}
+
+.doctor-slot-card.on-break {
+  border-color: #fde68a;
+  background-color: #fefce8;
+}
+
+.day-tab-btn {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--hospital-text);
+  cursor: pointer;
+  text-align: center;
+}
+
+.day-tab-btn.active {
+  background-color: var(--hospital-primary);
+  border-color: var(--hospital-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------------------
+   20. Scheduling & Roster Management (Phase 5)
+   ------------------------------------------------------------------------------ */
+.schedule-doctor-picker {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.schedule-kpi-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  height: 100%;
+}
+
+.schedule-kpi-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--hospital-text-light);
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.schedule-kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--hospital-primary);
+  margin-bottom: 0;
+}
+
+.schedule-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.schedule-admin-table th {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-text);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--hospital-border);
+  text-align: left;
+}
+
+.schedule-admin-table td {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--hospital-border);
+  color: var(--hospital-text);
+  vertical-align: middle;
+}
+
+.schedule-break-tag {
+  background-color: #fefce8;
+  border: 1px solid #fef08a;
+  color: #854d0e;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  display: inline-block;
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.schedule-override-tag {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  display: inline-block;
+}
+
+.schedule-calendar-cell {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-calendar-cell.active-day {
+  border-top: 3px solid var(--hospital-primary);
+}
+
+.schedule-calendar-cell.disabled-day {
+  background-color: var(--hospital-bg-alt);
+  opacity: 0.75;
+}
+
+.schedule-calendar-cell.leave-day {
+  border-top: 3px solid #dc2626;
+  background-color: #fef2f2;
+}
+
+.schedule-calendar-cell.override-day {
+  border-top: 3px solid #2563eb;
+  background-color: #eff6ff;
+}
+
+.schedule-preview-banner {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.8125rem;
+}
+
+/* ------------------------------------------------------------------------------
+   21. Appointment Booking Workflow (Phase 6)
+   ------------------------------------------------------------------------------ */
+.booking-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+  overflow-x: auto;
+}
+
+.booking-step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--hospital-text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.booking-step-item.active {
+  color: var(--hospital-primary);
+  font-weight: 700;
+}
+
+.booking-step-item.completed {
+  color: var(--hospital-text);
+}
+
+.booking-step-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-text-muted);
+  border: 1px solid var(--hospital-border);
+  flex-shrink: 0;
+}
+
+.booking-step-item.active .booking-step-num {
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  border-color: var(--hospital-primary);
+}
+
+.booking-step-item.completed .booking-step-num {
+  background-color: var(--hospital-secondary);
+  color: #ffffff;
+  border-color: var(--hospital-secondary);
+}
+
+.booking-step-divider {
+  flex-grow: 1;
+  height: 1px;
+  background-color: var(--hospital-border);
+  min-width: 1rem;
+}
+
+.slot-selection-btn {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--hospital-text);
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+}
+
+.slot-selection-btn:hover:not(:disabled) {
+  border-color: var(--hospital-primary);
+  background-color: var(--hospital-bg-alt);
+}
+
+.slot-selection-btn.selected {
+  background-color: var(--hospital-primary);
+  border-color: var(--hospital-primary);
+  color: #ffffff;
+}
+
+.slot-selection-btn:disabled {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-text-light);
+  border-color: var(--hospital-border-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.booking-summary-box {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.booking-receipt-card {
+  background-color: var(--hospital-surface);
+  border: 2px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ------------------------------------------------------------------------------
+   22. Patient Portal & Records (Phase 7)
+   ------------------------------------------------------------------------------ */
+.patient-nav-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.patient-nav-link {
+  color: var(--hospital-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.patient-nav-link:hover {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-primary);
+}
+
+.patient-nav-link.active {
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.patient-profile-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.appointment-item-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.appointment-item-card:hover {
+  border-color: var(--hospital-border-dark);
+}
+
+.cancel-confirm-box {
+  background-color: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #9f1239;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* ------------------------------------------------------------------------------
+   23. Administration Portal Architecture (Phase 8)
+   ------------------------------------------------------------------------------ */
+.admin-root-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--hospital-bg);
+}
+
+.hospital-admin-header {
+  background-color: var(--hospital-primary-dark);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-body-wrapper {
+  display: flex;
+  flex: 1 0 auto;
+  position: relative;
+  min-height: calc(100vh - 110px);
+}
+
+/* Admin Sidebar */
+.admin-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background-color: var(--hospital-surface);
+  border-right: 1px solid var(--hospital-border);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 991.98px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -260px;
+    z-index: 1050;
+    transition: left 0.2s ease-in-out;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .admin-sidebar.show {
+    left: 0;
+  }
+
+  .admin-sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.5);
+    z-index: 1040;
+  }
+}
+
+.admin-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--hospital-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+}
+
+.admin-sidebar-link:hover {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-primary);
+}
+
+.admin-sidebar-link.active {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-primary);
+  font-weight: 600;
+  border-left-color: var(--hospital-primary);
+}
+
+.admin-sidebar-link.restricted {
+  opacity: 0.75;
+}
+
+.admin-main-content {
+  background-color: var(--hospital-bg);
+  min-width: 0;
+}
+
+/* Operational Stat Cards */
+.admin-stat-card {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  height: 100%;
+}
+
+.admin-stat-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--hospital-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--hospital-primary);
+  line-height: 1.2;
+}
+
+.admin-stat-subtext {
+  font-size: 0.8125rem;
+  color: var(--hospital-text-light);
+  margin-top: 0.25rem;
+}
+
+/* Admin Tables */
+.admin-table-container {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  background-color: var(--hospital-bg-alt);
+  color: var(--hospital-text);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--hospital-border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--hospital-border-light);
+  vertical-align: middle;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover td {
+  background-color: var(--hospital-bg-alt);
+}
+
+.admin-filter-bar {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.hospital-badge-muted {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+
+/* ------------------------------------------------------------------------------
+   Patient Portal Styles & Responsive Layout Fixes
+   Balanced responsive container matching expanded 1560px system with full-width desktop utilization
+   ------------------------------------------------------------------------------ */
+.patient-portal-container {
+  max-width: var(--container-max-width, 1560px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4, 1rem);
+  padding-right: var(--space-4, 1rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 576px) {
+  .patient-portal-container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .patient-portal-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .patient-portal-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .patient-portal-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+.patient-dashboard-page,
+.patient-profile-page,
+.appointment-detail-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.patient-portal-nav-wrapper {
+  width: 100%;
+}
+
+.patient-identity-strip {
+  border-left: 4px solid var(--hospital-primary) !important;
+  background-color: #ffffff;
+}
+
+.patient-primary-action {
+  flex-shrink: 0;
+}
+
+@media (max-width: 575px) {
+  .patient-primary-action {
+    width: 100%;
+  }
+  .patient-primary-action .hospital-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.appointment-action-box {
+  width: 135px;
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .appointment-action-box {
+    width: 100%;
+    min-width: 100%;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+  }
+}
+
+.patient-avatar-badge {
+  background-color: var(--hospital-primary) !important;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.patient-nav-tabs {
+  background-color: #f1f5f9;
+}
+
+.patient-tab-btn {
+  transition: all 0.15s ease-in-out;
+  border: 1px solid transparent;
+}
+
+.patient-tab-btn:hover {
+  color: var(--hospital-primary) !important;
+}
+
+.upcoming-consultation-card {
+  border-top: 3px solid var(--hospital-primary) !important;
+}
+
+.appointment-record-row {
+  border: 1px solid #e2e8f0;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.appointment-record-row:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.cancel-confirm-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+}
+
+/* Apollo / Fortis Healthcare Hero & Navigation Styling */
+.hospital-hero-light {
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hospital-search-card {
+  border: 1px solid #cbd5e1;
+}
+
+.hospital-hero-visual-card {
+  border: 1px solid #e2e8f0;
+}
+
+.hospital-quick-card {
+  border: 1px solid #e2e8f0;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.hospital-quick-card:hover {
+  border-color: var(--hospital-primary) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.hospital-quick-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.active-nav-link {
+  color: var(--hospital-primary) !important;
+  border-bottom: 2px solid var(--hospital-primary);
+}
+
+.hospital-brand-cross-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background-color: var(--hospital-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hover-border-primary:hover {
+  border-color: var(--hospital-primary) !important;
+}
+
+.hover-border-danger:hover {
+  border-color: #ef4444 !important;
+}
+
+/* Responsive Viewport Guards */
+@media (max-width: 576px) {
+  .hospital-main-content {
+    padding-top: 0;
+    padding-bottom: var(--space-6);
+  }
+  
+  .hospital-container,
+  .patient-portal-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+

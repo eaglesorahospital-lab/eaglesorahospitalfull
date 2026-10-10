@@ -1,0 +1,76 @@
+/* ==============================================================================
+   Hospital Platform — Design System Variables (Phase 1)
+   Adheres to clinical, dignified hospital standards.
+   Strictly complies with the 30-rule design blacklist.
+   ============================================================================== */
+
+:root {
+  /* Brand & Clinical Colors */
+  --hospital-primary: #10375c;         /* Deep medical navy */
+  --hospital-primary-dark: #0b2545;    /* Dark navy for headers / hover */
+  --hospital-primary-light: #1c5286;   /* Accessible primary accent */
+  --hospital-secondary: #0e7490;       /* Controlled clinical teal */
+  --hospital-secondary-dark: #155e75;  /* Deep teal */
+
+  /* Neutral Background & Surface Colors */
+  --hospital-bg: #f8fafc;              /* Soft off-white / very light slate */
+  --hospital-bg-alt: #f1f5f9;          /* Subtle section background */
+  --hospital-surface: #ffffff;         /* Pure surface for clinical cards/tables */
+  --hospital-surface-subtle: #f8fafc;   /* Elevated or muted surface */
+
+  /* Typography Colors */
+  --hospital-text: #1e293b;            /* Dark neutral for optimal readability */
+  --hospital-text-muted: #475569;      /* Medium slate for supporting info */
+  --hospital-text-light: #64748b;      /* Light supporting text */
+  --hospital-text-inverse: #ffffff;    /* White text on dark navy */
+
+  /* Border & Divider Colors (Subtle, non-distracting) */
+  --hospital-border: #cbd5e1;          /* Default structural border */
+  --hospital-border-light: #e2e8f0;    /* Light divider */
+  --hospital-border-dark: #94a3b8;     /* Input focus border */
+
+  /* Semantic Status Colors (Clinical & Calm, not neon or rainbow) */
+  --status-confirmed-bg: #f0fdf4;
+  --status-confirmed-text: #166534;
+  --status-confirmed-border: #bbf7d0;
+
+  --status-scheduled-bg: #eff6ff;
+  --status-scheduled-text: #1e40af;
+  --status-scheduled-border: #bfdbfe;
+
+  --status-pending-bg: #fefce8;
+  --status-pending-text: #854d0e;
+  --status-pending-border: #fef08a;
+
+  --status-cancelled-bg: #fef2f2;
+  --status-cancelled-text: #991b1b;
+  --status-cancelled-border: #fecaca;
+
+  /* Typography Stack (Professional System Medical Stack) */
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* Radii (Clean, structured; strictly NO pill shapes or oversized corners) */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* Shadows (Subtle elevation only; no heavy drop shadows) */
+  --shadow-none: none;
+  --shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08);
+
+  /* Layout Widths (Expanded to effectively utilize modern wide displays) */
+  --container-max-width: 1560px;
+}
