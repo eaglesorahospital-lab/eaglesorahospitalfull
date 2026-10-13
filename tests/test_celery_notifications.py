@@ -287,6 +287,7 @@ class AsyncNotificationExecutionTests(TestCase):
             appointment_date=target_date,
             start_time=time(16, 0),
             end_time=time(16, 30),
+            status=Appointment.Status.CONFIRMED,
         )
 
         mail.outbox.clear()
@@ -314,6 +315,7 @@ class AsyncNotificationExecutionTests(TestCase):
             appointment_date=tomorrow,
             start_time=time(9, 30),
             end_time=time(10, 0),
+            status=Appointment.Status.CONFIRMED,
         )
 
         # Apt 2: Future, not tomorrow
@@ -323,6 +325,7 @@ class AsyncNotificationExecutionTests(TestCase):
             appointment_date=five_days_later,
             start_time=time(10, 0),
             end_time=time(10, 30),
+            status=Appointment.Status.CONFIRMED,
         )
 
         with patch('apps.notifications.tasks.send_appointment_reminder_task.delay') as mock_delay:
@@ -394,7 +397,7 @@ class AsyncNotificationExecutionTests(TestCase):
             response = self.client.post('/api/appointments/', payload, format='json')
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             data = response.json()
-            self.assertEqual(data.get('status'), 'CONFIRMED')
+            self.assertEqual(data.get('status'), 'REQUESTED')
             self.assertTrue(Appointment.objects.filter(reference=data.get('reference')).exists())
 
     def test_failure_isolation_redis_failure_does_not_break_booking_api(self):
@@ -449,6 +452,7 @@ class AsyncNotificationExecutionTests(TestCase):
             appointment_date=target_date,
             start_time=time(10, 0),
             end_time=time(10, 30),
+            status=Appointment.Status.CONFIRMED,
         )
 
         with patch('apps.notifications.services.send_mail', side_effect=smtplib.SMTPException("SMTP down")):

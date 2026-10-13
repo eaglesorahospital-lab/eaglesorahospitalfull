@@ -190,6 +190,18 @@ class AppointmentUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_status(self, value):
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            from apps.accounts.models import User
+            is_staff_or_admin = bool(
+                request.user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
+                or request.user.is_staff
+                or request.user.is_superuser
+            )
+            if not is_staff_or_admin and self.instance and self.instance.status != value:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Patients are not permitted to modify appointment status.")
+
         if self.instance and self.instance.status != value:
             from apps.appointments.services import AppointmentBookingService, AppointmentStateError
             try:
@@ -197,3 +209,4 @@ class AppointmentUpdateSerializer(serializers.ModelSerializer):
             except AppointmentStateError as e:
                 raise serializers.ValidationError(str(e))
         return value
+

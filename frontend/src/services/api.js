@@ -127,7 +127,9 @@ export async function request(endpoint, options = {}) {
 
   if (!response.ok) {
     let errMsg = `Request failed: HTTP ${response.status} ${response.statusText}`;
-    if (data && typeof data === 'object') {
+    if (response.status >= 500) {
+      errMsg = 'The server encountered an issue or is temporarily unavailable. Please try again shortly.';
+    } else if (data && typeof data === 'object') {
       if (data.detail) {
         errMsg = data.detail;
       } else if (Array.isArray(data.non_field_errors) && data.non_field_errors.length > 0) {
@@ -142,7 +144,7 @@ export async function request(endpoint, options = {}) {
           .join(' | ');
         if (fieldErrors) errMsg = fieldErrors;
       }
-    } else if (typeof data === 'string' && data.length > 0) {
+    } else if (typeof data === 'string' && data.length > 0 && !data.trim().startsWith('<')) {
       errMsg = data.slice(0, 1000);
     }
     throw new ApiError(errMsg, response.status, data);

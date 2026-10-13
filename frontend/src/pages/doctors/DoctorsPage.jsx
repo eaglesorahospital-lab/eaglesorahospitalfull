@@ -3,15 +3,13 @@ import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import DoctorCard from '../../components/doctors/DoctorCard';
 import EmptyState from '../../components/common/EmptyState';
-import Button from '../../components/common/Button';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
+import { Search, X, Users, Filter, AlertTriangle, RefreshCw } from 'lucide-react';
 
 /**
- * Hospital Platform — Doctor Discovery & Directory (Phase 4 & Persistence Fix)
- * Public-facing directory for searching consultant physicians, surgeons, and specialists
- * backed authoritatively by PostgreSQL database and Django REST Framework.
- * Strictly excludes inactive doctors from public discovery per hospital business rules.
+ * Hospital Platform — Doctor Discovery & Directory
+ * Public-facing directory for searching consultant physicians with Neumorphism styling.
  */
 export function DoctorsPage() {
   const breadcrumbs = [
@@ -19,13 +17,11 @@ export function DoctorsPage() {
     { label: 'Doctors Directory' },
   ];
 
-  // Authoritative data state synced with PostgreSQL
   const [doctorsList, setDoctorsList] = useState([]);
   const [departmentsList, setDepartmentsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
-  // Client-side search and filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('ALL');
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
@@ -38,7 +34,6 @@ export function DoctorsPage() {
       .getDoctors({ is_active: true, page_size: 100 })
       .then((res) => {
         const list = res?.results || [];
-        // Strictly exclude inactive doctors from public view
         const activeOnly = list.filter(
           (d) => d.is_active !== false && String(d.status).toLowerCase() !== 'inactive'
         );
@@ -72,34 +67,28 @@ export function DoctorsPage() {
     fetchDirectory();
   }, []);
 
-  // Extract unique specialties from authoritative doctors list
   const specialties = useMemo(() => {
     const list = new Set(doctorsList.map((d) => d.specialty).filter(Boolean));
     return ['ALL', ...Array.from(list)];
   }, [doctorsList]);
 
-  // Filter doctors based on criteria
   const filteredDoctors = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
     return doctorsList.filter((doctor) => {
-      // 1. Ensure active only
       if (doctor.is_active === false || String(doctor.status).toLowerCase() === 'inactive') {
         return false;
       }
 
-      // 2. Specialty Filter
       if (selectedSpecialty !== 'ALL' && doctor.specialty !== selectedSpecialty) {
         return false;
       }
 
-      // 3. Department Filter
       if (selectedDepartment !== 'ALL') {
         const deptId = String(doctor.departmentId || doctor.departmentSlug || doctor.department || '');
         if (deptId !== String(selectedDepartment)) return false;
       }
 
-      // 4. Text Search (Doctor name, specialty, department, qualification, expertise)
       if (!query) return true;
 
       const nameMatch = (doctor.name || '').toLowerCase().includes(query);
@@ -136,7 +125,7 @@ export function DoctorsPage() {
     selectedDepartment !== 'ALL';
 
   return (
-    <div className="doctors-directory-page">
+    <div className="doctors-directory-page py-4">
       <Container>
         <PageHeader
           title="Find a Medical Specialist"
@@ -144,28 +133,31 @@ export function DoctorsPage() {
           breadcrumbs={breadcrumbs}
         />
 
-        {/* Visible API Error Banner with Retry */}
+        {/* API Error Banner */}
         {apiError && (
           <div
-            className="alert alert-danger d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 rounded-3 shadow-sm border border-danger-subtle"
+            className="neu-raised neu-surface p-3 mb-4 rounded-4 border-start border-4 border-danger d-flex flex-wrap align-items-center justify-content-between gap-2"
             role="alert"
           >
-            <div className="d-flex align-items-center gap-2 mb-2 mb-sm-0">
-              <span className="fs-5" aria-hidden="true">&#9888;</span>
+            <div className="d-flex align-items-center gap-2">
+              <AlertTriangle size={20} className="text-danger flex-shrink-0" />
               <div>
-                <strong>Medical Directory API Unavailable:</strong> {apiError}
+                <strong className="text-danger">Medical Directory API Notice:</strong>{' '}
+                <span className="text-muted">{apiError}</span>
               </div>
             </div>
-            <Button variant="danger" size="sm" onClick={fetchDirectory}>
-              Retry Connection
-            </Button>
+            <button type="button" className="neu-btn neu-btn-outline neu-btn-sm d-flex align-items-center gap-1" onClick={fetchDirectory}>
+              <RefreshCw size={13} />
+              <span>Retry</span>
+            </button>
           </div>
         )}
 
         {/* Introduction Panel */}
-        <div className="hospital-card p-4 mb-4 bg-white">
-          <h2 className="h5 fw-bold text-primary mb-2">
-            Attending Medical Faculty & Consultants
+        <div className="neu-raised neu-surface p-4 mb-4 rounded-4">
+          <h2 className="h5 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+            <Users size={20} />
+            <span>Attending Medical Faculty & Consultants</span>
           </h2>
           <p className="hospital-body mb-0 text-muted">
             All attending specialists at EgleSora Hospital hold recognized post-graduate
@@ -177,7 +169,7 @@ export function DoctorsPage() {
 
         {/* Search & Filter Control Bar */}
         <section
-          className="hospital-card p-4 mb-4 bg-white"
+          className="neu-raised neu-surface p-4 mb-4 rounded-4"
           aria-label="Doctor search and filter controls"
         >
           <div className="row g-3">
@@ -186,25 +178,28 @@ export function DoctorsPage() {
               <label htmlFor="doctor-search-input" className="hospital-form-label mb-1">
                 Search Doctor or Expertise
               </label>
-              <div className="d-flex gap-2">
+              <div className="neu-inset rounded-3 p-1 d-flex align-items-center gap-2">
+                <span className="text-muted ps-2">
+                  <Search size={16} />
+                </span>
                 <input
                   id="doctor-search-input"
                   type="text"
-                  className="hospital-form-control"
-                  placeholder="Search by doctor name, specialty, qualification, or keywords..."
+                  className="form-control bg-transparent border-0 shadow-none ps-0"
+                  placeholder="Search by name, specialty, qualification..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   aria-label="Search doctors by name, specialty, or clinical focus"
                 />
                 {searchQuery && (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link text-muted p-1 me-1"
                     onClick={() => setSearchQuery('')}
                     aria-label="Clear search input"
                   >
-                    Clear
-                  </Button>
+                    <X size={16} />
+                  </button>
                 )}
               </div>
             </div>
@@ -214,18 +209,20 @@ export function DoctorsPage() {
               <label htmlFor="specialty-filter" className="hospital-form-label mb-1">
                 Filter by Specialty
               </label>
-              <select
-                id="specialty-filter"
-                className="hospital-form-select"
-                value={selectedSpecialty}
-                onChange={(e) => setSelectedSpecialty(e.target.value)}
-              >
-                {specialties.map((spec) => (
-                  <option key={spec} value={spec}>
-                    {spec === 'ALL' ? 'All Specialties' : spec}
-                  </option>
-                ))}
-              </select>
+              <div className="neu-inset rounded-3 p-1">
+                <select
+                  id="specialty-filter"
+                  className="form-select bg-transparent border-0 shadow-none"
+                  value={selectedSpecialty}
+                  onChange={(e) => setSelectedSpecialty(e.target.value)}
+                >
+                  {specialties.map((spec) => (
+                    <option key={spec} value={spec}>
+                      {spec === 'ALL' ? 'All Specialties' : spec}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Department Filter Dropdown */}
@@ -233,43 +230,45 @@ export function DoctorsPage() {
               <label htmlFor="dept-filter" className="hospital-form-label mb-1">
                 Department
               </label>
-              <select
-                id="dept-filter"
-                className="hospital-form-select"
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-              >
-                <option value="ALL">All Departments</option>
-                {departmentsList.map((dept) => (
-                  <option key={dept.id} value={dept.id || dept.slug}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
+              <div className="neu-inset rounded-3 p-1">
+                <select
+                  id="dept-filter"
+                  className="form-select bg-transparent border-0 shadow-none"
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                >
+                  <option value="ALL">All Departments</option>
+                  {departmentsList.map((dept) => (
+                    <option key={dept.id} value={dept.id || dept.slug}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Result Count and Clear Filters Action */}
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top border-light">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
             <div className="small text-muted" role="status" aria-live="polite">
-              Showing <strong>{filteredDoctors.length}</strong> of{' '}
-              <strong>{doctorsList.length}</strong> active medical consultants
+              Showing <strong className="text-body">{filteredDoctors.length}</strong> of{' '}
+              <strong className="text-body">{doctorsList.length}</strong> active medical consultants
             </div>
 
             {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
+                className="neu-btn neu-btn-outline neu-btn-sm py-1 px-2"
                 onClick={handleResetFilters}
                 aria-label="Reset all search filters"
               >
                 Reset All Filters
-              </Button>
+              </button>
             )}
           </div>
         </section>
 
-        {/* Doctor Results Grid, Loading Spinner or Empty State */}
+        {/* Doctor Results Grid or Loading or Empty State */}
         {isLoading ? (
           <div className="py-5 text-center my-4" aria-live="polite">
             <div className="spinner-border text-primary" role="status">
@@ -293,9 +292,9 @@ export function DoctorsPage() {
               title="No Medical Specialists Found"
               message="No consultant physicians matched your specified search keywords or filter criteria. Try broadening your specialty or department selection."
               action={
-                <Button variant="primary" size="sm" onClick={handleResetFilters}>
+                <button type="button" className="neu-btn neu-btn-primary" onClick={handleResetFilters}>
                   Clear All Filters
-                </Button>
+                </button>
               }
             />
           </div>

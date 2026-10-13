@@ -1,9 +1,9 @@
 import React from 'react';
-import Button from '../common/Button';
+import { Stethoscope, Calendar, Clock, User, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 /**
- * Hospital Platform — Booking Review Component (Phase 6)
- * Pre-submission review displaying doctor, appointment timing, and patient information.
+ * Hospital Platform — Booking Review Component
+ * Pre-submission review with Neumorphic styling.
  */
 export function BookingReview({
   doctor,
@@ -16,24 +16,27 @@ export function BookingReview({
   onConfirmBooking,
 }) {
   return (
-    <div className="hospital-card p-4 bg-white mb-4">
+    <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
       <div className="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-        <h3 className="h5 fw-bold text-primary mb-0">Review Consultation Details</h3>
-        <Button variant="outline" size="sm" onClick={onEditDetails}>
+        <h3 className="h5 fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+          <CheckCircle2 size={18} />
+          <span>Review Consultation Details</span>
+        </h3>
+        <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={onEditDetails}>
           Edit Details
-        </Button>
+        </button>
       </div>
 
       <div className="row g-4">
         {/* Doctor Affiliation Section */}
         <div className="col-12 col-md-4">
-          <div className="p-3 bg-light border border-light rounded h-100">
-            <div className="text-uppercase small fw-bold text-primary mb-2">Medical Consultant</div>
-            <div className="fw-bold text-dark fs-6">{doctor.name}</div>
+          <div className="neu-inset p-3 rounded-4 h-100">
+            <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">Medical Consultant</div>
+            <div className="fw-bold text-body fs-6">{doctor.name}</div>
             <div className="small text-muted">{doctor.specialty}</div>
             <div className="small text-muted mb-2">{doctor.departmentName || doctor.department}</div>
             <div className="small border-top pt-2">
-              <span className="fw-semibold text-dark">OPD Room: </span>
+              <strong className="text-body">OPD Room: </strong>
               <span className="text-muted">{doctor.consultation?.location || 'Clinical OPD'}</span>
             </div>
           </div>
@@ -41,12 +44,12 @@ export function BookingReview({
 
         {/* Appointment Logistics Section */}
         <div className="col-12 col-md-4">
-          <div className="p-3 bg-light border border-light rounded h-100">
-            <div className="text-uppercase small fw-bold text-primary mb-2">Appointment Schedule</div>
-            <div className="fw-bold text-dark fs-6">
+          <div className="neu-inset p-3 rounded-4 h-100">
+            <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">Appointment Schedule</div>
+            <div className="fw-bold text-body fs-6">
               {selectedDayName}, {selectedDate}
             </div>
-            <div className="fw-bold text-primary my-1">{selectedTime}</div>
+            <div className="fw-bold text-primary my-1 fs-5">{selectedTime}</div>
             <div className="small text-muted">
               Duration: {doctor.consultation?.duration || '30 minutes'}
             </div>
@@ -58,9 +61,9 @@ export function BookingReview({
 
         {/* Patient Summary Section */}
         <div className="col-12 col-md-4">
-          <div className="p-3 bg-light border border-light rounded h-100">
-            <div className="text-uppercase small fw-bold text-primary mb-2">Patient Details</div>
-            <div className="fw-bold text-dark">{patient.fullName}</div>
+          <div className="neu-inset p-3 rounded-4 h-100">
+            <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">Patient Details</div>
+            <div className="fw-bold text-body">{patient.fullName}</div>
             <div className="small text-muted">
               {patient.gender} &bull; DOB: {patient.dateOfBirth}
             </div>
@@ -71,13 +74,13 @@ export function BookingReview({
 
         {/* Clinical Reason & Emergency Contact */}
         <div className="col-12">
-          <div className="p-3 bg-light border border-light rounded">
-            <div className="small fw-semibold text-dark mb-1">Reason for Consultation:</div>
+          <div className="neu-inset p-3 rounded-4">
+            <div className="small fw-semibold text-body mb-1">Reason for Consultation:</div>
             <div className="small text-muted mb-2">{patient.reasonForVisit}</div>
 
             {patient.emergencyContact && (
               <div className="small pt-2 border-top">
-                <span className="fw-semibold text-dark">Emergency Contact: </span>
+                <strong className="text-body">Emergency Contact: </strong>
                 <span className="text-muted">{patient.emergencyContact}</span>
               </div>
             )}
@@ -86,18 +89,25 @@ export function BookingReview({
       </div>
 
       {/* Confirmation Call to Action */}
-      <div className="mt-4 pt-3 border-top border-light d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+      <div className="mt-4 pt-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
         <div className="small text-muted">
           Please verify that all clinical details and contact numbers are accurate before proceeding.
         </div>
 
         <div className="d-flex gap-2">
-          <Button variant="outline" size="md" onClick={onEditDetails} disabled={isSubmitting}>
+          <button type="button" className="neu-btn neu-btn-outline" onClick={onEditDetails} disabled={isSubmitting}>
             Back / Edit
-          </Button>
-          <Button variant="secondary" size="md" onClick={onConfirmBooking} disabled={isSubmitting}>
-            {isSubmitting ? 'Confirming...' : 'Confirm Appointment Request'}
-          </Button>
+          </button>
+          <button type="button" className="neu-btn neu-btn-primary" onClick={onConfirmBooking} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <span className="d-flex align-items-center gap-1">
+                <span className="spinner-border spinner-border-sm" role="status" />
+                <span>Confirming...</span>
+              </span>
+            ) : (
+              'Confirm Appointment Request'
+            )}
+          </button>
         </div>
       </div>
     </div>

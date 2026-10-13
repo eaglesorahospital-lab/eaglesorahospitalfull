@@ -23,6 +23,7 @@ from .services import (
 from apps.accounts.models import User, PatientProfile
 from apps.doctors.models import Doctor
 from apps.accounts.permissions import IsPatientOwnerOrStaff
+from apps.notifications.services import safe_dispatch_confirmation
 from config.pagination import StandardResultsSetPagination
 from config.throttling import AppointmentBookingRateThrottle
 
@@ -157,6 +158,17 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         # Idempotency header
         idempotency_key = request.headers.get('Idempotency-Key') or request.META.get('HTTP_IDEMPOTENCY_KEY')
 
+        # Resolve status: Patients ALWAYS create with REQUESTED.
+        # Staff/Admins can specify status if needed, but defaults to REQUESTED.
+        booking_status = Appointment.Status.REQUESTED
+        is_staff_or_admin = bool(
+            user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
+            or user.is_staff
+            or user.is_superuser
+        )
+        if is_staff_or_admin and 'status' in data and data['status'] in Appointment.Status.values:
+            booking_status = data['status']
+
         try:
             appointment, created = AppointmentBookingService.book_appointment(
                 patient=patient,
@@ -165,6 +177,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 start_time=start_time,
                 end_time=end_time,
                 appointment_type=appointment_type,
+                status=booking_status,
                 reason_for_visit=reason_for_visit,
                 notes=notes,
                 idempotency_key=idempotency_key,
@@ -180,6 +193,56 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_update(self, serializer):
+        old_status = self.get_object().status
+        instance = serializer.save()
+        if old_status == Appointment.Status.REQUESTED and instance.status == Appointment.Status.CONFIRMED:
+            safe_dispatch_confirmation(instance.id)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(AppointmentDetailSerializer(instance).data)
+
+    @action(detail=True, methods=['post'], url_path='approve')
+    def approve(self, request, reference=None):
+        """
+        Manually approves a REQUESTED appointment, transitioning it to CONFIRMED.
+        Restricted to authorized hospital staff and administrators.
+        """
+        user = request.user
+        if not (
+            user
+            and user.is_authenticated
+            and (
+                user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
+                or user.is_staff
+                or user.is_superuser
+            )
+        ):
+            raise PermissionDenied("Only authorized staff and administrators can approve appointments.")
+
+        apt = self.get_object()
+        if apt.status != Appointment.Status.REQUESTED:
+            return Response(
+                {"detail": f"Cannot approve appointment with status '{apt.status}'. Only REQUESTED appointments can be approved."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        apt.status = Appointment.Status.CONFIRMED
+        apt.save(update_fields=['status', 'updated_at'])
+
+        safe_dispatch_confirmation(apt.id)
+
+        return Response(AppointmentDetailSerializer(apt).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='cancel')
     def cancel(self, request, reference=None):
@@ -243,7 +306,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         and concurrency protection.
         """
         data = request.data
-        doctor_val = data.get('doctor') or data.get('doctorId')
+        doctor_val = data.get('doctor') or data.get('doctorId') or data.get('doctor_id')
         doctor = None
         if isinstance(doctor_val, int) or (isinstance(doctor_val, str) and doctor_val.isdigit()):
             doctor = Doctor.objects.filter(id=int(doctor_val)).first()
@@ -397,6 +460,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 start_time=parsed_start,
                 end_time=parsed_end,
                 appointment_type=Appointment.AppointmentType.IN_PERSON,
+                status=Appointment.Status.REQUESTED,
                 reason_for_visit=reason_for_visit,
                 notes=notes,
                 idempotency_key=idempotency_key,

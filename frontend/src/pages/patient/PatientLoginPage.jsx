@@ -3,13 +3,12 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import authService from '../../services/authService';
 import { HOSPITAL_METADATA } from '../../data/navigation';
+import ThemeToggle from '../../components/common/ThemeToggle';
+import { Activity, ShieldCheck, Mail, Lock, User, Phone, MapPin, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 /**
  * Hospital Platform — Patient Portal Authentication
- * Dedicated patient login and registration gateway.
- * Fully integrated with Django REST Framework SimpleJWT endpoints:
- * - POST /api/auth/login/
- * - POST /api/auth/register/
+ * Dedicated patient login and registration gateway with Neumorphism / Soft UI styling.
  */
 export function PatientLoginPage() {
   const { t } = useTranslation();
@@ -19,7 +18,7 @@ export function PatientLoginPage() {
   const searchParams = new URLSearchParams(location.search);
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login';
 
-  const [mode, setMode] = useState(initialMode); // 'login' | 'register'
+  const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -51,7 +50,6 @@ export function PatientLoginPage() {
       const { user } = await authService.login(email, password);
 
       if (user.role !== 'PATIENT') {
-        // If staff/admin user accidentally logs in here, route them appropriately
         if (user.role === 'DOCTOR_STAFF') {
           navigate('/admin/schedules', { replace: true });
         } else {
@@ -72,7 +70,8 @@ export function PatientLoginPage() {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!email || !password || !passwordConfirm) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password || !passwordConfirm) {
       setErrorMessage('Email, password, and password confirmation are required.');
       return;
     }
@@ -91,15 +90,15 @@ export function PatientLoginPage() {
 
     try {
       await authService.register({
-        email,
+        email: trimmedEmail,
         password,
         password_confirm: passwordConfirm,
-        first_name: firstName,
-        last_name: lastName,
-        phone,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone: phone.trim(),
         gender,
-        date_of_birth: dateOfBirth || null,
-        address,
+        date_of_birth: dateOfBirth ? dateOfBirth : null,
+        address: address.trim(),
       });
 
       setSuccessMessage('Account registered successfully! Redirecting to Patient Portal...');
@@ -114,30 +113,33 @@ export function PatientLoginPage() {
   };
 
   return (
-    <div className="patient-login-page py-5 bg-slate-50 min-vh-100 d-flex flex-column justify-content-center">
+    <div className="patient-login-page py-5 min-vh-100 d-flex flex-column justify-content-center">
       <div className="container" style={{ maxWidth: '540px' }}>
+        {/* Top actions: Brand + ThemeToggle */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2">
+            <div className="hospital-brand-cross-icon neu-raised d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }} aria-hidden="true">
+              <Activity size={20} className="text-white" />
+            </div>
+            <span className="fs-5 fw-bold text-body">{HOSPITAL_METADATA.name}</span>
+          </Link>
+          <ThemeToggle compact />
+        </div>
+
         {/* Brand Header */}
         <div className="text-center mb-4">
-          <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2 mb-2">
-            <div className="hospital-brand-cross-icon bg-primary text-white p-2 rounded-2" aria-hidden="true">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 10.5h-5.5V5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5H5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h5.5V19c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5.5H19c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z"/>
-              </svg>
-            </div>
-            <span className="fs-4 fw-bold text-dark">{HOSPITAL_METADATA.name}</span>
-          </Link>
-          <h1 className="h5 fw-bold text-dark mb-1">Patient Portal Gateway</h1>
+          <h1 className="h4 fw-bold text-body mb-1">Patient Portal Gateway</h1>
           <p className="text-muted small mb-0">
             Secure, verified access to your personal consultations, appointments, and medical record.
           </p>
         </div>
 
         {/* Tab Segment Controls */}
-        <div className="d-flex justify-content-center mb-3">
-          <div className="bg-white p-1 rounded-3 border d-inline-flex gap-1 shadow-sm">
+        <div className="d-flex justify-content-center mb-4">
+          <div className="neu-inset p-1 rounded-pill d-inline-flex gap-1">
             <button
               type="button"
-              className={`btn btn-sm px-4 fw-semibold ${mode === 'login' ? 'btn-primary' : 'btn-light text-muted'}`}
+              className={`neu-btn neu-btn-sm rounded-pill px-4 ${mode === 'login' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
               onClick={() => {
                 setMode('login');
                 setErrorMessage(null);
@@ -147,7 +149,7 @@ export function PatientLoginPage() {
             </button>
             <button
               type="button"
-              className={`btn btn-sm px-4 fw-semibold ${mode === 'register' ? 'btn-primary' : 'btn-light text-muted'}`}
+              className={`neu-btn neu-btn-sm rounded-pill px-4 ${mode === 'register' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
               onClick={() => {
                 setMode('register');
                 setErrorMessage(null);
@@ -159,16 +161,18 @@ export function PatientLoginPage() {
         </div>
 
         {/* Auth Card */}
-        <div className="card shadow-sm border-0 rounded-3 p-4 bg-white">
+        <div className="neu-raised neu-surface rounded-4 p-4 p-sm-5">
           {errorMessage && (
-            <div className="alert alert-danger small py-2 px-3 mb-3" role="alert">
-              {errorMessage}
+            <div className="neu-inset p-3 rounded-3 border-start border-4 border-danger small mb-3 text-danger d-flex align-items-center gap-2" role="alert">
+              <AlertTriangle size={16} className="flex-shrink-0" />
+              <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="alert alert-success small py-2 px-3 mb-3" role="alert">
-              {successMessage}
+            <div className="neu-inset p-3 rounded-3 border-start border-4 border-success small mb-3 text-success d-flex align-items-center gap-2" role="alert">
+              <CheckCircle2 size={16} className="flex-shrink-0" />
+              <span>{successMessage}</span>
             </div>
           )}
 
@@ -176,46 +180,56 @@ export function PatientLoginPage() {
             /* ================= LOGIN FORM ================= */
             <form onSubmit={handleLogin}>
               <div className="mb-3">
-                <label className="form-label small fw-semibold text-dark" htmlFor="patient-login-email">
+                <label className="hospital-form-label mb-1" htmlFor="patient-login-email">
                   Email Address <span className="text-danger">*</span>
                 </label>
-                <input
-                  id="patient-login-email"
-                  type="email"
-                  className="form-control form-control-sm"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                />
+                <div className="neu-inset rounded-3 p-1 d-flex align-items-center gap-2">
+                  <span className="text-muted ps-2">
+                    <Mail size={16} />
+                  </span>
+                  <input
+                    id="patient-login-email"
+                    type="email"
+                    className="form-control bg-transparent border-0 shadow-none ps-0"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="mb-3">
-                <label className="form-label small fw-semibold text-dark" htmlFor="patient-login-pass">
+              <div className="mb-4">
+                <label className="hospital-form-label mb-1" htmlFor="patient-login-pass">
                   Password <span className="text-danger">*</span>
                 </label>
-                <input
-                  id="patient-login-pass"
-                  type="password"
-                  className="form-control form-control-sm"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
+                <div className="neu-inset rounded-3 p-1 d-flex align-items-center gap-2">
+                  <span className="text-muted ps-2">
+                    <Lock size={16} />
+                  </span>
+                  <input
+                    id="patient-login-pass"
+                    type="password"
+                    className="form-control bg-transparent border-0 shadow-none ps-0"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="btn btn-primary w-100 btn-sm py-2 fw-semibold"
+                className="neu-btn neu-btn-primary w-100 py-2 fw-semibold justify-content-center d-flex align-items-center gap-2"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
                 ) : null}
-                {isLoading ? 'Verifying Credentials...' : 'Sign In to Patient Portal'}
+                <span>{isLoading ? 'Verifying Credentials...' : 'Sign In to Patient Portal'}</span>
               </button>
 
               <div className="text-center mt-3 pt-3 border-top small text-muted">
@@ -234,146 +248,165 @@ export function PatientLoginPage() {
             <form onSubmit={handleRegister}>
               <div className="row g-2 mb-2">
                 <div className="col-6">
-                  <label className="form-label small fw-semibold text-dark" htmlFor="reg-first-name">
+                  <label className="hospital-form-label mb-1" htmlFor="reg-first-name">
                     First Name
                   </label>
-                  <input
-                    id="reg-first-name"
-                    type="text"
-                    className="form-control form-control-sm"
-                    placeholder="First Name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                  />
+                  <div className="neu-inset rounded-3 p-1">
+                    <input
+                      id="reg-first-name"
+                      type="text"
+                      className="form-control bg-transparent border-0 shadow-none"
+                      placeholder="First Name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div className="col-6">
-                  <label className="form-label small fw-semibold text-dark" htmlFor="reg-last-name">
+                  <label className="hospital-form-label mb-1" htmlFor="reg-last-name">
                     Last Name
                   </label>
-                  <input
-                    id="reg-last-name"
-                    type="text"
-                    className="form-control form-control-sm"
-                    placeholder="Last Name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                  />
+                  <div className="neu-inset rounded-3 p-1">
+                    <input
+                      id="reg-last-name"
+                      type="text"
+                      className="form-control bg-transparent border-0 shadow-none"
+                      placeholder="Last Name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="mb-2">
-                <label className="form-label small fw-semibold text-dark" htmlFor="reg-email">
+                <label className="hospital-form-label mb-1" htmlFor="reg-email">
                   Email Address <span className="text-danger">*</span>
                 </label>
-                <input
-                  id="reg-email"
-                  type="email"
-                  className="form-control form-control-sm"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <div className="neu-inset rounded-3 p-1 d-flex align-items-center gap-2">
+                  <span className="text-muted ps-2"><Mail size={15} /></span>
+                  <input
+                    id="reg-email"
+                    type="email"
+                    className="form-control bg-transparent border-0 shadow-none ps-0"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="row g-2 mb-2">
                 <div className="col-6">
-                  <label className="form-label small fw-semibold text-dark" htmlFor="reg-phone">
+                  <label className="hospital-form-label mb-1" htmlFor="reg-phone">
                     Mobile Phone
                   </label>
-                  <input
-                    id="reg-phone"
-                    type="tel"
-                    className="form-control form-control-sm"
-                    placeholder="10-digit mobile"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
+                  <div className="neu-inset rounded-3 p-1">
+                    <input
+                      id="reg-phone"
+                      type="tel"
+                      className="form-control bg-transparent border-0 shadow-none"
+                      placeholder="10-digit mobile"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div className="col-6">
-                  <label className="form-label small fw-semibold text-dark" htmlFor="reg-gender">
+                  <label className="hospital-form-label mb-1" htmlFor="reg-gender">
                     Gender
                   </label>
-                  <select
-                    id="reg-gender"
-                    className="form-select form-select-sm"
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                  >
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                    <option value="OTHER">Other</option>
-                  </select>
+                  <div className="neu-inset rounded-3 p-1">
+                    <select
+                      id="reg-gender"
+                      className="form-select bg-transparent border-0 shadow-none"
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                    >
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               <div className="mb-2">
-                <label className="form-label small fw-semibold text-dark" htmlFor="reg-dob">
+                <label className="hospital-form-label mb-1" htmlFor="reg-dob">
                   Date of Birth
                 </label>
-                <input
-                  id="reg-dob"
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                />
+                <div className="neu-inset rounded-3 p-1">
+                  <input
+                    id="reg-dob"
+                    type="date"
+                    className="form-control bg-transparent border-0 shadow-none"
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div className="mb-2">
-                <label className="form-label small fw-semibold text-dark" htmlFor="reg-address">
+                <label className="hospital-form-label mb-1" htmlFor="reg-address">
                   Residential Address
                 </label>
-                <input
-                  id="reg-address"
-                  type="text"
-                  className="form-control form-control-sm"
-                  placeholder="City, State, Postal Code"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
+                <div className="neu-inset rounded-3 p-1">
+                  <input
+                    id="reg-address"
+                    type="text"
+                    className="form-control bg-transparent border-0 shadow-none"
+                    placeholder="City, State, Postal Code"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div className="row g-2 mb-3">
                 <div className="col-6">
-                  <label className="form-label small fw-semibold text-dark" htmlFor="reg-password">
+                  <label className="hospital-form-label mb-1" htmlFor="reg-password">
                     Password <span className="text-danger">*</span>
                   </label>
-                  <input
-                    id="reg-password"
-                    type="password"
-                    className="form-control form-control-sm"
-                    placeholder="Min 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <div className="neu-inset rounded-3 p-1">
+                    <input
+                      id="reg-password"
+                      type="password"
+                      className="form-control bg-transparent border-0 shadow-none"
+                      placeholder="Min 8 chars"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="col-6">
-                  <label className="form-label small fw-semibold text-dark" htmlFor="reg-password-confirm">
+                  <label className="hospital-form-label mb-1" htmlFor="reg-password-confirm">
                     Confirm Password <span className="text-danger">*</span>
                   </label>
-                  <input
-                    id="reg-password-confirm"
-                    type="password"
-                    className="form-control form-control-sm"
-                    placeholder="Re-enter password"
-                    value={passwordConfirm}
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
-                    required
-                  />
+                  <div className="neu-inset rounded-3 p-1">
+                    <input
+                      id="reg-password-confirm"
+                      type="password"
+                      className="form-control bg-transparent border-0 shadow-none"
+                      placeholder="Re-enter"
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="btn btn-primary w-100 btn-sm py-2 fw-semibold"
+                className="neu-btn neu-btn-primary w-100 py-2 fw-semibold justify-content-center d-flex align-items-center gap-2"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
                 ) : null}
-                {isLoading ? 'Creating Account...' : 'Register & Create Medical Record'}
+                <span>{isLoading ? 'Creating Account...' : 'Register & Create Medical Record'}</span>
               </button>
 
               <div className="text-center mt-3 pt-3 border-top small text-muted">
@@ -392,7 +425,7 @@ export function PatientLoginPage() {
 
         {/* Portal Switching / Staff Link */}
         <div className="text-center mt-4">
-          <Link to="/staff/login" className="text-decoration-none small text-muted hover-text-dark">
+          <Link to="/staff/login" className="text-decoration-none small text-muted hover-text-primary">
             Are you a doctor or hospital administrator? Sign in to Staff Workspace &rarr;
           </Link>
         </div>

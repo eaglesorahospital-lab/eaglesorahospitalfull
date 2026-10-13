@@ -1,16 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { 
+  ShieldCheck, 
+  RotateCw, 
+  CheckCircle2, 
+  X, 
+  Eye, 
+  Activity, 
+  FileText, 
+  Search, 
+  Lock 
+} from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import RoleRestrictedNotice from '../../components/admin/RoleRestrictedNotice';
 import { INITIAL_AUDIT_LOGS } from '../../data/adminData';
 
 /**
- * Hospital Platform — Admin Audit Logs Page (Phase 8)
+ * Hospital Platform — Admin Audit Logs Page (Neumorphic Redesign)
  * Security, compliance, and clinical operational audit trail.
- * Demonstrates immutable event auditing. Pure frontend presentation with fictional demo records.
  */
 export function AdminAuditPage() {
   const { currentRole, setRole } = useOutletContext() || {};
@@ -64,7 +73,7 @@ export function AdminAuditPage() {
   }, [auditLogsList, searchTerm, roleFilter, resultFilter]);
 
   return (
-    <div>
+    <div className="admin-audit-view">
       <PageHeader
         title="Compliance & Operational Audit Trail"
         description="Immutable administrative activity logs, clinical record accesses, roster modifications, and access reviews."
@@ -72,12 +81,17 @@ export function AdminAuditPage() {
       />
 
       {/* Compliance Notice Banner */}
-      <div className="alert alert-info py-2 px-3 mb-3 small d-flex flex-wrap justify-content-between align-items-center">
-        <span>
-          <strong>Healthcare Compliance & Traceability:</strong> In production, audit records are generated via
-          PostgreSQL transaction triggers and Django middleware to guarantee non-repudiation. Current view represents simulated entries.
-        </span>
-        <span className="text-muted">Super Admin Exclusive</span>
+      <div 
+        className="neu-card p-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-2"
+        style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+      >
+        <div className="d-flex align-items-center gap-2 small">
+          <ShieldCheck size={18} color="#16845B" />
+          <span style={{ color: 'var(--hospital-primary-navy)' }}>
+            <strong>Healthcare Compliance:</strong> Audit records are generated via database transaction triggers and middleware for non-repudiation.
+          </span>
+        </div>
+        <span className="neu-badge neu-badge-primary">Super Admin Exclusive</span>
       </div>
 
       {/* Filter and Search Bar */}
@@ -94,7 +108,7 @@ export function AdminAuditPage() {
       >
         <div className="col-12 col-sm-6 col-md-3">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
             aria-label="Filter by actor role"
@@ -109,7 +123,7 @@ export function AdminAuditPage() {
 
         <div className="col-12 col-sm-6 col-md-2">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={resultFilter}
             onChange={(e) => setResultFilter(e.target.value)}
             aria-label="Filter by audit result"
@@ -123,25 +137,28 @@ export function AdminAuditPage() {
       </AdminFilterBar>
 
       {/* Audit Logs Table */}
-      <div className="hospital-card p-0 mb-4 overflow-hidden">
-        <div className="admin-table-container">
-          <table className="admin-table">
+      <div 
+        className="neu-card p-0 mb-4 overflow-hidden" 
+        style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+      >
+        <div className="neu-table-container">
+          <table className="neu-table">
             <thead>
               <tr>
-                <th>Timestamp</th>
-                <th>Actor</th>
-                <th>Role</th>
-                <th>Action Code</th>
-                <th>Resource Target</th>
-                <th>Target Ref</th>
-                <th>Result</th>
-                <th className="text-end">Actions</th>
+                <th className="col-audit-time">Timestamp</th>
+                <th className="col-audit-actor">Actor</th>
+                <th className="col-audit-role">Role</th>
+                <th className="col-audit-action">Action Code</th>
+                <th className="col-audit-resource">Resource Target</th>
+                <th className="col-audit-target">Target Ref</th>
+                <th className="col-audit-result">Result</th>
+                <th className="col-audit-actions text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredAuditLogs.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4 text-muted">
+                  <td colSpan="8" className="text-center py-5 text-muted">
                     No audit records match the selected filter criteria.
                   </td>
                 </tr>
@@ -155,10 +172,20 @@ export function AdminAuditPage() {
                       <div className="fw-semibold">{log.actor}</div>
                     </td>
                     <td>
-                      <span className="badge bg-secondary small">{log.role}</span>
+                      <span className="neu-badge neu-badge-secondary">{log.role}</span>
                     </td>
                     <td>
-                      <code>{log.action}</code>
+                      <span 
+                        className="px-2 py-0.5 rounded small font-monospace fw-bold"
+                        style={{ 
+                          background: 'var(--hospital-surface)', 
+                          boxShadow: 'var(--neu-inset)',
+                          fontSize: '0.72rem',
+                          color: 'var(--hospital-blue)'
+                        }}
+                      >
+                        {log.action}
+                      </span>
                     </td>
                     <td>
                       <span className="small">{log.resource}</span>
@@ -169,14 +196,18 @@ export function AdminAuditPage() {
                     <td>
                       <AdminStatusBadge status={log.result} />
                     </td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm"
-                        onClick={() => setViewAuditLog(log)}
-                      >
-                        Inspect
-                      </button>
+                    <td className="text-end">
+                      <div className="neu-action-btns">
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => setViewAuditLog(log)}
+                          title="Inspect immutable audit entry"
+                        >
+                          <Eye size={13} className="me-1" />
+                          Inspect
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -191,59 +222,80 @@ export function AdminAuditPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <div 
+                className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <div>
-                  <h5 className="modal-title fs-6 fw-bold mb-0">
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Audit Entry: {viewAuditLog.id}
                   </h5>
                   <span className="small text-muted">{viewAuditLog.timestamp}</span>
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="neu-btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0 }}
                   onClick={() => setViewAuditLog(null)}
-                />
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                 <div className="row g-3 mb-3">
                   <div className="col-12 col-md-6">
-                    <div className="p-3 bg-light rounded border h-100">
-                      <div className="small text-muted fw-bold mb-2">Actor Identity</div>
-                      <div className="small"><strong>Actor:</strong> {viewAuditLog.actor}</div>
-                      <div className="small"><strong>Role:</strong> {viewAuditLog.role}</div>
-                      <div className="small"><strong>Client IP:</strong> 192.168.10.42 (Internal LAN)</div>
+                    <div 
+                      className="p-3 neu-card-sm h-100" 
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="small text-muted fw-bold mb-2 text-uppercase">Actor Identity</div>
+                      <div className="small mb-1"><strong>Actor:</strong> {viewAuditLog.actor}</div>
+                      <div className="small mb-1"><strong>Role:</strong> {viewAuditLog.role}</div>
+                      <div className="small mb-1"><strong>Client IP:</strong> 192.168.10.42 (Internal LAN)</div>
                       <div className="small"><strong>Session ID:</strong> SES-SIM-99201</div>
                     </div>
                   </div>
                   <div className="col-12 col-md-6">
-                    <div className="p-3 bg-light rounded border h-100">
-                      <div className="small text-muted fw-bold mb-2">Action Context</div>
-                      <div className="small"><strong>Action Code:</strong> <code>{viewAuditLog.action}</code></div>
-                      <div className="small"><strong>Resource Type:</strong> {viewAuditLog.resource}</div>
-                      <div className="small"><strong>Resource ID:</strong> {viewAuditLog.resourceId}</div>
-                      <div className="small mt-1">
+                    <div 
+                      className="p-3 neu-card-sm h-100" 
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="small text-muted fw-bold mb-2 text-uppercase">Action Context</div>
+                      <div className="small mb-1"><strong>Action Code:</strong> <code>{viewAuditLog.action}</code></div>
+                      <div className="small mb-1"><strong>Resource:</strong> {viewAuditLog.resource}</div>
+                      <div className="small mb-1"><strong>Resource ID:</strong> {viewAuditLog.resourceId}</div>
+                      <div className="small mt-2 d-flex align-items-center gap-2">
                         <strong>Outcome:</strong> <AdminStatusBadge status={viewAuditLog.result} />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 bg-white rounded border">
-                  <div className="small text-muted fw-bold mb-1">Event Narrative & Payload</div>
-                  <p className="small mb-0 text-dark" style={{ fontFamily: 'monospace' }}>
+                <div 
+                  className="p-3 neu-card-sm" 
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  <div className="small text-muted fw-bold mb-1 text-uppercase">Event Narrative & Payload</div>
+                  <p className="small mb-0 text-muted font-monospace" style={{ lineHeight: '1.5' }}>
                     {viewAuditLog.details}
                   </p>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div 
+                className="modal-footer px-4 py-3 border-top"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <button
                   type="button"
-                  className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                  className="neu-btn neu-btn-outline neu-btn-sm"
                   onClick={() => setViewAuditLog(null)}
                 >
                   Close

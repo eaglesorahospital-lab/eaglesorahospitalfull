@@ -2,15 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 import doctorService from '../../services/doctorService';
 import scheduleService from '../../services/scheduleService';
 import { getDoctorByIdOrSlug } from '../../data/hospitalData';
+import {
+  Calendar,
+  Clock,
+  Award,
+  Stethoscope,
+  Building2,
+  MapPin,
+  ChevronRight,
+  AlertTriangle,
+  FileText,
+  UserCheck,
+} from 'lucide-react';
 
-/**
- * Formats 24h time string ("09:00:00" or "09:00") into clean 12h display ("09:00 AM").
- */
 function formatTime12h(timeStr) {
   if (!timeStr) return '';
   const parts = String(timeStr).split(':');
@@ -23,10 +31,8 @@ function formatTime12h(timeStr) {
 }
 
 /**
- * Hospital Platform — Doctor Profile Page (Phase 4 & Persistence Fix)
- * Comprehensive specialist profile presenting qualifications, clinical bio,
- * areas of expertise, outpatient consultation timings, breaks, and leaves.
- * Backed by authoritative PostgreSQL database records.
+ * Hospital Platform — Doctor Profile Page
+ * Comprehensive specialist profile in Neumorphism / Soft UI design.
  */
 export function DoctorDetailPage() {
   const { slug, id } = useParams();
@@ -85,7 +91,6 @@ export function DoctorDetailPage() {
     );
   }
 
-  // Handle Invalid Doctor Slug
   if (!doctor) {
     const errorBreadcrumbs = [
       { label: 'Home', to: '/' },
@@ -94,7 +99,7 @@ export function DoctorDetailPage() {
     ];
 
     return (
-      <Container>
+      <Container className="py-4">
         <PageHeader
           title="Doctor Not Found"
           description="The requested medical specialist profile could not be located in our directory."
@@ -105,10 +110,8 @@ export function DoctorDetailPage() {
             title="Doctor Record Not Found"
             message={`We could not locate any physician profile corresponding to "${identifier}". The specialist may have relocated or the address may be typed incorrectly.`}
             action={
-              <Link to="/doctors">
-                <Button variant="primary" size="md">
-                  Return to Doctor Directory
-                </Button>
+              <Link to="/doctors" className="neu-btn neu-btn-primary">
+                Return to Doctor Directory
               </Link>
             }
           />
@@ -131,7 +134,6 @@ export function DoctorDetailPage() {
   const isActive = doctor.is_active !== false && String(doctor.status).toLowerCase() !== 'inactive';
   const doctorIdentifier = doctor.slug || doctor.id || identifier;
 
-  // Authoritative weekly schedules from PostgreSQL
   const activeSchedules = dbSchedules.filter((s) => s.is_working_day && s.is_active);
   const workingDaysList = activeSchedules.length > 0
     ? activeSchedules.map((s) => s.day_of_week)
@@ -140,7 +142,6 @@ export function DoctorDetailPage() {
     ? `${formatTime12h(activeSchedules[0].start_time)} - ${formatTime12h(activeSchedules[0].end_time)}`
     : (doctor.schedule?.workingHours || '09:00 AM - 01:00 PM');
   
-  // Format midday breaks cleanly
   const rawBreaks = activeSchedules.flatMap((s) => s.breaks || []);
   const breaksText = rawBreaks.length > 0
     ? rawBreaks
@@ -151,18 +152,15 @@ export function DoctorDetailPage() {
         ? doctor.schedule.breaks.map((b) => (typeof b === 'object' && b.start ? `${b.start} - ${b.end}` : String(b))).join(', ')
         : 'No scheduled midday break');
 
-  // Authoritative leaves from PostgreSQL
   const activeLeaves = dbLeaves.length > 0
     ? dbLeaves.filter((l) => l.is_active !== false).map((l) => ({ date: l.start_date, reason: l.reason }))
     : (Array.isArray(doctor.leave) ? doctor.leave : []);
   const hasLeave = activeLeaves.length > 0;
 
   return (
-    <div className="doctor-detail-page">
+    <div className="doctor-detail-page py-4">
       <Container>
-        {/* ====================================================================
-            1. Page Header & Actions
-            ==================================================================== */}
+        {/* 1. Page Header & Actions */}
         <PageHeader
           title={doctor.name}
           description={`${doctor.specialty} — ${deptName}`}
@@ -170,114 +168,111 @@ export function DoctorDetailPage() {
         >
           <div className="d-flex flex-wrap gap-2">
             {isActive ? (
-              <Link to={`/appointments/book?doctor=${doctorIdentifier}`}>
-                <Button variant="secondary" size="md">
-                  Book Consultation
-                </Button>
+              <Link to={`/appointments/book?doctor=${doctorIdentifier}`} className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1">
+                <Calendar size={15} />
+                <span>Book Consultation</span>
               </Link>
             ) : (
-              <span className="badge bg-secondary d-flex align-items-center px-3 py-2 text-white">
+              <span className="neu-badge neu-badge-neutral d-flex align-items-center px-3 py-2">
                 Inactive / Not Accepting Appointments
               </span>
             )}
-            <Link to={`/doctors/${doctorIdentifier}/availability`}>
-              <Button variant="outline" size="md">
-                Check OPD Schedule
-              </Button>
+            <Link to={`/doctors/${doctorIdentifier}/availability`} className="neu-btn neu-btn-outline d-inline-flex align-items-center gap-1">
+              <Clock size={15} />
+              <span>Check OPD Schedule</span>
             </Link>
           </div>
         </PageHeader>
 
-        {/* Server notification if API failed */}
         {apiError && (
-          <div className="alert alert-warning py-2 px-3 mb-4 small d-flex justify-content-between align-items-center" role="alert">
-            <span>{apiError}</span>
-            <button type="button" className="btn btn-sm btn-outline-dark ms-2" onClick={loadDoctorProfile}>
+          <div className="neu-raised neu-surface p-3 mb-4 rounded-4 border-start border-4 border-warning d-flex justify-content-between align-items-center" role="alert">
+            <span className="text-muted">{apiError}</span>
+            <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={loadDoctorProfile}>
               Retry
             </button>
           </div>
         )}
 
         <div className="row g-4 mb-5">
-          {/* ==================================================================
-              2. Left Sidebar: Identity, Affiliation & Consultation Summary
-              ================================================================== */}
+          {/* 2. Left Sidebar: Identity, Affiliation & Consultation Summary */}
           <div className="col-12 col-lg-4">
             {/* Doctor Identity Card */}
-            <div className="doctor-profile-hero mb-4">
+            <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
               <div className="d-flex align-items-center gap-3 mb-3">
-                <div className="doctor-profile-avatar-lg" aria-hidden="true">
+                <div className="doctor-profile-avatar-lg neu-inset flex-shrink-0" aria-hidden="true">
                   {doctor.photo ? (
                     <img src={doctor.photo} alt={doctor.name} />
                   ) : (
-                    <span>{doctor.initials || 'DR'}</span>
+                    <span className="fw-bold text-primary">{doctor.initials || 'DR'}</span>
                   )}
                 </div>
                 <div>
-                  <h2 className="h5 fw-bold text-dark mb-1">{doctor.name}</h2>
+                  <h2 className="h5 fw-bold text-body mb-1">{doctor.name}</h2>
                   <div className="small fw-semibold text-primary">{doctor.specialty}</div>
                   <div className="mt-1">
                     <span
-                      className={`hospital-badge ${
-                        isActive ? 'hospital-badge-confirmed' : 'hospital-badge-pending'
+                      className={`neu-badge ${
+                        isActive ? 'neu-badge-success' : 'neu-badge-warning'
                       }`}
                     >
-                      {isActive ? 'Active Attending Faculty' : 'On Leave / Sabbatical'}
+                      {isActive ? 'Active Attending Faculty' : 'On Leave'}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="border-top border-light pt-3 small">
-                <div className="mb-2">
-                  <span className="fw-semibold text-dark">Clinical Experience: </span>
-                  <span className="text-muted">{doctor.experience} years</span>
+              <div className="border-top pt-3 small">
+                <div className="mb-2 d-flex align-items-center gap-1 text-muted">
+                  <Award size={14} className="text-primary flex-shrink-0" />
+                  <span><strong className="text-body">Clinical Experience:</strong> {doctor.experience} years</span>
                 </div>
-                <div className="mb-2">
-                  <span className="fw-semibold text-dark">Affiliated Department: </span>
-                  <br />
+                <div className="mb-2 text-muted">
+                  <span className="fw-semibold text-body">Affiliated Department: </span>
                   <Link
                     to={`/departments/${deptSlug}`}
-                    className="text-primary text-decoration-none fw-semibold"
+                    className="text-primary text-decoration-none fw-semibold ms-1 d-inline-flex align-items-center gap-1"
                   >
-                    {deptName} &rarr;
+                    <span>{deptName}</span>
+                    <ChevronRight size={13} />
                   </Link>
                 </div>
               </div>
             </div>
 
             {/* Consultation Details Card */}
-            <div className="hospital-card p-4 mb-4 bg-white">
-              <h3 className="h6 fw-bold text-dark mb-3 border-bottom pb-2">
+            <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
+              <h3 className="h6 fw-bold text-body mb-3 border-bottom pb-2">
                 Outpatient Consultation Details
               </h3>
-              <div className="small mb-2">
-                <span className="fw-semibold text-dark">Consultation Type: </span>
-                <span className="text-muted">{doctor.consultation?.type || 'In-person'}</span>
+              <div className="small mb-2 text-muted">
+                <strong className="text-body">Type: </strong>
+                <span>{doctor.consultation?.type || 'In-person'}</span>
               </div>
-              <div className="small mb-2">
-                <span className="fw-semibold text-dark">Slot Duration: </span>
-                <span className="text-muted">{doctor.consultation?.duration || '30 minutes'}</span>
+              <div className="small mb-2 text-muted">
+                <strong className="text-body">Slot Duration: </strong>
+                <span>{doctor.consultation?.duration || '30 minutes'}</span>
               </div>
-              <div className="small mb-3">
-                <span className="fw-semibold text-dark">OPD Location: </span>
-                <span className="text-muted">{doctor.consultation?.location || 'Clinical OPD'}</span>
+              <div className="small mb-3 text-muted">
+                <strong className="text-body">OPD Location: </strong>
+                <span>{doctor.consultation?.location || 'Clinical OPD'}</span>
               </div>
 
               <div className="pt-2 border-top">
                 <Link
                   to={`/doctors/${doctorIdentifier}/availability`}
-                  className="hospital-btn hospital-btn-outline hospital-btn-sm w-100 text-center text-decoration-none"
+                  className="neu-btn neu-btn-outline w-100 text-center justify-content-center d-flex align-items-center gap-1"
                 >
-                  View Weekly Time Slots
+                  <Clock size={14} />
+                  <span>View Weekly Time Slots</span>
                 </Link>
               </div>
             </div>
 
             {/* Department Quick Link Card */}
-            <div className="hospital-card p-4 bg-white">
-              <h3 className="h6 fw-bold text-dark mb-2">
-                Division of {deptName}
+            <div className="neu-raised neu-surface p-4 rounded-4">
+              <h3 className="h6 fw-bold text-body mb-2 d-flex align-items-center gap-1">
+                <Building2 size={16} className="text-primary" />
+                <span>Division of {deptName}</span>
               </h3>
               <p className="small text-muted mb-3">
                 Learn more about our diagnostic protocols, clinical technologies,
@@ -285,29 +280,27 @@ export function DoctorDetailPage() {
               </p>
               <Link
                 to={`/departments/${deptSlug}`}
-                className="hospital-btn hospital-btn-secondary hospital-btn-sm w-100 text-center text-decoration-none"
+                className="neu-btn neu-btn-secondary w-100 text-center justify-content-center"
               >
                 View Department Overview
               </Link>
             </div>
           </div>
 
-          {/* ==================================================================
-              3. Right Main Panel: Bio, Qualifications, Expertise & Schedule
-              ================================================================== */}
+          {/* 3. Right Main Panel: Bio, Qualifications, Expertise & Schedule */}
           <div className="col-12 col-lg-8">
             {/* Professional Biography */}
-            <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="bio-heading">
+            <section className="neu-raised neu-surface p-4 rounded-4 mb-4" aria-labelledby="bio-heading">
               <h3 id="bio-heading" className="h5 fw-bold text-primary mb-3">
                 Professional Biography
               </h3>
-              <p className="hospital-body text-dark mb-0 leading-relaxed">
+              <p className="hospital-body text-body mb-0" style={{ lineHeight: '1.7' }}>
                 {doctor.bio}
               </p>
             </section>
 
-            {/* Academic & Professional Qualifications */}
-            <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="qual-heading">
+            {/* Qualifications */}
+            <section className="neu-raised neu-surface p-4 rounded-4 mb-4" aria-labelledby="qual-heading">
               <h3 id="qual-heading" className="h5 fw-bold text-primary mb-3">
                 Qualifications & Medical Credentials
               </h3>
@@ -315,26 +308,25 @@ export function DoctorDetailPage() {
                 {qualifications.map((qual, index) => (
                   <li
                     key={index}
-                    className="py-2 border-bottom border-light d-flex align-items-center gap-2 small"
+                    className="py-2 border-bottom d-flex align-items-center gap-2 small"
                   >
-                    <span className="badge bg-secondary text-white">{index + 1}</span>
-                    <span className="fw-semibold text-dark">{qual}</span>
+                    <span className="neu-badge neu-badge-primary">{index + 1}</span>
+                    <span className="fw-semibold text-body">{qual}</span>
                   </li>
                 ))}
               </ul>
             </section>
 
             {/* Areas of Clinical Expertise */}
-            <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="expertise-heading">
+            <section className="neu-raised neu-surface p-4 rounded-4 mb-4" aria-labelledby="expertise-heading">
               <h3 id="expertise-heading" className="h5 fw-bold text-primary mb-3">
                 Areas of Clinical Expertise
               </h3>
-              <div>
+              <div className="d-flex flex-wrap gap-2">
                 {(doctor.expertise || []).map((exp, idx) => (
                   <span
                     key={idx}
-                    className="doctor-expertise-tag p-2 px-3 fs-6"
-                    style={{ fontSize: '0.85rem' }}
+                    className="neu-badge neu-badge-neutral p-2 px-3 fs-6"
                   >
                     {exp}
                   </span>
@@ -343,21 +335,22 @@ export function DoctorDetailPage() {
             </section>
 
             {/* Outpatient Working Schedule */}
-            <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="schedule-heading">
+            <section className="neu-raised neu-surface p-4 rounded-4 mb-4" aria-labelledby="schedule-heading">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h3 id="schedule-heading" className="h5 fw-bold text-primary mb-0">
                   Outpatient (OPD) Working Schedule
                 </h3>
                 <Link
                   to={`/doctors/${doctorIdentifier}/availability`}
-                  className="small text-primary fw-semibold text-decoration-none"
+                  className="small text-primary fw-semibold text-decoration-none d-inline-flex align-items-center gap-1"
                 >
-                  Inspect Open Slots &rarr;
+                  <span>Inspect Open Slots</span>
+                  <ChevronRight size={14} />
                 </Link>
               </div>
 
-              <div className="table-responsive border border-light rounded">
-                <table className="dept-schedule-table table table-hover mb-0">
+              <div className="neu-table-container">
+                <table className="neu-table">
                   <thead>
                     <tr>
                       <th scope="col" style={{ width: '40%' }}>Consultation Parameter</th>
@@ -366,7 +359,7 @@ export function DoctorDetailPage() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="fw-semibold text-dark">Working Days</td>
+                      <td className="fw-semibold text-body">Working Days</td>
                       <td>
                         {workingDaysList.length > 0
                           ? workingDaysList.join(', ')
@@ -374,15 +367,15 @@ export function DoctorDetailPage() {
                       </td>
                     </tr>
                     <tr>
-                      <td className="fw-semibold text-dark">OPD Consultation Hours</td>
+                      <td className="fw-semibold text-body">OPD Consultation Hours</td>
                       <td>{workingHoursText}</td>
                     </tr>
                     <tr>
-                      <td className="fw-semibold text-dark">Daily Clinical Breaks</td>
+                      <td className="fw-semibold text-body">Daily Clinical Breaks</td>
                       <td>{breaksText}</td>
                     </tr>
                     <tr>
-                      <td className="fw-semibold text-dark">Consultation Location</td>
+                      <td className="fw-semibold text-body">Consultation Location</td>
                       <td>{doctor.consultation?.location || 'Clinical Consultation Suite'}</td>
                     </tr>
                   </tbody>
@@ -391,15 +384,15 @@ export function DoctorDetailPage() {
             </section>
 
             {/* Leave & Unavailability Notices */}
-            <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="leave-heading">
+            <section className="neu-raised neu-surface p-4 rounded-4 mb-4" aria-labelledby="leave-heading">
               <h3 id="leave-heading" className="h5 fw-bold text-primary mb-3">
                 Leave & Unavailability Notices
               </h3>
 
               {!isActive ? (
-                <div className="doctor-leave-alert">
-                  <div className="fw-bold mb-1">Physician On Academic Sabbatical / Leave</div>
-                  <p className="mb-0 small">
+                <div className="neu-inset p-3 rounded-3 border-start border-4 border-warning">
+                  <div className="fw-bold mb-1 text-warning">Physician On Academic Sabbatical / Leave</div>
+                  <p className="mb-0 small text-muted">
                     This specialist is temporarily unavailable for regular outpatient clinics.
                     For urgent medical guidance, please consult with another attending faculty
                     member in the {deptName} department.
@@ -408,19 +401,19 @@ export function DoctorDetailPage() {
               ) : hasLeave ? (
                 <div className="d-flex flex-column gap-2">
                   {activeLeaves.map((l, index) => (
-                    <div key={index} className="doctor-leave-alert d-flex justify-content-between align-items-center">
+                    <div key={index} className="neu-inset p-3 rounded-3 d-flex justify-content-between align-items-center">
                       <div>
-                        <strong>Scheduled Leave Date:</strong> {l.date}
-                        <div className="small mt-1">Reason: {l.reason}</div>
+                        <strong className="text-body">Scheduled Leave:</strong> {l.date}
+                        <div className="small text-muted mt-1">Reason: {l.reason}</div>
                       </div>
-                      <span className="hospital-badge hospital-badge-cancelled">
+                      <span className="neu-badge neu-badge-danger">
                         Clinic Suspended
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-3 bg-light border border-light rounded small text-muted">
+                <div className="neu-inset p-3 rounded-3 small text-muted">
                   No upcoming planned leaves on institutional record. Standard outpatient clinic
                   roster remains fully active.
                 </div>
@@ -428,9 +421,9 @@ export function DoctorDetailPage() {
             </section>
 
             {/* Appointment Booking Call-To-Action */}
-            <div className="hospital-card p-4 bg-light border border-primary-subtle d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div className="neu-raised neu-surface p-4 rounded-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
               <div>
-                <h4 className="h6 fw-bold text-dark mb-1">
+                <h4 className="h6 fw-bold text-body mb-1">
                   Ready to Schedule a Consultation?
                 </h4>
                 <p className="small text-muted mb-0">
@@ -438,10 +431,9 @@ export function DoctorDetailPage() {
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <Link to={`/appointments/book?doctor=${doctorIdentifier}`}>
-                  <Button variant="secondary" size="md">
-                    Book Appointment Now
-                  </Button>
+                <Link to={`/appointments/book?doctor=${doctorIdentifier}`} className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1">
+                  <Calendar size={15} />
+                  <span>Book Appointment Now</span>
                 </Link>
               </div>
             </div>

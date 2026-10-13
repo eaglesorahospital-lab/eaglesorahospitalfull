@@ -82,7 +82,7 @@ class Appointment(models.Model):
         _('lifecycle status'),
         max_length=20,
         choices=Status.choices,
-        default=Status.CONFIRMED,
+        default=Status.REQUESTED,
         db_index=True,
     )
     reason_for_visit = models.TextField(

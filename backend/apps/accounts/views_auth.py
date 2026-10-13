@@ -69,6 +69,8 @@ class RegisterView(APIView):
         refresh['role'] = user.role
         refresh['email'] = user.email
 
+        profile = getattr(user, 'patient_profile', None)
+
         return Response({
             "message": "Registration successful.",
             "access": str(refresh.access_token),
@@ -78,6 +80,7 @@ class RegisterView(APIView):
                 "email": user.email,
                 "name": user.get_full_name() or user.email,
                 "role": user.role,
+                "mrn": profile.mrn if profile else None,
             }
         }, status=status.HTTP_201_CREATED)
 

@@ -2,27 +2,31 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 import doctorService from '../../services/doctorService';
 import scheduleService from '../../services/scheduleService';
+import {
+  Calendar,
+  Clock,
+  User,
+  CheckCircle2,
+  ChevronRight,
+  AlertTriangle,
+  RotateCw,
+  Building2,
+} from 'lucide-react';
 
-/**
- * Formats 24h time string ("09:00:00" or "09:00") into clean 12h display ("09:00 AM").
- */
 function formatTime12h(timeStr) {
   if (!timeStr) return '';
   const parts = timeStr.split(':');
   let h = parseInt(parts[0], 10);
+  if (isNaN(h)) return timeStr;
   const m = parts[1] || '00';
   const ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12 || 12;
   return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
 }
 
-/**
- * Computes calendar date string "YYYY-MM-DD" using local date components.
- */
 function getLocalDateString(d) {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -32,9 +36,7 @@ function getLocalDateString(d) {
 
 /**
  * Hospital Platform — Doctor Availability & OPD Schedule Page
- * Patient-facing presentation of weekly clinical roster, shift timings, break intervals,
- * scheduled leaves, schedule overrides, and real-time consultation slots.
- * Backed authoritatively by PostgreSQL database records via Django REST Framework (/api/schedules/availability/).
+ * Patient-facing presentation of weekly clinical roster with Neumorphism styling.
  */
 export function DoctorAvailabilityPage() {
   const { slug, id } = useParams();
@@ -54,7 +56,6 @@ export function DoctorAvailabilityPage() {
   const [apiError, setApiError] = useState(null);
   const [dayNotice, setDayNotice] = useState(null);
 
-  // 1. Fetch Doctor details & weekly shift configurations from PostgreSQL
   useEffect(() => {
     let isMounted = true;
     setIsLoadingDoctor(true);
@@ -89,7 +90,6 @@ export function DoctorAvailabilityPage() {
     };
   }, [identifier]);
 
-  // Generate 7 upcoming calendar days starting tomorrow
   const targetDateRange = useMemo(() => {
     const today = new Date();
     const days = [];
@@ -107,7 +107,6 @@ export function DoctorAvailabilityPage() {
   const startDateStr = targetDateRange[0]?.dateString;
   const endDateStr = targetDateRange[targetDateRange.length - 1]?.dateString;
 
-  // 2. Fetch 7-day availability range from backend
   const fetchAvailabilityRange = useCallback(async () => {
     if (!doctor) return;
     setIsLoadingRange(true);
@@ -146,7 +145,6 @@ export function DoctorAvailabilityPage() {
         });
         setRangeDays(mapped);
 
-        // Select the first selectable (open) day if none currently selected
         setSelectedDate((prevDate) => {
           const exists = mapped.some((d) => d.dateString === prevDate);
           if (exists) return prevDate;
@@ -168,7 +166,6 @@ export function DoctorAvailabilityPage() {
     }
   }, [doctor, fetchAvailabilityRange]);
 
-  // 3. When selectedDate changes, fetch live slots for that day from /api/schedules/availability/
   useEffect(() => {
     if (!doctor || !selectedDate) return;
     let isMounted = true;
@@ -202,7 +199,6 @@ export function DoctorAvailabilityPage() {
     };
   }, [doctor, selectedDate, rangeDays]);
 
-  // Loading state
   if (isLoadingDoctor) {
     return (
       <Container>
@@ -216,7 +212,6 @@ export function DoctorAvailabilityPage() {
     );
   }
 
-  // Not found state
   if (!doctor) {
     const errorBreadcrumbs = [
       { label: 'Home', to: '/' },
@@ -225,7 +220,7 @@ export function DoctorAvailabilityPage() {
     ];
 
     return (
-      <Container>
+      <Container className="py-4">
         <PageHeader
           title="Doctor Not Found"
           description="The requested medical specialist schedule could not be located."
@@ -236,10 +231,8 @@ export function DoctorAvailabilityPage() {
             title="Doctor Profile Not Found"
             message={`No physician schedule was found for identifier "${identifier}".`}
             action={
-              <Link to="/doctors">
-                <Button variant="primary" size="md">
-                  Return to Doctor Directory
-                </Button>
+              <Link to="/doctors" className="neu-btn neu-btn-primary">
+                Return to Doctor Directory
               </Link>
             }
           />
@@ -271,14 +264,13 @@ export function DoctorAvailabilityPage() {
   const isClosedDay = selectedDayObj.statusType === 'closed' || !selectedDayObj.isSelectable;
   const isLeaveDay = selectedDayObj.statusType === 'leave';
 
-  // Build weekly schedule lookup for table
   const weeklyShiftMap = {};
   dbSchedules.forEach((s) => {
     weeklyShiftMap[s.day_of_week] = s;
   });
 
   return (
-    <div className="doctor-availability-page">
+    <div className="doctor-availability-page py-4">
       <Container>
         {/* 1. Page Header */}
         <PageHeader
@@ -287,19 +279,17 @@ export function DoctorAvailabilityPage() {
           breadcrumbs={breadcrumbs}
         >
           <div className="d-flex flex-wrap gap-2">
-            <Link to={`/doctors/${doctorIdentifier}`}>
-              <Button variant="outline" size="sm">
-                View Full Profile
-              </Button>
+            <Link to={`/doctors/${doctorIdentifier}`} className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1">
+              <User size={14} />
+              <span>Full Profile</span>
             </Link>
             {isActive ? (
-              <Link to={`/appointments/book?doctor=${doctorIdentifier}`}>
-                <Button variant="secondary" size="sm">
-                  Book Consultation
-                </Button>
+              <Link to={`/appointments/book?doctor=${doctorIdentifier}`} className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center gap-1">
+                <Calendar size={14} />
+                <span>Book Consultation</span>
               </Link>
             ) : (
-              <span className="badge bg-secondary d-flex align-items-center px-3 py-1 text-white">
+              <span className="neu-badge neu-badge-neutral px-3 py-1">
                 Consultant Inactive
               </span>
             )}
@@ -307,41 +297,41 @@ export function DoctorAvailabilityPage() {
         </PageHeader>
 
         {/* 2. Doctor Info Card */}
-        <div className="hospital-card p-4 mb-4 bg-white">
+        <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
           <div className="row g-4 align-items-center">
             <div className="col-12 col-md-8">
               <div className="d-flex align-items-center gap-3">
-                <div className="doctor-avatar-box" aria-hidden="true">
+                <div className="doctor-avatar-box neu-inset flex-shrink-0" aria-hidden="true">
                   {doctor.photo || doctor.image_url ? (
                     <img src={doctor.photo || doctor.image_url} alt={doctor.name} />
                   ) : (
-                    <span>{doctor.initials || 'DR'}</span>
+                    <span className="fw-bold text-primary">{doctor.initials || 'DR'}</span>
                   )}
                 </div>
                 <div>
-                  <h2 className="h5 fw-bold text-dark mb-1">{doctor.name}</h2>
+                  <h2 className="h5 fw-bold text-body mb-1">{doctor.name}</h2>
                   <div className="small text-muted">
                     {doctor.specialty} &bull; {deptName}
                   </div>
                   <div className="small text-muted mt-1">
-                    Location: <strong>{doctor.consultation_location || 'Clinical OPD Suite'}</strong>
+                    Location: <strong className="text-body">{doctor.consultation_location || 'Clinical OPD Suite'}</strong>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="col-12 col-md-4">
-              <div className="p-3 bg-light border border-light rounded small">
+              <div className="p-3 neu-inset rounded-3 small text-muted">
                 <div>
-                  <span className="fw-semibold text-dark">Slot Duration: </span>
+                  <strong className="text-body">Slot Duration: </strong>
                   {slotDuration} minutes
                 </div>
                 <div className="mt-1">
-                  <span className="fw-semibold text-dark">Capacity: </span>
+                  <strong className="text-body">Capacity: </strong>
                   1 patient per slot (Row-locked)
                 </div>
                 <div className="mt-1">
-                  <span className="fw-semibold text-dark">Timezone: </span>
+                  <strong className="text-body">Timezone: </strong>
                   Asia/Kolkata (IST)
                 </div>
               </div>
@@ -349,11 +339,10 @@ export function DoctorAvailabilityPage() {
           </div>
         </div>
 
-        {/* Error notification if API failed */}
         {apiError && (
-          <div className="alert alert-warning py-2 px-3 mb-4 small d-flex justify-content-between align-items-center" role="alert">
-            <span>{apiError}</span>
-            <button type="button" className="btn btn-sm btn-outline-dark ms-2" onClick={fetchAvailabilityRange}>
+          <div className="neu-raised neu-surface p-3 mb-4 rounded-4 border-start border-4 border-warning d-flex justify-content-between align-items-center" role="alert">
+            <span className="text-muted small">{apiError}</span>
+            <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={fetchAvailabilityRange}>
               Retry
             </button>
           </div>
@@ -361,13 +350,13 @@ export function DoctorAvailabilityPage() {
 
         {/* 3. Date Selection Strip */}
         <section className="mb-4" aria-label="Upcoming Consultation Days">
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <h3 className="h6 fw-bold text-dark mb-0">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h3 className="h6 fw-bold text-body mb-0">
               Select an OPD Date to Preview Live Consultation Slots:
             </h3>
             {isLoadingRange && (
-              <span className="small text-muted">
-                <span className="spinner-border spinner-border-sm me-1" role="status" /> Updating schedule...
+              <span className="small text-muted d-flex align-items-center gap-1">
+                <span className="spinner-border spinner-border-sm" role="status" /> Updating...
               </span>
             )}
           </div>
@@ -375,23 +364,25 @@ export function DoctorAvailabilityPage() {
           <div className="row g-2">
             {rangeDays.map((day) => {
               const isSelected = day.dateString === selectedDate;
-              let badgeClass = 'hospital-badge-scheduled';
-              if (day.statusType === 'available') badgeClass = 'hospital-badge-confirmed';
-              else if (day.statusType === 'leave') badgeClass = 'hospital-badge-cancelled';
-              else if (day.statusType === 'closed') badgeClass = 'hospital-badge-cancelled';
+              let badgeStatus = 'neutral';
+              if (day.statusType === 'available') badgeStatus = 'success';
+              else if (day.statusType === 'leave') badgeStatus = 'danger';
+              else if (day.statusType === 'closed') badgeStatus = 'neutral';
 
               return (
                 <div key={day.dateString} className="col-6 col-sm-4 col-md-3 col-lg">
                   <button
                     type="button"
-                    className={`w-100 day-tab-btn ${isSelected ? 'active' : ''}`}
+                    className={`w-100 p-3 rounded-4 border-0 text-center transition-all ${
+                      isSelected ? 'neu-inset' : 'neu-raised neu-surface'
+                    }`}
                     onClick={() => setSelectedDate(day.dateString)}
                     aria-pressed={isSelected}
                   >
-                    <div className="fw-bold">{day.dayName.slice(0, 3)}</div>
-                    <div className="small">{day.displayDate}</div>
-                    <div className="mt-1">
-                      <span className={`hospital-badge ${badgeClass} text-nowrap`} style={{ fontSize: '0.65rem' }}>
+                    <div className="fw-bold text-body">{day.dayName.slice(0, 3)}</div>
+                    <div className="small text-muted">{day.displayDate}</div>
+                    <div className="mt-2">
+                      <span className={`neu-badge neu-badge-${badgeStatus} text-nowrap`} style={{ fontSize: '0.65rem' }}>
                         {day.status}
                       </span>
                     </div>
@@ -404,7 +395,7 @@ export function DoctorAvailabilityPage() {
 
         {/* 4. Slot Details Card */}
         <section
-          className="hospital-card p-4 mb-4 bg-white"
+          className="neu-raised neu-surface p-4 rounded-4 mb-4"
           aria-label={`Time slots for ${selectedDayObj.dayName}, ${selectedDayObj.displayDate}`}
         >
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom pb-3 mb-4">
@@ -419,10 +410,8 @@ export function DoctorAvailabilityPage() {
 
             <div>
               <span
-                className={`hospital-badge ${
-                  selectedDayObj.isSelectable
-                    ? 'hospital-badge-confirmed'
-                    : 'hospital-badge-cancelled'
+                className={`neu-badge ${
+                  selectedDayObj.isSelectable ? 'neu-badge-success' : 'neu-badge-danger'
                 } fs-6 px-3 py-1`}
               >
                 Status: {selectedDayObj.status}
@@ -437,9 +426,8 @@ export function DoctorAvailabilityPage() {
               <span className="text-muted small">Loading available consultation slots...</span>
             </div>
           ) : isLeaveDay ? (
-            /* On Leave View */
-            <div className="doctor-leave-alert p-4 border border-warning rounded bg-warning bg-opacity-10">
-              <h4 className="h6 fw-bold text-dark mb-1">Clinic Suspended — Physician On Scheduled Leave</h4>
+            <div className="neu-inset p-4 rounded-3 border-start border-4 border-warning">
+              <h4 className="h6 fw-bold text-body mb-1">Clinic Suspended — Physician On Scheduled Leave</h4>
               <p className="mb-2 small text-muted">
                 {doctor.name} is on scheduled leave on {selectedDayObj.displayDate}
                 {dayNotice ? ` (${dayNotice})` : ''}.
@@ -449,27 +437,25 @@ export function DoctorAvailabilityPage() {
               </p>
             </div>
           ) : isClosedDay ? (
-            /* Closed Day View */
-            <div className="p-4 bg-light border border-light rounded text-center">
-              <h4 className="h6 fw-bold text-dark mb-1">
+            <div className="p-4 neu-inset rounded-3 text-center">
+              <h4 className="h6 fw-bold text-body mb-1">
                 No Outpatient Clinic on {selectedDayObj.dayName}s
               </h4>
               <p className="small text-muted mb-2">
                 {dayNotice || `${doctor.name} does not hold outpatient OPD sessions on ${selectedDayObj.dayName}s.`}
               </p>
               <p className="small text-muted mb-0">
-                Please choose one of the available weekdays (Monday through Friday) from the schedule selector above.
+                Please choose one of the available weekdays from the schedule selector above.
               </p>
             </div>
           ) : slots.length > 0 ? (
-            /* Open Working Day with Slots */
             <div>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <span className="small text-muted fw-semibold">
                   Select a slot below to reserve consultation:
                 </span>
                 <span className="small text-muted">
-                  {slots.filter((s) => s.available).length} of {slots.length} slots available
+                  <strong className="text-success">{slots.filter((s) => s.available).length}</strong> of {slots.length} slots available
                 </span>
               </div>
 
@@ -477,15 +463,17 @@ export function DoctorAvailabilityPage() {
                 {slots.map((slot, index) => {
                   const isAvailable = Boolean(slot.available);
                   const isSelected = selectedSlotTime === slot.start_time;
-                  let cardClass = 'doctor-slot-card p-3 border rounded text-center position-relative';
-                  if (isSelected) cardClass += ' border-primary bg-primary bg-opacity-10 shadow-sm';
-                  else if (isAvailable) cardClass += ' border-success bg-white cursor-pointer';
-                  else cardClass += ' border-light bg-light opacity-75';
 
                   return (
                     <div key={index} className="col-6 col-sm-4 col-md-3">
                       <div
-                        className={cardClass}
+                        className={`p-3 rounded-3 text-center position-relative transition-all ${
+                          isSelected
+                            ? 'neu-inset border border-2 border-primary'
+                            : isAvailable
+                            ? 'neu-raised neu-surface cursor-pointer'
+                            : 'neu-inset opacity-50'
+                        }`}
                         style={{ cursor: isAvailable ? 'pointer' : 'not-allowed' }}
                         onClick={() => {
                           if (isAvailable) {
@@ -496,22 +484,20 @@ export function DoctorAvailabilityPage() {
                         tabIndex={isAvailable ? 0 : -1}
                         aria-pressed={isSelected}
                       >
-                        <div className="fw-bold text-dark">
+                        <div className="fw-bold text-body">
                           {formatTime12h(slot.start_time)}
                         </div>
                         <div className="small mt-1">
                           <span
-                            className={`badge ${
-                              isAvailable ? 'bg-success' : 'bg-secondary'
-                            }`}
-                            style={{ fontSize: '0.7rem' }}
+                            className={`neu-badge neu-badge-${isAvailable ? 'success' : 'neutral'}`}
+                            style={{ fontSize: '0.65rem' }}
                           >
                             {isAvailable ? 'Available' : (slot.reason || 'Booked')}
                           </span>
                         </div>
                         {isSelected && (
                           <div className="position-absolute top-0 end-0 p-1 text-primary">
-                            <span className="badge bg-primary rounded-pill">&check; Selected</span>
+                            <CheckCircle2 size={16} />
                           </div>
                         )}
                       </div>
@@ -521,14 +507,14 @@ export function DoctorAvailabilityPage() {
               </div>
 
               {/* Action Strip */}
-              <div className="p-3 bg-light border border-light rounded d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+              <div className="p-3 neu-inset rounded-3 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
                 <div className="small text-muted">
                   {selectedSlotTime ? (
                     <span>
-                      Selected Time: <strong>{formatTime12h(selectedSlotTime)}</strong> on {selectedDayObj.displayDate}
+                      Selected Time: <strong className="text-body">{formatTime12h(selectedSlotTime)}</strong> on {selectedDayObj.displayDate}
                     </span>
                   ) : (
-                    <span>Click any available green slot above to pre-select your time, or proceed to booking.</span>
+                    <span>Click any available slot above to pre-select your time, or proceed to booking.</span>
                   )}
                 </div>
 
@@ -538,21 +524,21 @@ export function DoctorAvailabilityPage() {
                       selectedSlotTime ? `&time=${selectedSlotTime}` : ''
                     }`}
                   >
-                    <Button variant="secondary" size="md">
-                      {selectedSlotTime ? `Book Slot (${formatTime12h(selectedSlotTime)}) &rarr;` : 'Proceed to Booking &rarr;'}
-                    </Button>
+                    <button type="button" className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1">
+                      <span>{selectedSlotTime ? `Book Slot (${formatTime12h(selectedSlotTime)})` : 'Proceed to Booking'}</span>
+                      <ChevronRight size={15} />
+                    </button>
                   </Link>
                 ) : (
-                  <span className="badge bg-secondary p-2 text-white">
+                  <span className="neu-badge neu-badge-neutral p-2">
                     Consultant Inactive
                   </span>
                 )}
               </div>
             </div>
           ) : (
-            /* Empty slots state */
-            <div className="p-4 bg-light border border-light rounded text-center">
-              <h4 className="h6 fw-bold text-dark mb-1">No Consultation Slots Available</h4>
+            <div className="p-4 neu-inset rounded-3 text-center">
+              <h4 className="h6 fw-bold text-body mb-1">No Consultation Slots Available</h4>
               <p className="small text-muted mb-0">
                 All appointment slots for {selectedDayObj.displayDate} have been reserved. Please pick another date.
               </p>
@@ -561,13 +547,13 @@ export function DoctorAvailabilityPage() {
         </section>
 
         {/* 5. Weekly OPD Reference Table */}
-        <section className="hospital-card p-4 mb-5 bg-white" aria-label="Weekly OPD Reference">
+        <section className="neu-raised neu-surface p-4 rounded-4 mb-5" aria-label="Weekly OPD Reference">
           <h3 className="h6 fw-bold text-primary mb-3">
-            Centralized Weekly Outpatient Shift Roster (PostgreSQL Database)
+            Centralized Weekly Outpatient Shift Roster
           </h3>
 
-          <div className="table-responsive border border-light rounded">
-            <table className="dept-schedule-table table table-hover mb-0">
+          <div className="neu-table-container">
+            <table className="neu-table">
               <thead>
                 <tr>
                   <th scope="col" style={{ width: '25%' }}>Day of Week</th>
@@ -584,7 +570,7 @@ export function DoctorAvailabilityPage() {
 
                     return (
                       <tr key={dayName}>
-                        <td className="fw-semibold text-dark">{dayName}</td>
+                        <td className="fw-semibold text-body">{dayName}</td>
                         <td>
                           {isWorking
                             ? `${formatTime12h(shift.start_time)} - ${formatTime12h(shift.end_time)}`
@@ -597,8 +583,8 @@ export function DoctorAvailabilityPage() {
                         </td>
                         <td>
                           <span
-                            className={`hospital-badge ${
-                              isWorking ? 'hospital-badge-confirmed' : 'hospital-badge-cancelled'
+                            className={`neu-badge ${
+                              isWorking ? 'neu-badge-success' : 'neu-badge-neutral'
                             }`}
                           >
                             {isWorking ? 'Active OPD' : 'Closed'}

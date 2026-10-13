@@ -2,18 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 import StatusBadge from '../../components/common/StatusBadge';
 import PatientNav from '../../components/patient/PatientNav';
 import usePatientSession from '../../hooks/usePatientSession';
 import appointmentService from '../../services/appointmentService';
+import {
+  Calendar,
+  Clock,
+  User,
+  MapPin,
+  Stethoscope,
+  Building2,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowLeft,
+  X,
+} from 'lucide-react';
 
 /**
  * Hospital Platform — Appointment Details Page
- * View individual consultation reservation with doctor affiliation, clinic location,
- * timing, intake reason, and accessible cancellation controls.
- * Centered within the standard patient portal container (max-width: 1040px).
+ * View individual consultation reservation with Neumorphic design.
  */
 export function AppointmentDetailPage() {
   const { t } = useTranslation();
@@ -25,34 +34,47 @@ export function AppointmentDetailPage() {
   const [remoteAppointment, setRemoteAppointment] = useState(null);
   const [isLoading, setIsLoading] = useState(!sessionAppointment);
 
-  useEffect(() => {
-    if (!sessionAppointment && reference && isAuthenticated) {
-      let isMounted = true;
-      setIsLoading(true);
-
-      appointmentService
-        .getAppointment(reference)
-        .then((data) => {
-          if (isMounted && data) {
-            setRemoteAppointment(data);
-          }
-        })
-        .catch((err) => {
-          console.warn(`Could not load appointment ${reference} from API:`, err);
-        })
-        .finally(() => {
-          if (isMounted) setIsLoading(false);
-        });
-
-      return () => {
-        isMounted = false;
-      };
-    } else if (!isAuthenticated) {
+  const fetchRemote = React.useCallback(() => {
+    if (!reference || !isAuthenticated) {
       setIsLoading(false);
+      return;
     }
-  }, [sessionAppointment, reference, isAuthenticated]);
+    appointmentService
+      .getAppointment(reference)
+      .then((data) => {
+        if (data) {
+          setRemoteAppointment(data);
+        }
+      })
+      .catch((err) => {
+        console.warn(`Could not load appointment ${reference} from API:`, err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [reference, isAuthenticated]);
 
-  const appointment = sessionAppointment || remoteAppointment;
+  useEffect(() => {
+    fetchRemote();
+  }, [fetchRemote]);
+
+  useEffect(() => {
+    const handleFocus = () => fetchRemote();
+    const handleEvent = (e) => {
+      const ref = e.detail?.reference;
+      if (!ref || ref.toLowerCase() === reference?.toLowerCase()) {
+        fetchRemote();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('eglesora-appointment-updated', handleEvent);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('eglesora-appointment-updated', handleEvent);
+    };
+  }, [fetchRemote, reference]);
+
+  const appointment = remoteAppointment || sessionAppointment;
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [feedbackNotice, setFeedbackNotice] = useState(null);
@@ -74,12 +96,12 @@ export function AppointmentDetailPage() {
             breadcrumbs={breadcrumbs}
           />
           <PatientNav />
-          <div className="patient-card bg-white border rounded-3 p-4 p-md-5 text-center shadow-sm">
-            <h3 className="fs-5 fw-bold text-dark mb-2">Sign In to View Appointment Details</h3>
+          <div className="neu-raised neu-surface rounded-4 p-4 p-md-5 text-center">
+            <h3 className="fs-5 fw-bold text-body mb-2">Sign In to View Appointment Details</h3>
             <p className="text-muted small mx-auto mb-4" style={{ maxWidth: '480px' }}>
               Please sign in to verify your identity and view the full details of appointment reference <strong>{reference}</strong>.
             </p>
-            <Link to="/patient/login" className="hospital-btn hospital-btn-primary px-4 py-2">
+            <Link to="/patient/login" className="neu-btn neu-btn-primary px-4 py-2">
               Sign In to Patient Portal
             </Link>
           </div>
@@ -123,10 +145,8 @@ export function AppointmentDetailPage() {
               title="Appointment Not Found or Access Denied"
               message={`We could not locate any consultation booking matching reference "${reference}" associated with your account.`}
               action={
-                <Link to="/my-appointments">
-                  <Button variant="primary" size="sm">
-                    Return to Appointments
-                  </Button>
+                <Link to="/my-appointments" className="neu-btn neu-btn-primary">
+                  Return to Appointments
                 </Link>
               }
             />
@@ -136,8 +156,9 @@ export function AppointmentDetailPage() {
     );
   }
 
-  const isCancelled = appointment.status === 'Cancelled';
-  const isCompleted = appointment.status === 'Completed';
+  const statusUpper = (appointment.status || '').toUpperCase();
+  const isCancelled = statusUpper === 'CANCELLED' || statusUpper === 'NO_SHOW';
+  const isCompleted = statusUpper === 'COMPLETED';
   const isActionable = !isCancelled && !isCompleted;
 
   const handleConfirmCancel = () => {
@@ -154,7 +175,6 @@ export function AppointmentDetailPage() {
   return (
     <div className="appointment-detail-page py-4">
       <div className="patient-portal-container">
-        {/* Page Header */}
         <PageHeader
           title={`Appointment: ${appointment.reference}`}
           description={`Consultation file with ${appointment.doctorName} (${appointment.department})`}
@@ -162,27 +182,30 @@ export function AppointmentDetailPage() {
           className="mb-3"
         />
 
-        {/* Patient Identity Strip & Tab Navigation */}
         <PatientNav />
 
-        {/* Feedback Alert if Action Performed */}
         {feedbackNotice && (
-          <div className="alert alert-success alert-dismissible fade show mb-4 small py-2 px-3" role="alert">
-            {feedbackNotice}
+          <div className="neu-inset p-3 rounded-4 mb-4 border-start border-4 border-success small text-success d-flex justify-content-between align-items-center" role="alert">
+            <span className="d-flex align-items-center gap-2">
+              <CheckCircle2 size={16} />
+              <span>{feedbackNotice}</span>
+            </span>
             <button
               type="button"
-              className="btn-close py-2"
+              className="btn btn-sm btn-link text-muted p-0"
               onClick={() => setFeedbackNotice(null)}
               aria-label="Close"
-            />
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
 
         {/* Main Details Card */}
-        <div className="patient-card bg-white border rounded-3 p-3 p-md-4 mb-5 shadow-sm">
+        <div className="neu-raised neu-surface rounded-4 p-4 p-md-5 mb-5">
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom pb-3 mb-4">
             <div>
-              <span className="text-uppercase small fw-bold text-muted">Booking Reference</span>
+              <span className="neu-eyebrow text-uppercase fw-bold text-muted">Booking Reference</span>
               <div className="h4 fw-bold text-primary mb-0 font-monospace">{appointment.reference}</div>
             </div>
 
@@ -194,16 +217,18 @@ export function AppointmentDetailPage() {
           <div className="row g-3 g-md-4 mb-4">
             {/* Attending Specialist */}
             <div className="col-12 col-md-6">
-              <div className="p-3 bg-slate-50 border rounded-2 h-100">
-                <div className="text-uppercase small fw-bold text-primary mb-2">
-                  {t('patient.doctor')}
+              <div className="neu-inset p-3 rounded-4 h-100">
+                <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2 d-flex align-items-center gap-1">
+                  <Stethoscope size={14} />
+                  <span>{t('patient.doctor')}</span>
                 </div>
-                <h3 className="h6 fw-bold text-dark mb-1">{appointment.doctorName}</h3>
+                <h3 className="h6 fw-bold text-body mb-1">{appointment.doctorName}</h3>
                 <div className="small text-muted">{appointment.specialty}</div>
                 <div className="small text-muted mb-2">{appointment.department}</div>
 
-                <div className="small border-top pt-2">
-                  <span className="fw-semibold text-dark">{t('patient.location')}: </span>
+                <div className="small border-top pt-2 d-flex align-items-center gap-1">
+                  <MapPin size={13} className="text-primary flex-shrink-0" />
+                  <strong className="text-body">{t('patient.location')}: </strong>
                   <span className="text-muted">{appointment.location}</span>
                 </div>
 
@@ -222,11 +247,12 @@ export function AppointmentDetailPage() {
 
             {/* Schedule & Timing */}
             <div className="col-12 col-md-6">
-              <div className="p-3 bg-slate-50 border rounded-2 h-100">
-                <div className="text-uppercase small fw-bold text-primary mb-2">
-                  {t('patient.time')}
+              <div className="neu-inset p-3 rounded-4 h-100">
+                <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2 d-flex align-items-center gap-1">
+                  <Calendar size={14} />
+                  <span>{t('patient.time')}</span>
                 </div>
-                <div className="fw-bold text-dark">
+                <div className="fw-bold text-body">
                   {appointment.dayName ? `${appointment.dayName}, ` : ''}{appointment.date}
                 </div>
                 <div className="fw-bold text-primary fs-5 my-1">{appointment.time}</div>
@@ -242,26 +268,27 @@ export function AppointmentDetailPage() {
 
             {/* Patient Intake Information */}
             <div className="col-12">
-              <div className="p-3 bg-slate-50 border rounded-2">
-                <div className="text-uppercase small fw-bold text-primary mb-2">
-                  Patient Intake Record
+              <div className="neu-inset p-3 rounded-4">
+                <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2 d-flex align-items-center gap-1">
+                  <User size={14} />
+                  <span>Patient Intake Record</span>
                 </div>
-                <div className="row g-2 small">
+                <div className="row g-2 small text-muted">
                   <div className="col-12 col-sm-6">
-                    <span className="fw-semibold text-dark">{t('patient.fullName')}: </span>
-                    <span className="text-muted">{appointment.patient?.fullName}</span>
+                    <strong className="text-body">{t('patient.fullName')}: </strong>
+                    <span>{appointment.patient?.fullName}</span>
                   </div>
                   <div className="col-12 col-sm-6">
-                    <span className="fw-semibold text-dark">{t('patient.mobile')}: </span>
-                    <span className="text-muted">{appointment.patient?.mobile}</span>
+                    <strong className="text-body">{t('patient.mobile')}: </strong>
+                    <span>{appointment.patient?.mobile}</span>
                   </div>
                   <div className="col-12 col-sm-6">
-                    <span className="fw-semibold text-dark">{t('patient.email')}: </span>
-                    <span className="text-muted">{appointment.patient?.email}</span>
+                    <strong className="text-body">{t('patient.email')}: </strong>
+                    <span>{appointment.patient?.email}</span>
                   </div>
                   <div className="col-12 col-sm-6">
-                    <span className="fw-semibold text-dark">{t('patient.reason')}: </span>
-                    <span className="text-muted">{appointment.patient?.reasonForVisit}</span>
+                    <strong className="text-body">{t('patient.reason')}: </strong>
+                    <span>{appointment.patient?.reasonForVisit}</span>
                   </div>
                 </div>
               </div>
@@ -270,20 +297,21 @@ export function AppointmentDetailPage() {
 
           {/* Action Buttons */}
           <div className="d-flex flex-column flex-sm-row gap-2 pt-3 border-top justify-content-between align-items-stretch align-items-sm-center">
-            <Link to="/my-appointments" className="w-100 w-sm-auto text-decoration-none">
-              <Button variant="outline" size="sm" className="w-100 justify-content-center">
-                &larr; Back to Dashboard
-              </Button>
+            <Link to="/my-appointments" className="text-decoration-none">
+              <button type="button" className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1">
+                <ArrowLeft size={14} />
+                <span>Back to Dashboard</span>
+              </button>
             </Link>
 
             {isActionable && (
               <div className="d-flex flex-column flex-sm-row gap-2">
-                <Button variant="outline" size="sm" onClick={handleReschedule} className="justify-content-center">
+                <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={handleReschedule}>
                   {t('patient.reschedule')}
-                </Button>
+                </button>
                 <button
                   type="button"
-                  className="btn btn-sm btn-outline-danger"
+                  className="neu-btn neu-btn-outline text-danger neu-btn-sm"
                   onClick={() => setShowCancelModal(true)}
                 >
                   {t('patient.cancel')}
@@ -297,38 +325,41 @@ export function AppointmentDetailPage() {
         {showCancelModal && (
           <div
             className="modal show d-block"
-            style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)' }}
+            style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
             role="dialog"
             aria-modal="true"
           >
             <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '440px' }}>
-              <div className="modal-content border-0 shadow">
-                <div className="modal-header border-bottom">
-                  <h5 className="modal-title fs-6 fw-bold text-danger">
-                    {t('patient.confirmCancel')}
+              <div className="neu-raised neu-surface rounded-4 overflow-hidden border-0">
+                <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
+                  <h5 className="modal-title fs-6 fw-bold text-danger mb-0 d-flex align-items-center gap-2">
+                    <AlertTriangle size={18} />
+                    <span>{t('patient.confirmCancel')}</span>
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="btn btn-sm btn-link text-muted p-0"
                     onClick={() => setShowCancelModal(false)}
                     aria-label="Close"
-                  />
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
-                <div className="modal-body p-4">
-                  <p className="small text-secondary mb-3">
+                <div className="p-4">
+                  <p className="small text-muted mb-3">
                     {t('patient.cancelModalText')}
                   </p>
-                  <div className="cancel-confirm-box p-3 rounded-2 bg-light border mb-2 small">
-                    <div className="mb-1"><strong>Reference: </strong>{appointment.reference}</div>
-                    <div className="mb-1"><strong>{t('patient.doctor')}: </strong>{appointment.doctorName}</div>
-                    <div><strong>{t('patient.time')}: </strong>{appointment.date} at {appointment.time}</div>
+                  <div className="neu-inset p-3 rounded-3 small text-muted mb-2">
+                    <div className="mb-1"><strong className="text-body">Reference: </strong><span className="font-monospace">{appointment.reference}</span></div>
+                    <div className="mb-1"><strong className="text-body">{t('patient.doctor')}: </strong>{appointment.doctorName}</div>
+                    <div><strong className="text-body">{t('patient.time')}: </strong>{appointment.date} at {appointment.time}</div>
                   </div>
                 </div>
-                <div className="modal-footer border-top bg-light py-2 px-3">
-                  <Button variant="outline" size="sm" onClick={() => setShowCancelModal(false)}>
+                <div className="p-3 border-top d-flex justify-content-end gap-2">
+                  <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={() => setShowCancelModal(false)}>
                     {t('patient.keepAppointment')}
-                  </Button>
-                  <button type="button" className="btn btn-sm btn-danger px-3" onClick={handleConfirmCancel}>
+                  </button>
+                  <button type="button" className="neu-btn neu-btn-outline text-danger neu-btn-sm px-3" onClick={handleConfirmCancel}>
                     {t('patient.confirmCancel')}
                   </button>
                 </div>

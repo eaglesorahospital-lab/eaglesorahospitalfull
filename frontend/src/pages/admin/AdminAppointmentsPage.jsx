@@ -1,14 +1,30 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { 
+  CheckCircle2, 
+  Clock, 
+  Calendar, 
+  AlertCircle, 
+  X, 
+  Eye, 
+  Edit3, 
+  CalendarClock, 
+  Ban, 
+  Check, 
+  RotateCw,
+  Building2,
+  User,
+  Phone,
+  Mail,
+  FileText
+} from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import RoleRestrictedNotice from '../../components/admin/RoleRestrictedNotice';
 import doctorService from '../../services/doctorService';
 import appointmentService from '../../services/appointmentService';
-import { INITIAL_DEMO_APPOINTMENTS } from '../../data/adminData';
-import { DEMO_DOCTORS, DEMO_DEPARTMENTS } from '../../data/hospitalData';
+import { DEMO_DEPARTMENTS } from '../../data/hospitalData';
 
 const PDF_STATUSES = [
   'ALL',
@@ -22,9 +38,9 @@ const PDF_STATUSES = [
 ];
 
 /**
- * Hospital Platform — Admin Appointments Management Page (Phase 8)
- * Operational queue and record tracking for patient consultations.
- * Supports filtering by status, doctor, department, type; status transitions; and local cancellation/rescheduling.
+ * Hospital Platform — Admin Appointments Management Page (Neumorphic Redesign)
+ * Clinical Appointment Registry providing queue management,
+ * status workflows (REQUESTED -> CONFIRMED), rescheduling, and consultation file viewing.
  */
 export function AdminAppointmentsPage() {
   const { currentRole, setRole } = useOutletContext() || {};
@@ -51,6 +67,21 @@ export function AdminAppointmentsPage() {
   const [doctorFilter, setDoctorFilter] = useState('ALL');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [doctorsList, setDoctorsList] = useState([]);
+
+  const fetchAppointments = () => {
+    setIsLoading(true);
+    appointmentService
+      .getAppointments({ page_size: 100 })
+      .then((serverApts) => {
+        setAppointmentsList(serverApts || []);
+      })
+      .catch((err) => {
+        console.warn('Could not load appointments from backend API in AdminAppointmentsPage:', err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -89,6 +120,8 @@ export function AdminAppointmentsPage() {
   const [cancelModalAppointment, setCancelModalAppointment] = useState(null);
   const [rescheduleModalAppointment, setRescheduleModalAppointment] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
+  const [processingReference, setProcessingReference] = useState(null);
+  const [isStatusSubmitting, setIsStatusSubmitting] = useState(false);
 
   // Status modal form state
   const [newStatus, setNewStatus] = useState('CONFIRMED');
@@ -103,58 +136,160 @@ export function AdminAppointmentsPage() {
     { label: 'Appointment Registry' },
   ];
 
-  // Filtered list
+  // Filtered list with defensive null-safety across all fields
   const filteredAppointments = useMemo(() => {
-    return appointmentsList.filter((apt) => {
-      const matchSearch =
-        searchTerm === '' ||
-        apt.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.patientContact.includes(searchTerm) ||
-        apt.doctorName.toLowerCase().includes(searchTerm.toLowerCase());
+    return (appointmentsList || []).filter((apt) => {
+      if (!apt) return false;
+      const term = (searchTerm || '').trim().toLowerCase();
+      const ref = String(apt.reference || '').toLowerCase();
+      const patientName = String(apt.patientName || '').toLowerCase();
+      const patientContact = String(apt.patientContact || '');
+      const doctorName = String(apt.doctorName || '').toLowerCase();
 
+      const matchSearch =
+        term === '' ||
+        ref.includes(term) ||
+        patientName.includes(term) ||
+        patientContact.toLowerCase().includes(term) ||
+        doctorName.includes(term);
+
+      const aptStatus = String(apt.status || '').toUpperCase();
       const matchStatus =
-        statusFilter === 'ALL' || apt.status.toUpperCase() === statusFilter.toUpperCase();
+        statusFilter === 'ALL' || aptStatus === statusFilter.toUpperCase();
 
       const matchDept =
-        departmentFilter === 'ALL' || apt.department === departmentFilter;
+        departmentFilter === 'ALL' || String(apt.department || '') === departmentFilter;
 
       const matchDoctor =
-        doctorFilter === 'ALL' || String(apt.doctorId) === String(doctorFilter);
+        doctorFilter === 'ALL' || String(apt.doctorId ?? '') === String(doctorFilter);
 
       const matchType =
-        typeFilter === 'ALL' || apt.type === typeFilter;
+        typeFilter === 'ALL' || String(apt.type || '') === typeFilter;
 
       return matchSearch && matchStatus && matchDept && matchDoctor && matchType;
     });
   }, [appointmentsList, searchTerm, statusFilter, departmentFilter, doctorFilter, typeFilter]);
 
+  // Handle Quick Approve
+  const handleQuickApprove = async (apt) => {
+    if (!apt || !apt.reference || processingReference === apt.reference) return;
+    setProcessingReference(apt.reference);
+    try {
+      const updated = await appointmentService.approveAppointment(apt.reference);
+      const safeUpdated = updated || {};
+
+      setAppointmentsList((prev) =>
+        prev.map((item) => {
+          if (item.reference !== apt.reference) return item;
+          return {
+            ...item,
+            ...safeUpdated,
+            reference: safeUpdated.reference || item.reference,
+            patientName: safeUpdated.patientName || item.patientName,
+            patientContact: safeUpdated.patientContact || item.patientContact,
+            patientEmail: safeUpdated.patientEmail || item.patientEmail,
+            doctorName: safeUpdated.doctorName || item.doctorName,
+            specialty: safeUpdated.specialty || item.specialty,
+            department: safeUpdated.department || item.department,
+            date: safeUpdated.date || item.date,
+            time: safeUpdated.time || item.time,
+            type: safeUpdated.type || item.type,
+            location: safeUpdated.location || item.location,
+            status: 'CONFIRMED',
+            rawStatus: 'CONFIRMED',
+          };
+        })
+      );
+
+      if (viewAppointment && viewAppointment.reference === apt.reference) {
+        setViewAppointment((prev) => ({
+          ...prev,
+          ...safeUpdated,
+          reference: safeUpdated.reference || prev.reference,
+          patientName: safeUpdated.patientName || prev.patientName,
+          patientContact: safeUpdated.patientContact || prev.patientContact,
+          patientEmail: safeUpdated.patientEmail || prev.patientEmail,
+          doctorName: safeUpdated.doctorName || prev.doctorName,
+          specialty: safeUpdated.specialty || prev.specialty,
+          department: safeUpdated.department || prev.department,
+          date: safeUpdated.date || prev.date,
+          time: safeUpdated.time || prev.time,
+          type: safeUpdated.type || prev.type,
+          location: safeUpdated.location || prev.location,
+          status: 'CONFIRMED',
+          rawStatus: 'CONFIRMED',
+        }));
+      }
+
+      setActionNotice(`Appointment ${apt.reference} successfully approved and confirmed.`);
+    } catch (err) {
+      setActionNotice(`Approval failed: ${err.message || 'Please verify network or administrator permissions.'}`);
+    } finally {
+      setProcessingReference(null);
+    }
+  };
+
   // Handle Update Status
   const handleApplyStatusChange = async (e) => {
     e.preventDefault();
-    if (!statusModalAppointment) return;
+    if (!statusModalAppointment || isStatusSubmitting) return;
+
+    setIsStatusSubmitting(true);
+    const targetRef = statusModalAppointment.reference;
 
     try {
       const updated = await appointmentService.updateAppointmentStatus(
-        statusModalAppointment.reference,
+        targetRef,
         newStatus,
         statusNote
       );
+      const safeUpdated = updated || {};
+
       setAppointmentsList((prev) =>
-        prev.map((apt) =>
-          apt.reference === statusModalAppointment.reference ? { ...apt, ...updated } : apt
-        )
+        prev.map((apt) => {
+          if (apt.reference !== targetRef) return apt;
+          return {
+            ...apt,
+            ...safeUpdated,
+            reference: safeUpdated.reference || apt.reference,
+            patientName: safeUpdated.patientName || apt.patientName,
+            patientContact: safeUpdated.patientContact || apt.patientContact,
+            doctorName: safeUpdated.doctorName || apt.doctorName,
+            department: safeUpdated.department || apt.department,
+            date: safeUpdated.date || apt.date,
+            time: safeUpdated.time || apt.time,
+            status: (safeUpdated.status || newStatus).toUpperCase(),
+            rawStatus: safeUpdated.rawStatus || newStatus,
+            notes: statusNote
+              ? `${apt.notes || ''} [Status note: ${statusNote}]`.trim()
+              : safeUpdated.notes || apt.notes,
+          };
+        })
       );
+
+      if (viewAppointment && viewAppointment.reference === targetRef) {
+        setViewAppointment((prev) => ({
+          ...prev,
+          ...safeUpdated,
+          reference: safeUpdated.reference || prev.reference,
+          patientName: safeUpdated.patientName || prev.patientName,
+          doctorName: safeUpdated.doctorName || prev.doctorName,
+          status: (safeUpdated.status || newStatus).toUpperCase(),
+          rawStatus: safeUpdated.rawStatus || newStatus,
+        }));
+      }
+
       setActionNotice(
-        `Appointment ${statusModalAppointment.reference} status changed to ${newStatus} in database.`
+        `Appointment ${targetRef} status changed to ${newStatus} in database.`
       );
     } catch (err) {
       setAppointmentsList((prev) =>
         prev.map((apt) =>
-          apt.reference === statusModalAppointment.reference
+          apt.reference === targetRef
             ? {
                 ...apt,
-                status: newStatus,
+                status: newStatus.toUpperCase(),
+                rawStatus: newStatus,
                 notes: statusNote
                   ? `${apt.notes || ''} [Status note: ${statusNote}]`.trim()
                   : apt.notes,
@@ -163,12 +298,13 @@ export function AdminAppointmentsPage() {
         )
       );
       setActionNotice(
-        `Appointment ${statusModalAppointment.reference} status changed to ${newStatus} (${err.message || 'Updated locally'}).`
+        `Appointment ${targetRef} status changed to ${newStatus} (${err.message || 'Updated locally'}).`
       );
+    } finally {
+      setIsStatusSubmitting(false);
+      setStatusModalAppointment(null);
+      setStatusNote('');
     }
-
-    setStatusModalAppointment(null);
-    setStatusNote('');
   };
 
   // Handle Cancel Appointment
@@ -263,28 +399,51 @@ export function AdminAppointmentsPage() {
   };
 
   return (
-    <div>
+    <div className="admin-appointments-view">
       <PageHeader
         title="Clinical Appointment Registry"
-        description="Outpatient scheduling queue, check-in verification, status workflows, and consultation files."
+        description="Outpatient scheduling queue, check-in verification, triage workflows, and consultation management."
         breadcrumbs={breadcrumbs}
-      />
+      >
+        <button
+          type="button"
+          className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-2"
+          onClick={fetchAppointments}
+          disabled={isLoading}
+        >
+          <RotateCw size={14} className={isLoading ? 'spin-anim' : ''} />
+          Sync Registry
+        </button>
+      </PageHeader>
 
       {/* Action Notice */}
       {actionNotice && (
-        <div className="alert alert-success py-2 px-3 mb-3 small d-flex justify-content-between align-items-center">
-          <span>{actionNotice}</span>
+        <div 
+          className="neu-card p-3 mb-4 d-flex justify-content-between align-items-center"
+          style={{ 
+            borderRadius: '14px', 
+            background: 'var(--hospital-surface)',
+            borderLeft: '4px solid var(--neu-success)'
+          }}
+        >
+          <div className="d-flex align-items-center gap-2 small">
+            <CheckCircle2 size={16} color="var(--neu-success)" />
+            <span style={{ color: 'var(--hospital-primary-navy)', fontWeight: 600 }}>{actionNotice}</span>
+          </div>
           <button
             type="button"
-            className="btn-close btn-close-sm"
+            className="neu-btn-icon"
+            style={{ width: '28px', height: '28px', padding: 0 }}
             onClick={() => setActionNotice(null)}
-          />
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
       {/* Filter and Search Bar */}
       <AdminFilterBar
-        searchPlaceholder="Search reference, patient, mobile, or doctor..."
+        searchPlaceholder="Search reference, patient name, contact, doctor..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         hasActiveFilters={
@@ -304,7 +463,7 @@ export function AdminAppointmentsPage() {
       >
         <div className="col-12 col-sm-6 col-md-2">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             aria-label="Filter by appointment status"
@@ -319,7 +478,7 @@ export function AdminAppointmentsPage() {
 
         <div className="col-12 col-sm-6 col-md-3">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
             aria-label="Filter by department"
@@ -335,7 +494,7 @@ export function AdminAppointmentsPage() {
 
         <div className="col-12 col-sm-6 col-md-3">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={doctorFilter}
             onChange={(e) => setDoctorFilter(e.target.value)}
             aria-label="Filter by doctor"
@@ -351,91 +510,142 @@ export function AdminAppointmentsPage() {
       </AdminFilterBar>
 
       {/* Appointments Table */}
-      <div className="hospital-card p-0 mb-4 overflow-hidden">
-        <div className="admin-table-container">
-          <table className="admin-table">
+      <div 
+        className="neu-card p-0 mb-4 overflow-hidden" 
+        style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+      >
+        <div className="neu-table-container">
+          <table className="neu-table">
             <thead>
               <tr>
-                <th>Reference</th>
-                <th>Patient</th>
-                <th>Consultant & Department</th>
-                <th>Date & Slot</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th className="text-end">Actions</th>
+                <th className="col-apt-ref">Reference</th>
+                <th className="col-apt-patient">Patient Details</th>
+                <th className="col-apt-doctor">Consultant & Specialty</th>
+                <th className="col-apt-slot">Date & Slot</th>
+                <th className="col-apt-type">Type</th>
+                <th className="col-apt-status">Status</th>
+                <th className="col-apt-actions text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredAppointments.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-4 text-muted">
-                    No appointments match the selected filters.
+                  <td colSpan="7" className="text-center py-5 text-muted">
+                    <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+                    <div>Loading clinical appointment registry...</div>
+                  </td>
+                </tr>
+              ) : filteredAppointments.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-5 text-muted">
+                    <AlertCircle size={28} className="mb-2 text-muted" />
+                    <div className="fw-semibold">No appointments match the selected filters.</div>
+                    <div className="small text-muted mt-1">Try resetting your filters or search keywords.</div>
                   </td>
                 </tr>
               ) : (
                 filteredAppointments.map((apt) => (
                   <tr key={apt.reference}>
-                    <td>
-                      <div className="fw-bold">
-                        <code>{apt.reference}</code>
+                    <td className="col-apt-ref">
+                      <span 
+                        className="px-2.5 py-1 rounded small fw-bold font-monospace d-inline-block mb-1"
+                        style={{ 
+                          background: 'var(--hospital-surface)', 
+                          boxShadow: 'var(--neu-inset)',
+                          fontSize: '0.785rem',
+                          color: 'var(--hospital-medical-blue)'
+                        }}
+                      >
+                        {apt.reference}
+                      </span>
+                      <div className="small text-muted" style={{ fontSize: '0.75rem' }}>
+                        {apt.createdAt ? `Booked ${apt.createdAt}` : 'Online Booking'}
                       </div>
-                      <span className="small text-muted">{apt.createdAt}</span>
                     </td>
-                    <td>
-                      <div className="fw-semibold">{apt.patientName}</div>
-                      <span className="small text-muted">{apt.patientContact}</span>
+                    <td className="col-apt-patient">
+                      <div className="fw-semibold text-truncate" style={{ maxWidth: '190px' }}>
+                        {apt.patientName}
+                      </div>
+                      <div className="small text-muted d-block mt-0.5">{apt.patientContact}</div>
                     </td>
-                    <td>
-                      <div className="small fw-semibold">{apt.doctorName}</div>
-                      <span className="small text-muted">{apt.department}</span>
+                    <td className="col-apt-doctor">
+                      <div className="small fw-semibold text-primary">{apt.doctorName}</div>
+                      <span className="small text-muted d-block mt-0.5">{apt.department}</span>
                     </td>
-                    <td>
-                      <div className="small fw-semibold">{apt.date}</div>
-                      <span className="small text-muted">{apt.time} ({apt.duration})</span>
+                    <td className="col-apt-slot">
+                      <div className="small fw-semibold text-body">{apt.date}</div>
+                      <span className="small text-muted d-block mt-0.5">{apt.time} ({apt.duration || '30m'})</span>
                     </td>
-                    <td>
-                      <span className="small text-muted">{apt.type}</span>
+                    <td className="col-apt-type">
+                      <span className="small text-muted">{apt.type || 'Consultation'}</span>
                     </td>
-                    <td>
+                    <td className="col-apt-status">
                       <AdminStatusBadge status={apt.status} />
                     </td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => setViewAppointment(apt)}
-                      >
-                        Details
-                      </button>
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => {
-                          setStatusModalAppointment(apt);
-                          setNewStatus(apt.status);
-                        }}
-                      >
-                        Status
-                      </button>
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => {
-                          setRescheduleModalAppointment(apt);
-                          setRescheduleDate(apt.date);
-                        }}
-                      >
-                        Reschedule
-                      </button>
-                      {apt.status !== 'CANCELLED' && (
+                    <td className="col-apt-actions text-end text-nowrap">
+                      <div className="neu-action-btns">
+                        {apt.status === 'REQUESTED' && (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-primary neu-btn-sm"
+                            style={{ 
+                              background: '#16845B', 
+                              color: '#ffffff',
+                              boxShadow: '0 4px 10px rgba(22, 132, 91, 0.3)'
+                            }}
+                            onClick={() => handleQuickApprove(apt)}
+                            disabled={processingReference === apt.reference}
+                            title="Confirm slot & approve appointment"
+                          >
+                            <Check size={13} className="me-1" />
+                            {processingReference === apt.reference ? 'Approving...' : 'Approve'}
+                          </button>
+                        )}
                         <button
                           type="button"
-                          className="hospital-btn hospital-btn-sm btn-outline-danger"
-                          onClick={() => setCancelModalAppointment(apt)}
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => setViewAppointment(apt)}
+                          title="View consultation file"
                         >
-                          Cancel
+                          <Eye size={13} className="me-1" />
+                          Details
                         </button>
-                      )}
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => {
+                            setStatusModalAppointment(apt);
+                            setNewStatus(apt.status);
+                          }}
+                          title="Change clinical status"
+                        >
+                          <Edit3 size={13} className="me-1" />
+                          Status
+                        </button>
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => {
+                            setRescheduleModalAppointment(apt);
+                            setRescheduleDate(apt.date || '2026-11-20');
+                          }}
+                          title="Reschedule appointment date/time"
+                        >
+                          <CalendarClock size={13} className="me-1" />
+                          Reschedule
+                        </button>
+                        {apt.status !== 'CANCELLED' && (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-danger neu-btn-sm"
+                            onClick={() => setCancelModalAppointment(apt)}
+                            title="Cancel appointment"
+                          >
+                            <X size={13} className="me-1" />
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -450,50 +660,74 @@ export function AdminAppointmentsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <div 
+                className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <div>
-                  <h5 className="modal-title fs-6 fw-bold mb-0">
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Appointment File: {viewAppointment.reference}
                   </h5>
-                  <span className="small text-muted">Created: {viewAppointment.createdAt}</span>
+                  <span className="small text-muted">Created: {viewAppointment.createdAt || 'Standard Registry Entry'}</span>
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="neu-btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0 }}
                   onClick={() => setViewAppointment(null)}
-                />
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                 <div className="row g-3 mb-3">
                   <div className="col-12 col-md-6">
-                    <div className="p-3 bg-light rounded border h-100">
-                      <div className="small text-muted fw-bold mb-2">Patient Demographics</div>
-                      <div className="small"><strong>Name:</strong> {viewAppointment.patientName}</div>
-                      <div className="small"><strong>Mobile:</strong> {viewAppointment.patientContact}</div>
-                      <div className="small"><strong>Email:</strong> {viewAppointment.patientEmail}</div>
-                      <div className="small"><strong>Reason for Visit:</strong> {viewAppointment.reasonForVisit}</div>
+                    <div 
+                      className="p-3 neu-card-sm h-100" 
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <User size={16} color="var(--hospital-blue)" />
+                        <span className="small text-muted fw-bold text-uppercase">Patient Demographics</span>
+                      </div>
+                      <div className="small mb-1"><strong>Name:</strong> {viewAppointment.patientName}</div>
+                      <div className="small mb-1"><strong>Mobile:</strong> {viewAppointment.patientContact}</div>
+                      <div className="small mb-1"><strong>Email:</strong> {viewAppointment.patientEmail || 'Not specified'}</div>
+                      <div className="small"><strong>Reason:</strong> {viewAppointment.reasonForVisit || 'General Clinical Consultation'}</div>
                     </div>
                   </div>
                   <div className="col-12 col-md-6">
-                    <div className="p-3 bg-light rounded border h-100">
-                      <div className="small text-muted fw-bold mb-2">Consultation Schedule</div>
-                      <div className="small"><strong>Doctor:</strong> {viewAppointment.doctorName}</div>
-                      <div className="small"><strong>Specialty:</strong> {viewAppointment.specialty}</div>
-                      <div className="small"><strong>Department:</strong> {viewAppointment.department}</div>
-                      <div className="small"><strong>Date & Time:</strong> {viewAppointment.date} at {viewAppointment.time}</div>
-                      <div className="small"><strong>Location:</strong> {viewAppointment.location}</div>
+                    <div 
+                      className="p-3 neu-card-sm h-100" 
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <Building2 size={16} color="var(--hospital-cyan)" />
+                        <span className="small text-muted fw-bold text-uppercase">Consultation Schedule</span>
+                      </div>
+                      <div className="small mb-1"><strong>Doctor:</strong> {viewAppointment.doctorName}</div>
+                      <div className="small mb-1"><strong>Specialty:</strong> {viewAppointment.specialty || 'General OPD'}</div>
+                      <div className="small mb-1"><strong>Department:</strong> {viewAppointment.department}</div>
+                      <div className="small mb-1"><strong>Date & Time:</strong> {viewAppointment.date} at {viewAppointment.time}</div>
+                      <div className="small"><strong>Location:</strong> {viewAppointment.location || 'EagleSora Outpatient Wing'}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 bg-light rounded border mb-2">
-                  <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="small text-muted fw-bold">Current Status:</span>
+                <div 
+                  className="p-3 neu-card-sm" 
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="small text-muted fw-bold text-uppercase">Authoritative Status:</span>
                     <AdminStatusBadge status={viewAppointment.status} />
                   </div>
                   <div className="small text-muted">
@@ -501,10 +735,25 @@ export function AdminAppointmentsPage() {
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div 
+                className="modal-footer px-4 py-3 border-top"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
+                {viewAppointment.status === 'REQUESTED' && (
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-primary neu-btn-sm me-2"
+                    style={{ background: '#16845B', color: '#fff' }}
+                    onClick={() => handleQuickApprove(viewAppointment)}
+                    disabled={processingReference === viewAppointment.reference}
+                  >
+                    <Check size={14} className="me-1" />
+                    {processingReference === viewAppointment.reference ? 'Approving...' : 'Approve Appointment'}
+                  </button>
+                )}
                 <button
                   type="button"
-                  className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                  className="neu-btn neu-btn-outline neu-btn-sm"
                   onClick={() => setViewAppointment(null)}
                 >
                   Close
@@ -520,29 +769,38 @@ export function AdminAppointmentsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
               <form onSubmit={handleApplyStatusChange}>
-                <div className="modal-header">
-                  <h5 className="modal-title fs-6 fw-bold">
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Update Status: {statusModalAppointment.reference}
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => setStatusModalAppointment(null)}
-                  />
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                   <div className="mb-3">
-                    <label className="hospital-form-label">
-                      Select Status (PDF Terminology)
+                    <label className="neu-form-label">
+                      Select Status (Clinical Terminology)
                     </label>
                     <select
-                      className="hospital-form-control"
+                      className="neu-select"
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value)}
                     >
@@ -556,26 +814,33 @@ export function AdminAppointmentsPage() {
                     </select>
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Administrative Note</label>
+                    <label className="neu-form-label">Administrative Note</label>
                     <textarea
-                      rows="2"
-                      className="hospital-form-control"
+                      rows="3"
+                      className="neu-textarea"
                       placeholder="e.g. Vitals checked at reception desk, verified with consultant"
                       value={statusNote}
                       onChange={(e) => setStatusNote(e.target.value)}
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
                   <button
                     type="button"
-                    className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => setStatusModalAppointment(null)}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="hospital-btn hospital-btn-primary hospital-btn-sm">
-                    Apply Status
+                  <button
+                    type="submit"
+                    className="neu-btn neu-btn-primary neu-btn-sm"
+                    disabled={isStatusSubmitting}
+                  >
+                    {isStatusSubmitting ? 'Applying...' : 'Apply Status'}
                   </button>
                 </div>
               </form>
@@ -589,44 +854,59 @@ export function AdminAppointmentsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title fs-6 fw-bold text-danger">Cancel Appointment</h5>
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <div 
+                className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
+                <h5 className="modal-title fs-6 fw-bold text-danger mb-0">Cancel Appointment</h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="neu-btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0 }}
                   onClick={() => setCancelModalAppointment(null)}
-                />
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <div className="modal-body">
-                <p>
+              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                <p className="mb-3">
                   Are you sure you want to cancel appointment{' '}
                   <strong>{cancelModalAppointment.reference}</strong>?
                 </p>
-                <div className="p-3 bg-light rounded border small mb-2">
+                <div 
+                  className="p-3 neu-card-sm small mb-3"
+                  style={{ borderRadius: '14px', background: 'var(--hospital-surface)' }}
+                >
                   <div><strong>Patient:</strong> {cancelModalAppointment.patientName}</div>
                   <div><strong>Doctor:</strong> {cancelModalAppointment.doctorName}</div>
                   <div><strong>Slot:</strong> {cancelModalAppointment.date} at {cancelModalAppointment.time}</div>
                 </div>
                 <p className="small text-muted mb-0">
-                  This action marks the consultation as CANCELLED in local session state.
+                  This action marks the consultation as CANCELLED in database records.
                 </p>
               </div>
-              <div className="modal-footer">
+              <div 
+                className="modal-footer px-4 py-3 border-top"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <button
                   type="button"
-                  className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                  className="neu-btn neu-btn-outline neu-btn-sm"
                   onClick={() => setCancelModalAppointment(null)}
                 >
                   Keep Appointment
                 </button>
                 <button
                   type="button"
-                  className="hospital-btn btn-danger hospital-btn-sm"
+                  className="neu-btn neu-btn-danger neu-btn-sm"
                   onClick={handleConfirmCancel}
                 >
                   Cancel Appointment
@@ -642,37 +922,46 @@ export function AdminAppointmentsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
               <form onSubmit={handleConfirmReschedule}>
-                <div className="modal-header">
-                  <h5 className="modal-title fs-6 fw-bold">
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Reschedule: {rescheduleModalAppointment.reference}
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => setRescheduleModalAppointment(null)}
-                  />
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                   <div className="mb-3">
-                    <label className="hospital-form-label">New Consultation Date</label>
+                    <label className="neu-form-label">New Consultation Date</label>
                     <input
                       type="date"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={rescheduleDate}
                       onChange={(e) => setRescheduleDate(e.target.value)}
                       required
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">New Consultation Time</label>
+                    <label className="neu-form-label">New Consultation Time</label>
                     <select
-                      className="hospital-form-control"
+                      className="neu-select"
                       value={rescheduleTime}
                       onChange={(e) => setRescheduleTime(e.target.value)}
                     >
@@ -686,15 +975,18 @@ export function AdminAppointmentsPage() {
                     </select>
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
                   <button
                     type="button"
-                    className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => setRescheduleModalAppointment(null)}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="hospital-btn hospital-btn-primary hospital-btn-sm">
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm">
                     Confirm Reschedule
                   </button>
                 </div>

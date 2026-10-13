@@ -1,31 +1,31 @@
 import React from 'react';
 
 /**
- * Hospital Platform — Admin Status Badge Component (Phase 8)
- * Standardizes clinical, administrative, and system status indicators.
- * Strictly complies with design blacklist: no rainbow/neon colors, clear semantic contrast.
+ * Hospital Platform — Admin Status Badge Component
+ * Standardizes clinical, administrative, and system status indicators
+ * with soft Neumorphic pill surfaces and semantic color contrast.
  */
 export function AdminStatusBadge({ status, className = '' }) {
   if (!status) return null;
 
   const raw = String(status).trim().toUpperCase();
 
-  let badgeClass = 'hospital-badge-scheduled';
+  let neuClass = 'neu-badge-info';
   let label = status;
 
   switch (raw) {
     case 'CONFIRMED':
-      badgeClass = 'hospital-badge-scheduled';
+      neuClass = 'neu-badge-success';
       label = 'Confirmed';
       break;
     case 'CHECKED_IN':
-      badgeClass = 'hospital-badge-confirmed';
+      neuClass = 'neu-badge-primary';
       label = 'Checked In';
       break;
     case 'REQUESTED':
     case 'PENDING':
     case 'DRAFT':
-      badgeClass = 'hospital-badge-pending';
+      neuClass = 'neu-badge-warning';
       label = raw === 'REQUESTED' ? 'Requested' : raw === 'DRAFT' ? 'Draft' : 'Pending';
       break;
     case 'COMPLETED':
@@ -33,38 +33,39 @@ export function AdminStatusBadge({ status, className = '' }) {
     case 'PUBLISHED':
     case 'SENT':
     case 'SUCCESS':
-      badgeClass = 'hospital-badge-confirmed';
+      neuClass = 'neu-badge-success';
       label = raw === 'COMPLETED' ? 'Completed' : raw === 'ACTIVE' ? 'Active' : raw === 'PUBLISHED' ? 'Published' : raw === 'SENT' ? 'Sent' : 'Success';
       break;
     case 'CANCELLED':
     case 'FAILED':
     case 'DENIED':
-      badgeClass = 'hospital-badge-cancelled';
+      neuClass = 'neu-badge-danger';
       label = raw === 'CANCELLED' ? 'Cancelled' : raw === 'FAILED' ? 'Failed' : 'Denied';
       break;
     case 'NO_SHOW':
-      badgeClass = 'hospital-badge-cancelled';
+      neuClass = 'neu-badge-danger';
       label = 'No Show';
       break;
     case 'RESCHEDULED':
-      badgeClass = 'hospital-badge-pending';
+      neuClass = 'neu-badge-warning';
       label = 'Rescheduled';
       break;
     case 'INACTIVE':
-      badgeClass = 'hospital-badge-muted';
+      neuClass = 'neu-badge-secondary';
       label = 'Inactive';
       break;
     case 'WARNING':
-      badgeClass = 'hospital-badge-pending';
+      neuClass = 'neu-badge-warning';
       label = 'Warning';
       break;
     default:
-      badgeClass = 'hospital-badge-scheduled';
+      neuClass = 'neu-badge-info';
       label = status;
   }
 
   return (
-    <span className={`hospital-badge ${badgeClass} ${className}`.trim()}>
+    <span className={`neu-badge ${neuClass} ${className}`.trim()}>
+      <span className="neu-badge-dot" />
       {label}
     </span>
   );

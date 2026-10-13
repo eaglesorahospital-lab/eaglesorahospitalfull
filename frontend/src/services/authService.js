@@ -50,6 +50,54 @@ export function isTokenExpired(token, bufferSeconds = 15) {
   return payload.exp * 1000 < Date.now() + bufferSeconds * 1000;
 }
 
+/**
+ * Safely parses response body without throwing SyntaxErrors on non-JSON/HTML payloads
+ */
+async function safeParseJsonResponse(response) {
+  try {
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await response.json();
+    }
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Formats backend error responses into user-friendly strings without exposing raw HTML or server traces
+ */
+function formatAuthErrorMessage(response, data, fallback = 'Operation failed.') {
+  if (response.status >= 500) {
+    return 'The authentication service is temporarily unavailable. Please try again shortly.';
+  }
+
+  if (data && typeof data === 'object') {
+    if (typeof data.detail === 'string') {
+      return data.detail;
+    }
+    if (Array.isArray(data.non_field_errors) && data.non_field_errors.length > 0) {
+      return data.non_field_errors.join(' ');
+    }
+
+    const fieldErrors = Object.entries(data)
+      .filter(([key]) => key !== 'detail' && key !== 'non_field_errors')
+      .map(([field, errs]) => {
+        const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const msg = Array.isArray(errs) ? errs.join(' ') : String(errs);
+        return `${fieldName}: ${msg}`;
+      });
+
+    if (fieldErrors.length > 0) {
+      return fieldErrors.join(' | ');
+    }
+  }
+
+  return fallback;
+}
+
 export const authService = {
   _refreshPromise: null,
 
@@ -57,23 +105,29 @@ export const authService = {
    * Authenticate staff user against Django backend
    */
   async login(email, password) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+    } catch {
+      throw new Error('Unable to connect to the authentication server. Please check your network.');
+    }
 
-    const data = await response.json();
+    const data = await safeParseJsonResponse(response);
 
     if (!response.ok) {
-      const errorMsg = data.detail || data.non_field_errors?.[0] || 'Invalid credentials.';
+      const errorMsg = formatAuthErrorMessage(response, data, 'Invalid email address or password.');
       throw new Error(errorMsg);
     }
 
     // Role verification
-    const { access, refresh, user } = data;
+    const { access, refresh, user } = data || {};
     if (!user || !user.role) {
       throw new Error('User profile or role not returned by authentication service.');
     }
@@ -112,26 +166,33 @@ export const authService = {
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/refresh/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refresh: currentRefresh }),
-        });
+        let response;
+        try {
+          response = await fetch(`${API_BASE_URL}/api/auth/refresh/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({ refresh: currentRefresh }),
+          });
+        } catch {
+          this.clearSession();
+          throw new Error('Unable to contact authentication server to refresh session.');
+        }
 
-        const data = await response.json();
+        const data = await safeParseJsonResponse(response);
 
         if (!response.ok) {
           this.clearSession();
-          const errorMsg = data.detail || 'Session expired. Please sign in again.';
+          const errorMsg = formatAuthErrorMessage(response, data, 'Session expired. Please sign in again.');
           throw new Error(errorMsg);
         }
 
-        if (data.access) {
+        if (data && data.access) {
           sessionStorage.setItem(ACCESS_TOKEN_KEY, data.access);
         }
-        if (data.refresh) {
+        if (data && data.refresh) {
           sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refresh);
         }
 
@@ -139,7 +200,7 @@ export const authService = {
           window.dispatchEvent(new CustomEvent('eglesora-session-updated'));
         }
 
-        return data.access;
+        return data ? data.access : null;
       } catch (err) {
         this.clearSession();
         throw err;
@@ -181,26 +242,28 @@ export const authService = {
    * Register a new outpatient account via POST /api/auth/register/
    */
   async register(registrationData) {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(registrationData),
-    });
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}/api/auth/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(registrationData),
+      });
+    } catch {
+      throw new Error('Unable to connect to registration service. Please verify your network connection.');
+    }
 
-    const data = await response.json();
+    const data = await safeParseJsonResponse(response);
 
     if (!response.ok) {
-      let errorMsg = data.detail || 'Registration failed.';
-      if (data.email) errorMsg = Array.isArray(data.email) ? data.email.join(' ') : data.email;
-      else if (data.password) errorMsg = Array.isArray(data.password) ? data.password.join(' ') : data.password;
-      else if (data.password_confirm) errorMsg = Array.isArray(data.password_confirm) ? data.password_confirm.join(' ') : data.password_confirm;
-      else if (data.non_field_errors) errorMsg = data.non_field_errors.join(' ');
+      const errorMsg = formatAuthErrorMessage(response, data, 'Registration failed. Please verify your details.');
       throw new Error(errorMsg);
     }
 
-    const { access, refresh, user } = data;
+    const { access, refresh, user } = data || {};
     if (access && refresh) {
       // Wipe any prior cached patient records
       sessionStorage.removeItem('eglesora_patient_profile');

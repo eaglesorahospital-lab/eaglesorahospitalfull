@@ -1,28 +1,30 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Building2, Clock, MapPin, ChevronRight, Activity } from 'lucide-react';
 
 /**
- * Hospital Platform — Department Card Component (Phase 3)
- * Professional presentation of a clinical department with key outpatient details.
+ * Hospital Platform — Department Card Component
+ * Soft UI / Neumorphism clinical department card.
  */
 export function DepartmentCard({ department }) {
   if (!department) return null;
 
   return (
-    <article className="dept-card">
+    <article className="neu-raised neu-surface p-4 rounded-4 h-100 d-flex flex-column transition-all hover-lift">
       <div className="d-flex justify-content-between align-items-start mb-2">
-        <span className="dept-card-specialty">{department.specialty}</span>
+        <span className="neu-badge neu-badge-primary">{department.specialty}</span>
         {department.services && (
-          <span className="small text-muted">
-            {department.services.length} Clinical Services
+          <span className="small text-muted d-inline-flex align-items-center gap-1">
+            <Activity size={12} className="text-primary" />
+            {department.services.length} Services
           </span>
         )}
       </div>
 
-      <h3 className="h5 fw-bold text-dark mb-2">
+      <h3 className="h5 fw-bold text-body mb-2 mt-1">
         <Link
           to={`/departments/${department.slug}`}
-          className="text-decoration-none text-dark"
+          className="text-decoration-none text-body hover-text-primary"
         >
           {department.name}
         </Link>
@@ -32,23 +34,26 @@ export function DepartmentCard({ department }) {
         {department.shortDescription}
       </p>
 
-      <div className="pt-3 border-top border-light mb-3 small">
-        <div className="text-secondary fw-semibold">
-          OPD Hours: <span className="text-dark fw-normal">{department.opdHours}</span>
+      <div className="pt-3 border-top mb-3 small">
+        <div className="text-muted d-flex align-items-center gap-1 mb-1">
+          <Clock size={13} className="text-primary flex-shrink-0" />
+          <span><strong className="text-body">OPD Hours:</strong> {department.opdHours}</span>
         </div>
         {department.contact && (
-          <div className="text-muted mt-1">
-            Location: {department.contact.location}
+          <div className="text-muted d-flex align-items-center gap-1">
+            <MapPin size={13} className="text-primary flex-shrink-0" />
+            <span>{department.contact.location}</span>
           </div>
         )}
       </div>
 
-      <div>
+      <div className="mt-auto">
         <Link
           to={`/departments/${department.slug}`}
-          className="hospital-btn hospital-btn-outline hospital-btn-sm w-100"
+          className="neu-btn neu-btn-outline w-100 text-center justify-content-center d-flex align-items-center gap-1"
         >
-          View Department Details &rarr;
+          <span>View Department Details</span>
+          <ChevronRight size={14} />
         </Link>
       </div>
     </article>

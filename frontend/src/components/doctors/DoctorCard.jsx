@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Stethoscope, Calendar, Clock, MapPin, Award, ChevronRight } from 'lucide-react';
 
 /**
- * Hospital Platform — Doctor Directory Card (Phase 4)
- * Professional presentation of medical consultant credentials, affiliated clinical division,
- * areas of expertise, and OPD consultation locations.
+ * Hospital Platform — Doctor Directory Card
+ * Soft UI / Neumorphism medical consultant card.
  */
 export function DoctorCard({ doctor }) {
   if (!doctor) return null;
@@ -27,39 +27,40 @@ export function DoctorCard({ doctor }) {
   const photoUrl = doctor.photo || doctor.photo_url || doctor.image_url || doctor.image || null;
 
   return (
-    <article className="doctor-directory-card" aria-label={`Doctor profile for ${doctor.name}`}>
+    <article className="doctor-directory-card neu-card p-4 rounded-4 h-100 d-flex flex-column" aria-label={`Doctor profile for ${doctor.name}`}>
       {/* Header: Avatar, Identity & Status */}
       <div className="d-flex align-items-start gap-3 mb-3">
-        <div className="doctor-avatar-box" aria-hidden="true">
+        <div className="doctor-avatar-box neu-inset flex-shrink-0" aria-hidden="true">
           {photoUrl ? (
             <img src={photoUrl} alt={doctor.name} />
           ) : (
-            <span>{doctor.initials || 'DR'}</span>
+            <span className="fw-bold text-primary">{doctor.initials || 'DR'}</span>
           )}
         </div>
 
         <div className="flex-grow-1 min-w-0">
           <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
             <span
-              className={`hospital-badge ${
-                isActive ? 'hospital-badge-confirmed' : 'hospital-badge-pending'
+              className={`neu-badge ${
+                isActive ? 'neu-badge-success' : 'neu-badge-warning'
               }`}
             >
-              {isActive ? 'Active Consultant' : 'On Leave / Inactive'}
+              {isActive ? 'Active Consultant' : 'On Leave'}
             </span>
           </div>
 
-          <h3 className="h6 fw-bold mb-1 text-dark">
+          <h3 className="h6 fw-bold mb-1 text-truncate">
             <Link
               to={`/doctors/${slug}`}
-              className="text-decoration-none text-dark"
+              className="text-decoration-none text-body hover-text-primary"
             >
               {doctor.name}
             </Link>
           </h3>
 
-          <div className="small fw-semibold text-primary mb-1">
-            {doctor.specialty}
+          <div className="small fw-semibold text-primary mb-1 d-flex align-items-center gap-1">
+            <Stethoscope size={13} className="flex-shrink-0" />
+            <span className="text-truncate">{doctor.specialty}</span>
           </div>
 
           {qualifications && (
@@ -71,70 +72,71 @@ export function DoctorCard({ doctor }) {
       </div>
 
       {/* Affiliation & Experience Metadata */}
-      <div className="pt-2 border-top border-light mb-3 small">
-        <div className="mb-1 text-secondary">
-          <span className="fw-semibold text-dark">Department: </span>
+      <div className="pt-2 border-top mb-3 small flex-grow-1">
+        <div className="mb-1 text-secondary d-flex align-items-center gap-1">
+          <span className="fw-semibold text-body">Department: </span>
           {deptId ? (
             <Link
               to={`/departments/${deptId}`}
-              className="text-decoration-none text-secondary"
+              className="text-decoration-none text-primary fw-medium text-truncate"
             >
               {deptName}
             </Link>
           ) : (
-            <span>{deptName}</span>
+            <span className="text-truncate">{deptName}</span>
           )}
         </div>
 
         {experienceYears !== undefined && (
-          <div className="text-muted">
-            <span className="fw-semibold text-dark">Clinical Experience: </span>
-            {experienceYears} years
+          <div className="text-muted d-flex align-items-center gap-1 mb-1">
+            <Award size={13} className="text-primary flex-shrink-0" />
+            <span><strong className="text-body">{experienceYears}</strong> years clinical exp.</span>
           </div>
         )}
 
         {doctor.consultation && (
-          <div className="text-muted mt-1">
-            <span className="fw-semibold text-dark">Consultation: </span>
-            {doctor.consultation.type} ({doctor.consultation.duration})
+          <div className="text-muted d-flex align-items-center gap-1 mb-1">
+            <Clock size={13} className="text-muted flex-shrink-0" />
+            <span>{doctor.consultation.type} ({doctor.consultation.duration})</span>
           </div>
         )}
 
         {doctor.consultation?.location && (
-          <div className="text-muted mt-1 text-truncate" title={doctor.consultation.location}>
-            <span className="fw-semibold text-dark">Location: </span>
-            {doctor.consultation.location}
+          <div className="text-muted d-flex align-items-center gap-1 text-truncate" title={doctor.consultation.location}>
+            <MapPin size={13} className="text-muted flex-shrink-0" />
+            <span className="text-truncate">{doctor.consultation.location}</span>
+          </div>
+        )}
+
+        {/* Clinical Expertise Pills */}
+        {topExpertise.length > 0 && (
+          <div className="mt-2 pt-2 border-top">
+            <div className="d-flex flex-wrap gap-1">
+              {topExpertise.map((item, idx) => (
+                <span key={idx} className="neu-badge neu-badge-neutral text-truncate" style={{ maxWidth: '140px' }}>
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Clinical Expertise Pills */}
-      {topExpertise.length > 0 && (
-        <div className="mb-3">
-          <div className="small fw-semibold text-dark mb-1">Key Focus Areas:</div>
-          <div>
-            {topExpertise.map((item, idx) => (
-              <span key={idx} className="doctor-expertise-tag">
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Actions */}
-      <div className="mt-auto pt-3 border-top border-light d-flex flex-column gap-2">
+      <div className="mt-auto pt-3 border-top d-flex flex-column gap-2">
         <Link
           to={`/doctors/${slug}`}
-          className="hospital-btn hospital-btn-primary hospital-btn-sm text-center text-decoration-none"
+          className="neu-btn neu-btn-primary w-100 text-center text-decoration-none d-flex align-items-center justify-content-center gap-1"
         >
-          View Doctor Profile
+          <span>View Profile</span>
+          <ChevronRight size={14} />
         </Link>
         <Link
           to={`/doctors/${slug}/availability`}
-          className="hospital-btn hospital-btn-outline hospital-btn-sm text-center text-decoration-none"
+          className="neu-btn neu-btn-outline w-100 text-center text-decoration-none d-flex align-items-center justify-content-center gap-1"
         >
-          Check OPD Schedule
+          <Calendar size={14} />
+          <span>Check OPD Schedule</span>
         </Link>
       </div>
     </article>

@@ -1,76 +1,179 @@
 /* ==============================================================================
-   Hospital Platform — Design System Variables (Phase 1)
-   Adheres to clinical, dignified hospital standards.
-   Strictly complies with the 30-rule design blacklist.
+   EgleSora Hospital Platform — Complete Neumorphic Design System Tokens
+   Soft UI / Neumorphism architecture: Light & Dark Mode
+   Colors, Shadows, Radii, Typography, and Transitions
    ============================================================================== */
 
 :root {
-  /* Brand & Clinical Colors */
-  --hospital-primary: #10375c;         /* Deep medical navy */
-  --hospital-primary-dark: #0b2545;    /* Dark navy for headers / hover */
-  --hospital-primary-light: #1c5286;   /* Accessible primary accent */
-  --hospital-secondary: #0e7490;       /* Controlled clinical teal */
-  --hospital-secondary-dark: #155e75;  /* Deep teal */
+  /* ----------------------------------------------------------------------------
+     1. Brand & Core Color Palette (User Specification)
+     ---------------------------------------------------------------------------- */
+  --hospital-bg: #EEF3F8;             /* Main background */
+  --hospital-surface: #F5F8FC;        /* Primary surface */
+  --hospital-surface-subtle: #E8EEF5; /* Secondary surface */
+  --hospital-surface-card: #F5F8FC;   /* Card surface */
+  --hospital-surface-alt: #E8EEF5;    /* Alt section background */
+  --hospital-surface-input: #F5F8FC;  /* Inset input background */
 
-  /* Neutral Background & Surface Colors */
-  --hospital-bg: #f8fafc;              /* Soft off-white / very light slate */
-  --hospital-bg-alt: #f1f5f9;          /* Subtle section background */
-  --hospital-surface: #ffffff;         /* Pure surface for clinical cards/tables */
-  --hospital-surface-subtle: #f8fafc;   /* Elevated or muted surface */
+  --hospital-primary-navy: #16365C;   /* Primary navy */
+  --hospital-primary: #16365C;        /* Main brand primary */
+  --hospital-primary-dark: #0F2540;   /* Deep header navy */
+  --hospital-primary-light: #224C7E;  /* Navy accent */
+
+  --hospital-medical-blue: #2878C8;   /* Medical blue */
+  --hospital-accent-cyan: #35B8C9;    /* Accent cyan */
+  --hospital-secondary: #2878C8;      /* Medical blue */
+  --hospital-secondary-dark: #1E60A3; /* Deeper medical blue */
 
   /* Typography Colors */
-  --hospital-text: #1e293b;            /* Dark neutral for optimal readability */
-  --hospital-text-muted: #475569;      /* Medium slate for supporting info */
-  --hospital-text-light: #64748b;      /* Light supporting text */
-  --hospital-text-inverse: #ffffff;    /* White text on dark navy */
+  --hospital-text: #172B43;           /* Primary text */
+  --hospital-text-muted: #64748B;     /* Secondary text */
+  --hospital-text-light: #8294A8;     /* Supporting subtle text */
+  --hospital-text-inverse: #FFFFFF;   /* Text on navy/dark */
 
-  /* Border & Divider Colors (Subtle, non-distracting) */
-  --hospital-border: #cbd5e1;          /* Default structural border */
-  --hospital-border-light: #e2e8f0;    /* Light divider */
-  --hospital-border-dark: #94a3b8;     /* Input focus border */
+  /* Borders & Dividers */
+  --hospital-border: #D8E2ED;         /* Default border */
+  --hospital-border-light: #E8EEF5;   /* Subtle divider */
+  --hospital-border-focus: #2878C8;   /* Focused input border */
 
-  /* Semantic Status Colors (Clinical & Calm, not neon or rainbow) */
-  --status-confirmed-bg: #f0fdf4;
-  --status-confirmed-text: #166534;
-  --status-confirmed-border: #bbf7d0;
+  /* Semantic Feedback Colors */
+  --status-confirmed-bg: #EAF7EE;
+  --status-confirmed-text: #16845B;
+  --status-confirmed-border: #C6EBD2;
 
-  --status-scheduled-bg: #eff6ff;
-  --status-scheduled-text: #1e40af;
-  --status-scheduled-border: #bfdbfe;
+  --status-scheduled-bg: #EBF4FC;
+  --status-scheduled-text: #2878C8;
+  --status-scheduled-border: #C8E1FA;
 
-  --status-pending-bg: #fefce8;
-  --status-pending-text: #854d0e;
-  --status-pending-border: #fef08a;
+  --status-pending-bg: #FEF7EA;
+  --status-pending-text: #B7791F;
+  --status-pending-border: #FBE6B6;
 
-  --status-cancelled-bg: #fef2f2;
-  --status-cancelled-text: #991b1b;
-  --status-cancelled-border: #fecaca;
+  --status-cancelled-bg: #FDEEEE;
+  --status-cancelled-text: #C43D4B;
+  --status-cancelled-border: #F8CCD0;
 
-  /* Typography Stack (Professional System Medical Stack) */
-  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* ----------------------------------------------------------------------------
+     2. Neumorphic Elevation & Shadow Tokens (Light Mode)
+     ---------------------------------------------------------------------------- */
+  /* Raised Surfaces (Soft extrusion from light background) */
+  --neu-raised: 0 6px 16px rgba(31, 55, 82, 0.08), -5px -5px 14px rgba(255, 255, 255, 0.85);
+  --neu-raised-sm: 0 3px 8px rgba(31, 55, 82, 0.06), -3px -3px 8px rgba(255, 255, 255, 0.85);
+  --neu-raised-card: 6px 6px 16px rgba(31, 55, 82, 0.08), -6px -6px 16px rgba(255, 255, 255, 0.85);
+  --neu-raised-hover: 8px 12px 24px rgba(31, 55, 82, 0.12), -8px -8px 20px rgba(255, 255, 255, 0.90);
+  --neu-raised-float: 10px 16px 30px rgba(31, 55, 82, 0.15), -10px -10px 24px rgba(255, 255, 255, 0.95);
 
-  /* Spacing Scale */
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
+  /* Inset Surfaces (Soft deboss for inputs, search, pressed buttons) */
+  --neu-inset: inset 3px 3px 7px rgba(31, 55, 82, 0.07), inset -3px -3px 7px rgba(255, 255, 255, 0.85);
+  --neu-inset-sm: inset 2px 2px 5px rgba(31, 55, 82, 0.06), inset -2px -2px 5px rgba(255, 255, 255, 0.85);
+  --neu-pressed: inset 2px 2px 6px rgba(31, 55, 82, 0.14), inset -2px -2px 6px rgba(255, 255, 255, 0.70);
 
-  /* Radii (Clean, structured; strictly NO pill shapes or oversized corners) */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
+  /* Convex / Flat button styles */
+  --neu-btn-primary: 0 4px 12px rgba(22, 54, 92, 0.25), -3px -3px 8px rgba(255, 255, 255, 0.50);
+  --neu-btn-blue: 0 4px 12px rgba(40, 120, 200, 0.25), -3px -3px 8px rgba(255, 255, 255, 0.50);
 
-  /* Shadows (Subtle elevation only; no heavy drop shadows) */
-  --shadow-none: none;
-  --shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08);
+  /* ----------------------------------------------------------------------------
+     3. Geometry, Radii & Typography Stack
+     ---------------------------------------------------------------------------- */
+  --font-stack: "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Layout Widths (Expanded to effectively utilize modern wide displays) */
-  --container-max-width: 1560px;
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Spacing Scale (Consistent Hierarchy) */
+  --space-1: 0.25rem;   /* 4px - tiny icon/text gaps only */
+  --space-2: 0.5rem;    /* 8px - compact internal spacing */
+  --space-3: 0.75rem;   /* 12px - related inline controls */
+  --space-4: 1rem;      /* 16px - standard component spacing */
+  --space-5: 1.25rem;   /* 20px - card content spacing compact */
+  --space-6: 1.5rem;    /* 24px - standard card content spacing & major section gap */
+  --space-7: 1.75rem;   /* 28px - generous component separation */
+  --space-8: 2rem;      /* 32px - major content groups separation */
+  --space-10: 2.5rem;   /* 40px - major page sections */
+  --space-12: 3rem;     /* 48px - large sections */
+  --space-16: 4rem;     /* 64px - hero / feature sections */
+
+  /* Component Dimensions */
+  --control-height: 44px;
+  --control-height-sm: 36px;
+  --control-height-lg: 50px;
+  --table-cell-padding-y: 1.1rem;
+  --table-cell-padding-x: 1.25rem;
+  --page-padding-desktop: 1.5rem; /* 24px */
+  --page-padding-tablet: 1.25rem;  /* 20px */
+  --page-padding-mobile: 1rem;     /* 16px */
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --container-max-width: 1200px;
+}
+
+/* ------------------------------------------------------------------------------
+   4. Dark Mode Neumorphic Tokens
+   ------------------------------------------------------------------------------ */
+[data-theme="dark"],
+.theme-dark {
+  --hospital-bg: #0F1D2E;
+  --hospital-surface: #15273D;
+  --hospital-surface-subtle: #1B324F;
+  --hospital-surface-card: #15273D;
+  --hospital-surface-alt: #182C44;
+  --hospital-surface-input: #112033;
+
+  --hospital-primary-navy: #35B8C9;
+  --hospital-primary: #3884D8;
+  --hospital-primary-dark: #0A1420;
+  --hospital-primary-light: #5AA1ED;
+
+  --hospital-medical-blue: #3A8EE5;
+  --hospital-accent-cyan: #35B8C9;
+  --hospital-secondary: #35B8C9;
+  --hospital-secondary-dark: #229AA9;
+
+  --hospital-text: #E8F0F8;
+  --hospital-text-muted: #95A9C0;
+  --hospital-text-light: #6A829E;
+  --hospital-text-inverse: #0F1D2E;
+
+  --hospital-border: #233B57;
+  --hospital-border-light: #1A314B;
+  --hospital-border-focus: #3A8EE5;
+
+  /* Semantic Feedback Colors (Dark Mode) */
+  --status-confirmed-bg: #0E2E20;
+  --status-confirmed-text: #34D399;
+  --status-confirmed-border: #166534;
+
+  --status-scheduled-bg: #102B47;
+  --status-scheduled-text: #60A5FA;
+  --status-scheduled-border: #1E40AF;
+
+  --status-pending-bg: #32250F;
+  --status-pending-text: #FBBF24;
+  --status-pending-border: #92400E;
+
+  --status-cancelled-bg: #35171B;
+  --status-cancelled-text: #F87171;
+  --status-cancelled-border: #991B1B;
+
+  /* Dark Neumorphic Shadows */
+  --neu-raised: 5px 5px 14px rgba(6, 12, 20, 0.65), -4px -4px 12px rgba(34, 62, 93, 0.45);
+  --neu-raised-sm: 3px 3px 8px rgba(6, 12, 20, 0.55), -2px -2px 8px rgba(34, 62, 93, 0.35);
+  --neu-raised-card: 6px 8px 18px rgba(6, 12, 20, 0.70), -6px -6px 16px rgba(34, 62, 93, 0.45);
+  --neu-raised-hover: 8px 14px 24px rgba(6, 12, 20, 0.80), -7px -7px 20px rgba(45, 78, 115, 0.50);
+  --neu-raised-float: 10px 18px 32px rgba(6, 12, 20, 0.90), -8px -8px 24px rgba(45, 78, 115, 0.55);
+
+  --neu-inset: inset 3px 3px 7px rgba(6, 12, 20, 0.75), inset -3px -3px 7px rgba(34, 62, 93, 0.35);
+  --neu-inset-sm: inset 2px 2px 5px rgba(6, 12, 20, 0.65), inset -2px -2px 5px rgba(34, 62, 93, 0.30);
+  --neu-pressed: inset 2px 2px 6px rgba(6, 12, 20, 0.85), inset -2px -2px 6px rgba(34, 62, 93, 0.40);
+
+  --neu-btn-primary: 0 4px 14px rgba(0, 0, 0, 0.45), -2px -2px 6px rgba(56, 132, 216, 0.25);
+  --neu-btn-blue: 0 4px 14px rgba(0, 0, 0, 0.45), -2px -2px 6px rgba(58, 142, 229, 0.25);
 }

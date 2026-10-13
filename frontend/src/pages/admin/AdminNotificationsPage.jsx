@@ -1,16 +1,25 @@
 import React, { useState, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { 
+  Bell, 
+  Send, 
+  RotateCw, 
+  CheckCircle2, 
+  X, 
+  Eye, 
+  Mail, 
+  MessageSquare, 
+  Activity 
+} from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import RoleRestrictedNotice from '../../components/admin/RoleRestrictedNotice';
 import { INITIAL_NOTIFICATIONS } from '../../data/adminData';
 
 /**
- * Hospital Platform — Admin Notifications Management Page (Phase 8)
+ * Hospital Platform — Admin Notifications Management Page (Neumorphic Redesign)
  * Registry of dispatched SMS, Email, and System alerts.
- * Strictly frontend mock presentation. Asynchronous Celery/Redis dispatch occurs in later backend phases.
  */
 export function AdminNotificationsPage() {
   const { currentRole, setRole } = useOutletContext() || {};
@@ -80,7 +89,7 @@ export function AdminNotificationsPage() {
   };
 
   return (
-    <div>
+    <div className="admin-notifications-view">
       <PageHeader
         title="Notification Dispatch Registry"
         description="Outbound SMS, Email, and clinical alert queues. Telemetry logs for appointment notifications."
@@ -88,22 +97,52 @@ export function AdminNotificationsPage() {
       />
 
       {/* Backend Architecture Notice Banner */}
-      <div className="alert alert-info py-2 px-3 mb-3 small d-flex flex-wrap justify-content-between align-items-center">
-        <span>
-          <strong>Asynchronous Queue Architecture:</strong> In production, automated notifications are triggered by
-          Django model signals and dispatched via Redis and Celery worker workers. Current view represents simulated logs.
-        </span>
-        <span className="text-muted">Phase 8 Frontend Only</span>
+      <div 
+        className="neu-card p-3 p-md-4 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3"
+        style={{ borderRadius: '18px', background: 'var(--hospital-surface)' }}
+      >
+        <div className="d-flex align-items-center gap-3 small">
+          <div 
+            className="d-flex align-items-center justify-content-center"
+            style={{ 
+              width: '36px', 
+              height: '36px', 
+              borderRadius: '10px', 
+              boxShadow: 'var(--neu-inset)', 
+              color: 'var(--hospital-medical-blue)',
+              flexShrink: 0 
+            }}
+          >
+            <Activity size={18} />
+          </div>
+          <span style={{ color: 'var(--hospital-primary-navy)' }}>
+            <strong>Queue Telemetry:</strong> In production, notifications trigger via Django signals and dispatch via Redis/Celery queue workers.
+          </span>
+        </div>
+        <span className="neu-badge neu-badge-info">Worker Active</span>
       </div>
 
       {actionNotice && (
-        <div className="alert alert-success py-2 px-3 mb-3 small d-flex justify-content-between align-items-center">
-          <span>{actionNotice}</span>
+        <div 
+          className="neu-card p-3 mb-4 d-flex justify-content-between align-items-center"
+          style={{ 
+            borderRadius: '14px', 
+            background: 'var(--hospital-surface)',
+            borderLeft: '4px solid var(--neu-success)'
+          }}
+        >
+          <div className="d-flex align-items-center gap-2 small">
+            <CheckCircle2 size={16} color="var(--neu-success)" />
+            <span style={{ color: 'var(--hospital-primary-navy)', fontWeight: 600 }}>{actionNotice}</span>
+          </div>
           <button
             type="button"
-            className="btn-close btn-close-sm"
+            className="neu-btn-icon"
+            style={{ width: '28px', height: '28px', padding: 0 }}
             onClick={() => setActionNotice(null)}
-          />
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -121,7 +160,7 @@ export function AdminNotificationsPage() {
       >
         <div className="col-12 col-sm-6 col-md-3">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             aria-label="Filter by notification type"
@@ -137,7 +176,7 @@ export function AdminNotificationsPage() {
 
         <div className="col-12 col-sm-6 col-md-2">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             aria-label="Filter by dispatch status"
@@ -151,71 +190,95 @@ export function AdminNotificationsPage() {
       </AdminFilterBar>
 
       {/* Notifications Table */}
-      <div className="hospital-card p-0 mb-4 overflow-hidden">
-        <div className="admin-table-container">
-          <table className="admin-table">
+      <div 
+        className="neu-card p-0 mb-4 overflow-hidden" 
+        style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+      >
+        <div className="neu-table-container">
+          <table className="neu-table">
             <thead>
               <tr>
-                <th>Notice ID</th>
-                <th>Event Type</th>
-                <th>Channel</th>
-                <th>Recipient Contact</th>
-                <th>Related Ref</th>
-                <th>Dispatch Time</th>
-                <th>Status</th>
-                <th className="text-end">Actions</th>
+                <th className="col-notice-id">Notice ID</th>
+                <th className="col-event-type">Event Type</th>
+                <th className="col-channel">Channel</th>
+                <th className="col-recipient">Recipient Contact</th>
+                <th className="col-related-ref">Related Ref</th>
+                <th className="col-dispatch-time">Dispatch Time</th>
+                <th className="col-notif-status">Status</th>
+                <th className="col-notif-actions text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredNotifications.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-4 text-muted">
+                  <td colSpan="8" className="text-center py-5 text-muted">
                     No notification dispatch records match the selected filter.
                   </td>
                 </tr>
               ) : (
                 filteredNotifications.map((n) => (
                   <tr key={n.id}>
-                    <td>
-                      <code>{n.id}</code>
-                    </td>
-                    <td>
-                      <span className="fw-semibold text-primary">{n.type}</span>
-                    </td>
-                    <td>
-                      <span className="small text-muted">{n.channel}</span>
-                    </td>
-                    <td>
-                      <span className="small">{n.recipient}</span>
-                    </td>
-                    <td>
-                      <span className="small">
-                        <code>{n.relatedRef}</code>
+                    <td className="col-notice-id">
+                      <span 
+                        className="px-2.5 py-1 rounded small font-monospace fw-bold"
+                        style={{ 
+                          background: 'var(--hospital-surface)', 
+                          boxShadow: 'var(--neu-inset)',
+                          fontSize: '0.785rem',
+                          color: 'var(--hospital-medical-blue)'
+                        }}
+                      >
+                        {n.id}
                       </span>
                     </td>
-                    <td>
-                      <span className="small text-muted">{n.sentAt}</span>
+                    <td className="col-event-type">
+                      <span className="fw-semibold text-primary d-block">{n.type}</span>
                     </td>
-                    <td>
+                    <td className="col-channel">
+                      <span className="neu-badge neu-badge-info">{n.channel}</span>
+                    </td>
+                    <td className="col-recipient">
+                      <span className="small text-body d-block text-break" style={{ maxWidth: '220px' }}>
+                        {n.recipient}
+                      </span>
+                    </td>
+                    <td className="col-related-ref">
+                      <span 
+                        className="px-2 py-0.5 rounded small font-monospace d-inline-block"
+                        style={{ background: 'var(--hospital-surface)', boxShadow: 'var(--neu-inset)', fontSize: '0.75rem' }}
+                      >
+                        {n.relatedRef}
+                      </span>
+                    </td>
+                    <td className="col-dispatch-time">
+                      <span className="small text-muted font-monospace">{n.sentAt}</span>
+                    </td>
+                    <td className="col-notif-status">
                       <AdminStatusBadge status={n.status} />
                     </td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => setViewNotif(n)}
-                      >
-                        Payload
-                      </button>
-                      {n.status !== 'Sent' && (
+                    <td className="col-notif-actions text-end text-nowrap">
+                      <div className="neu-action-btns">
                         <button
                           type="button"
-                          className="hospital-btn hospital-btn-sm btn-outline-success"
-                          onClick={() => handleResend(n.id)}
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => setViewNotif(n)}
+                          title="View dispatch payload"
                         >
-                          Retry
+                          <Eye size={13} className="me-1" />
+                          Payload
                         </button>
-                      )}
+                        {n.status !== 'Sent' && (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-primary neu-btn-sm"
+                            onClick={() => handleResend(n.id)}
+                            title="Retry message dispatch"
+                          >
+                            <Send size={13} className="me-1" />
+                            Retry
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -230,46 +293,64 @@ export function AdminNotificationsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <div 
+                className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <div>
-                  <h5 className="modal-title fs-6 fw-bold mb-0">
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Dispatch Payload: {viewNotif.id}
                   </h5>
                   <span className="small text-muted">{viewNotif.type} • {viewNotif.channel}</span>
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="neu-btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0 }}
                   onClick={() => setViewNotif(null)}
-                />
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <div className="modal-body">
-                <div className="p-3 bg-light rounded border mb-3">
-                  <div className="small"><strong>Recipient:</strong> {viewNotif.recipient}</div>
-                  <div className="small"><strong>Channel:</strong> {viewNotif.channel}</div>
-                  <div className="small"><strong>Reference:</strong> {viewNotif.relatedRef}</div>
-                  <div className="small"><strong>Dispatch Timestamp:</strong> {viewNotif.sentAt}</div>
-                  <div className="small mt-1">
+              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                <div 
+                  className="p-3 neu-card-sm mb-3"
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  <div className="small mb-1"><strong>Recipient:</strong> {viewNotif.recipient}</div>
+                  <div className="small mb-1"><strong>Channel:</strong> {viewNotif.channel}</div>
+                  <div className="small mb-1"><strong>Reference:</strong> {viewNotif.relatedRef}</div>
+                  <div className="small mb-1"><strong>Timestamp:</strong> {viewNotif.sentAt}</div>
+                  <div className="small mt-2 d-flex align-items-center gap-2">
                     <strong>Delivery State:</strong> <AdminStatusBadge status={viewNotif.status} />
                   </div>
                 </div>
 
-                <div className="p-3 bg-white rounded border">
-                  <div className="small text-muted fw-bold mb-1">Message Body</div>
-                  <p className="small mb-0 text-dark" style={{ fontFamily: 'monospace' }}>
+                <div 
+                  className="p-3 neu-card-sm"
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  <div className="small text-muted fw-bold mb-1 text-uppercase">Message Body</div>
+                  <p className="small mb-0 text-muted font-monospace" style={{ lineHeight: '1.5' }}>
                     {viewNotif.message}
                   </p>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div 
+                className="modal-footer px-4 py-3 border-top"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <button
                   type="button"
-                  className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                  className="neu-btn neu-btn-outline neu-btn-sm"
                   onClick={() => setViewNotif(null)}
                 >
                   Close

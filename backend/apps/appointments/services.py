@@ -84,6 +84,7 @@ class AppointmentBookingService:
         start_time,
         end_time,
         appointment_type=Appointment.AppointmentType.IN_PERSON,
+        status=Appointment.Status.REQUESTED,
         reason_for_visit="",
         notes="",
         idempotency_key=None,
@@ -267,6 +268,7 @@ class AppointmentBookingService:
                 raise SlotConflictError("The selected appointment slot is no longer available.")
 
             # Create Appointment
+            booking_status = status or Appointment.Status.REQUESTED
             appointment = Appointment.objects.create(
                 patient=patient,
                 doctor=locked_doctor,
@@ -276,15 +278,15 @@ class AppointmentBookingService:
                 start_time=start_t,
                 end_time=end_t,
                 appointment_type=appointment_type,
-                status=Appointment.Status.CONFIRMED,
+                status=booking_status,
                 reason_for_visit=reason_for_visit,
                 notes=notes,
                 idempotency_key=idempotency_key,
                 rescheduled_from=rescheduled_from,
             )
 
-            # Trigger asynchronous confirmation email after transaction commits
-            if not rescheduled_from:
+            # Trigger asynchronous confirmation email only if confirmed
+            if booking_status == Appointment.Status.CONFIRMED and not rescheduled_from:
                 safe_dispatch_confirmation(appointment.id)
 
             return appointment, True
@@ -368,6 +370,7 @@ class AppointmentBookingService:
 
             # Mark original appointment as RESCHEDULED to release its slot before booking new one
             # Note: in atomic transaction, if the booking fails, this change is rolled back!
+            prior_status = original_apt.status
             original_apt.status = Appointment.Status.RESCHEDULED
             original_apt.save(update_fields=['status', 'updated_at'])
 
@@ -379,6 +382,7 @@ class AppointmentBookingService:
                 start_time=new_start_time,
                 end_time=new_end_time,
                 appointment_type=original_apt.appointment_type,
+                status=Appointment.Status.CONFIRMED if prior_status == Appointment.Status.CONFIRMED else Appointment.Status.REQUESTED,
                 reason_for_visit=original_apt.reason_for_visit,
                 notes=f"Rescheduled from {original_apt.reference}. {reason}".strip(),
                 rescheduled_from=original_apt,

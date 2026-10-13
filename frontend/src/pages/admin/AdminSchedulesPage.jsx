@@ -1,14 +1,31 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
+import { 
+  Calendar, 
+  Clock, 
+  Users, 
+  Globe, 
+  Plus, 
+  CheckCircle2, 
+  AlertCircle, 
+  X, 
+  Edit3, 
+  Power, 
+  Coffee, 
+  CalendarCheck, 
+  FileText,
+  RotateCw,
+  Sun,
+  ShieldCheck
+} from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 import RoleRestrictedNotice from '../../components/admin/RoleRestrictedNotice';
 import doctorService from '../../services/doctorService';
 import scheduleService from '../../services/scheduleService';
 
 /**
- * Hospital Platform — Admin Doctor Scheduling & Roster Page (Phase 5 & Persistence Fix)
+ * Hospital Platform — Admin Doctor Scheduling & Roster Page (Neumorphic Redesign)
  * Administrative interface to inspect and configure doctor shift allocations,
  * consultation slot durations, capacity, midday breaks, leaves, and working days.
  * Backed authoritatively by PostgreSQL database via Django REST Framework.
@@ -32,7 +49,7 @@ export function AdminSchedulesPage() {
     { label: 'Doctor Schedules' },
   ];
 
-  // 1. Doctors list state
+  // Doctors list state
   const [doctorsList, setDoctorsList] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
   const [dbSchedules, setDbSchedules] = useState([]);
@@ -96,7 +113,6 @@ export function AdminSchedulesPage() {
     loadDoctors();
   }, []);
 
-
   // Selected doctor object (safely resolved)
   const doctor = useMemo(() => {
     if (!doctorsList || doctorsList.length === 0) return null;
@@ -118,9 +134,9 @@ export function AdminSchedulesPage() {
         scheduleService.getDoctorLeaves(docIdOrSlug).catch(() => []),
         scheduleService.getDoctorOverrides(docIdOrSlug).catch(() => []),
       ]);
-      setDbSchedules(schedules);
-      setDbLeaves(leaves);
-      setDbOverrides(overrides);
+      setDbSchedules(schedules || []);
+      setDbLeaves(leaves || []);
+      setDbOverrides(overrides || []);
     } catch (err) {
       console.error('Failed to load doctor schedules:', err);
       setActionError(`Failed to load schedules: ${err.message}`);
@@ -240,7 +256,7 @@ export function AdminSchedulesPage() {
       });
 
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Updated ${dayName} shift (${nextEnabled ? 'Active OPD' : 'Closed'}) for ${doctor.name} in PostgreSQL database.`);
+      setActionNotice(`Updated ${dayName} shift (${nextEnabled ? 'Active OPD' : 'Closed'}) for ${doctor.name} in database.`);
     } catch (err) {
       setActionError(`Failed to save ${dayName} schedule to database: ${err.message}`);
     } finally {
@@ -273,7 +289,7 @@ export function AdminSchedulesPage() {
 
       setEditShiftDay(null);
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Updated ${editShiftDay} shift (${editShiftStart} - ${editShiftEnd}) for ${doctor.name} in PostgreSQL.`);
+      setActionNotice(`Updated ${editShiftDay} shift (${editShiftStart} - ${editShiftEnd}) for ${doctor.name} in database.`);
     } catch (err) {
       setActionError(`Failed to update shift: ${err.message}`);
     } finally {
@@ -289,12 +305,10 @@ export function AdminSchedulesPage() {
     setIsSaving(true);
 
     try {
-      // 1. Update doctor profile consultation duration
       await doctorService.updateDoctor(doctor.slug || doctor.id, {
         consultation_duration_minutes: Number(newDuration),
       });
 
-      // 2. Update existing schedules
       for (const sched of dbSchedules) {
         await scheduleService.saveSchedule({
           id: sched.id,
@@ -303,7 +317,7 @@ export function AdminSchedulesPage() {
       }
 
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Consultation slot duration for ${doctor.name} updated to ${newDuration} minutes in PostgreSQL.`);
+      setActionNotice(`Consultation slot duration for ${doctor.name} updated to ${newDuration} minutes in database.`);
     } catch (err) {
       setActionError(`Failed to update slot duration: ${err.message}`);
     } finally {
@@ -351,7 +365,7 @@ export function AdminSchedulesPage() {
       setShowOverrideModal(false);
       setModalError(null);
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Successfully added schedule override on ${newOverrideDate} for ${doctor.name} in PostgreSQL.`);
+      setActionNotice(`Successfully added schedule override on ${newOverrideDate} for ${doctor.name} in database.`);
     } catch (err) {
       const errorMsg = err.message || 'Failed to save schedule override.';
       setModalError(errorMsg);
@@ -393,16 +407,16 @@ export function AdminSchedulesPage() {
       const overrideMatch = (activeSchedule.overrides || []).find((o) => o.date === dateString);
 
       let status = dayConfig.enabled ? 'Active OPD' : 'Closed';
-      let badgeClass = dayConfig.enabled ? 'hospital-badge-confirmed' : 'hospital-badge-scheduled';
+      let badgeClass = dayConfig.enabled ? 'neu-badge-success' : 'neu-badge-secondary';
       let hours = dayConfig.enabled ? `${dayConfig.start} - ${dayConfig.end}` : 'Clinic Closed';
 
       if (leaveMatch) {
         status = 'On Leave';
-        badgeClass = 'hospital-badge-cancelled';
+        badgeClass = 'neu-badge-danger';
         hours = `Leave: ${leaveMatch.reason}`;
       } else if (overrideMatch) {
         status = `Override (${overrideMatch.type})`;
-        badgeClass = 'hospital-badge-pending';
+        badgeClass = 'neu-badge-warning';
         hours = `${overrideMatch.start} - ${overrideMatch.end}`;
       }
 
@@ -421,7 +435,7 @@ export function AdminSchedulesPage() {
   }, [activeSchedule]);
 
   return (
-    <div className="admin-schedules-page">
+    <div className="admin-schedules-view">
       <PageHeader
         title="Doctor Scheduling & Roster Management"
         description="Administrative management of recurring clinical shifts, consultation slot intervals, midday breaks, leaves, and schedule overrides."
@@ -430,69 +444,93 @@ export function AdminSchedulesPage() {
 
       {/* Persistence Status & Notification Banners */}
       {actionError && (
-        <div className="alert alert-danger d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert">
-          <div>
-            <strong>Error: </strong> {actionError}
+        <div 
+          className="neu-card p-3 mb-4 d-flex justify-content-between align-items-center"
+          style={{ 
+            borderRadius: '14px', 
+            background: 'var(--hospital-surface)',
+            borderLeft: '4px solid var(--neu-error)'
+          }}
+        >
+          <div className="d-flex align-items-center gap-2 small">
+            <AlertCircle size={16} color="var(--neu-error)" />
+            <span style={{ color: 'var(--neu-error)', fontWeight: 600 }}>{actionError}</span>
           </div>
           <button
             type="button"
-            className="btn-close"
-            aria-label="Close"
+            className="neu-btn-icon"
+            style={{ width: '28px', height: '28px', padding: 0 }}
             onClick={() => setActionError(null)}
-          />
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
       {actionNotice && (
-        <div className="alert alert-success d-flex align-items-center justify-content-between mb-4 shadow-sm" role="alert">
-          <div>
-            <strong>Success: </strong> {actionNotice}
+        <div 
+          className="neu-card p-3 mb-4 d-flex justify-content-between align-items-center"
+          style={{ 
+            borderRadius: '14px', 
+            background: 'var(--hospital-surface)',
+            borderLeft: '4px solid var(--neu-success)'
+          }}
+        >
+          <div className="d-flex align-items-center gap-2 small">
+            <CheckCircle2 size={16} color="var(--neu-success)" />
+            <span style={{ color: 'var(--hospital-primary-navy)', fontWeight: 600 }}>{actionNotice}</span>
           </div>
           <button
             type="button"
-            className="btn-close"
-            aria-label="Close"
+            className="neu-btn-icon"
+            style={{ width: '28px', height: '28px', padding: 0 }}
             onClick={() => setActionNotice(null)}
-          />
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
       {isSaving && (
-        <div className="alert alert-info py-2 mb-4 d-flex align-items-center gap-2">
-          <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
-          <span>Saving schedule changes to PostgreSQL database...</span>
+        <div 
+          className="neu-card p-3 mb-4 d-flex align-items-center gap-3"
+          style={{ borderRadius: '14px', background: 'var(--hospital-surface)' }}
+        >
+          <RotateCw size={16} className="spin-anim text-primary" />
+          <span className="small text-muted fw-semibold">Saving schedule changes to PostgreSQL database...</span>
         </div>
       )}
 
-      {/* Full Loading State */}
+      {/* Loading or Auth Error */}
       {isLoading && !doctor ? (
-        <div className="py-5 text-center my-4" aria-live="polite">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading doctor schedules...</span>
-          </div>
-          <p className="mt-3 text-muted">Retrieving doctor rosters and shift allocations from database...</p>
+        <div className="py-5 text-center my-4">
+          <RotateCw size={28} className="spin-anim text-primary mb-2" />
+          <p className="mt-2 text-muted">Retrieving doctor rosters and shift allocations from database...</p>
         </div>
       ) : isAuthError ? (
-        <div className="card shadow-sm border-warning my-4">
-          <div className="card-body p-4 text-center">
-            <div className="d-inline-flex p-3 rounded-circle bg-warning bg-opacity-10 text-warning mb-3">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </div>
-            <h3 className="h5 fw-bold text-dark mb-2">Administrative Authentication Required</h3>
-            <p className="text-muted small mx-auto mb-4" style={{ maxWidth: '480px' }}>
-              Your staff session has expired or requires authorization to view and manage doctor schedules and clinical shifts from PostgreSQL.
-            </p>
-            <div className="d-flex justify-content-center gap-2">
-              <Link to={`/staff/login?redirect=${encodeURIComponent(window.location.pathname)}`} className="btn btn-primary btn-sm">
-                Sign In to Staff Workspace
-              </Link>
-              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={loadDoctors}>
-                Retry Connection
-              </button>
-            </div>
+        <div 
+          className="neu-card p-5 text-center my-4" 
+          style={{ borderRadius: '24px', background: 'var(--hospital-surface)' }}
+        >
+          <div 
+            className="d-inline-flex p-3 rounded-circle mb-3"
+            style={{ background: 'var(--hospital-surface)', boxShadow: 'var(--neu-inset)', color: '#B7791F' }}
+          >
+            <AlertCircle size={32} />
+          </div>
+          <h3 className="h5 fw-bold mb-2" style={{ color: 'var(--hospital-primary-navy)' }}>
+            Administrative Authentication Required
+          </h3>
+          <p className="text-muted small mx-auto mb-4" style={{ maxWidth: '480px' }}>
+            Your staff session has expired or requires authorization to view and manage doctor schedules.
+          </p>
+          <div className="d-flex justify-content-center gap-2">
+            <Link to={`/staff/login?redirect=${encodeURIComponent(window.location.pathname)}`} className="neu-btn neu-btn-primary neu-btn-sm">
+              Sign In to Staff Workspace
+            </Link>
+            <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={loadDoctors}>
+              Retry Connection
+            </button>
           </div>
         </div>
       ) : !doctor ? (
@@ -504,18 +542,19 @@ export function AdminSchedulesPage() {
         </div>
       ) : (
         <>
-          {/* ====================================================================
-              1. Doctor Selector & Identity Bar
-              ==================================================================== */}
-          <section className="schedule-doctor-picker mb-4" aria-label="Select Doctor">
+          {/* Doctor Selector & Identity Bar */}
+          <section 
+            className="neu-card p-4 mb-4" 
+            style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+          >
             <div className="row g-3 align-items-center">
               <div className="col-12 col-md-5">
-                <label htmlFor="doctor-select" className="hospital-form-label mb-1">
-                  Select Medical Specialist to Manage Schedule:
+                <label htmlFor="doctor-select" className="neu-form-label mb-1">
+                  Select Specialist to Configure Roster:
                 </label>
                 <select
                   id="doctor-select"
-                  className="hospital-form-select"
+                  className="neu-select"
                   value={selectedDoctorId}
                   onChange={(e) => {
                     setSelectedDoctorId(e.target.value);
@@ -532,25 +571,42 @@ export function AdminSchedulesPage() {
               </div>
 
               <div className="col-12 col-md-7">
-                <div className="d-flex align-items-center gap-3 p-2 bg-light border border-light rounded">
-                  <div className="doctor-avatar-box" style={{ width: '3.25rem', height: '3.25rem' }} aria-hidden="true">
-                    <span>{doctor?.initials || 'DR'}</span>
+                <div 
+                  className="p-3 neu-card-sm d-flex align-items-center gap-3"
+                  style={{ borderRadius: '14px', background: 'var(--hospital-surface)' }}
+                >
+                  <div 
+                    className="neu-avatar-box d-flex align-items-center justify-content-center fw-bold"
+                    style={{ 
+                      width: '46px', 
+                      height: '46px', 
+                      borderRadius: '12px', 
+                      background: 'var(--hospital-surface)', 
+                      boxShadow: 'var(--neu-inset)', 
+                      color: 'var(--hospital-blue)',
+                      fontSize: '1rem',
+                      flexShrink: 0
+                    }}
+                  >
+                    {doctor?.initials || 'DR'}
                   </div>
                   <div className="flex-grow-1 min-w-0">
-                    <div className="fw-bold text-dark text-truncate">{doctor?.name}</div>
+                    <div className="fw-bold text-truncate" style={{ color: 'var(--hospital-primary-navy)' }}>
+                      {doctor?.name}
+                    </div>
                     <div className="small text-muted text-truncate">
                       {doctor?.specialty} &bull; {doctor?.departmentName || doctor?.department}
                     </div>
-                    <div className="small text-muted">
-                      OPD Location: <strong>{doctor?.consultation?.location || 'Clinical Wing'}</strong>
+                    <div className="small text-muted" style={{ fontSize: '0.78rem' }}>
+                      OPD Suite: <strong>{doctor?.consultation?.location || 'Clinical Wing'}</strong>
                     </div>
                   </div>
                   <div>
                     <span
-                      className={`hospital-badge ${
+                      className={`neu-badge ${
                         doctor?.status?.toLowerCase() === 'active' || doctor?.is_active
-                          ? 'hospital-badge-confirmed'
-                          : 'hospital-badge-pending'
+                          ? 'neu-badge-success'
+                          : 'neu-badge-warning'
                       }`}
                     >
                       {doctor?.status?.toLowerCase() === 'active' || doctor?.is_active
@@ -563,18 +619,19 @@ export function AdminSchedulesPage() {
             </div>
           </section>
 
-          {/* ====================================================================
-              2. Slot Configuration & Shift KPI Summary Cards
-              ==================================================================== */}
-          <section className="row g-3 mb-4" aria-label="Slot Configuration Parameters">
+          {/* Slot Configuration & Shift KPI Cards */}
+          <section className="row g-3 mb-4">
             <div className="col-6 col-lg-3">
-              <div className="schedule-kpi-card">
-                <div className="schedule-kpi-title">Slot Duration</div>
+              <div className="neu-card p-3 h-100" style={{ borderRadius: '16px' }}>
+                <span className="small text-muted fw-bold text-uppercase d-block mb-1">Slot Duration</span>
                 <div className="d-flex align-items-center justify-content-between mt-1">
-                  <div className="schedule-kpi-value">{activeSchedule.slotDuration} min</div>
+                  <span className="fs-4 fw-bold" style={{ color: 'var(--hospital-blue)', fontFamily: 'var(--font-display)' }}>
+                    {activeSchedule.slotDuration}m
+                  </span>
                   <select
                     aria-label="Change slot duration"
-                    className="form-select form-select-sm w-auto"
+                    className="neu-select py-1 px-2"
+                    style={{ width: 'auto', fontSize: '0.8rem' }}
                     value={activeSchedule.slotDuration}
                     onChange={(e) => handleChangeDuration(e.target.value)}
                   >
@@ -585,70 +642,75 @@ export function AdminSchedulesPage() {
                     <option value="60">60 min</option>
                   </select>
                 </div>
-                <div className="small text-muted mt-2">Consultation appointment block</div>
+                <div className="small text-muted mt-2" style={{ fontSize: '0.75rem' }}>Appointment consultation block</div>
               </div>
             </div>
 
             <div className="col-6 col-lg-3">
-              <div className="schedule-kpi-card">
-                <div className="schedule-kpi-title">Patient Capacity</div>
-                <div className="schedule-kpi-value">{activeSchedule.capacity} patient / slot</div>
-                <div className="small text-muted mt-2">Single patient per consultation slot</div>
+              <div className="neu-card p-3 h-100" style={{ borderRadius: '16px' }}>
+                <span className="small text-muted fw-bold text-uppercase d-block mb-1">Patient Capacity</span>
+                <span className="fs-4 fw-bold" style={{ color: 'var(--neu-success)', fontFamily: 'var(--font-display)' }}>
+                  {activeSchedule.capacity} / slot
+                </span>
+                <div className="small text-muted mt-2" style={{ fontSize: '0.75rem' }}>One patient per consultation slot</div>
               </div>
             </div>
 
             <div className="col-6 col-lg-3">
-              <div className="schedule-kpi-card">
-                <div className="schedule-kpi-title">Clinical Timezone</div>
-                <div className="schedule-kpi-value" style={{ fontSize: '1.05rem' }}>
+              <div className="neu-card p-3 h-100" style={{ borderRadius: '16px' }}>
+                <span className="small text-muted fw-bold text-uppercase d-block mb-1">Timezone</span>
+                <span className="fs-5 fw-bold d-block text-truncate" style={{ color: 'var(--hospital-primary-navy)' }}>
                   {activeSchedule.timezone}
-                </div>
-                <div className="small text-muted mt-2">Standard Indian Hospital Time (IST)</div>
+                </span>
+                <div className="small text-muted mt-2" style={{ fontSize: '0.75rem' }}>Indian Standard Time (IST)</div>
               </div>
             </div>
 
             <div className="col-6 col-lg-3">
-              <div className="schedule-kpi-card">
-                <div className="schedule-kpi-title">Active OPD Days</div>
-                <div className="schedule-kpi-value">{activeDaysCount} of 7 days</div>
-                <div className="small text-muted mt-2">Weekly recurring shifts configured</div>
+              <div className="neu-card p-3 h-100" style={{ borderRadius: '16px' }}>
+                <span className="small text-muted fw-bold text-uppercase d-block mb-1">Active Clinic Days</span>
+                <span className="fs-4 fw-bold" style={{ color: 'var(--hospital-cyan)', fontFamily: 'var(--font-display)' }}>
+                  {activeDaysCount} of 7 days
+                </span>
+                <div className="small text-muted mt-2" style={{ fontSize: '0.75rem' }}>Weekly recurring shift assignments</div>
               </div>
             </div>
           </section>
 
-          {/* ====================================================================
-              3. Weekly Schedule Table
-              ==================================================================== */}
-          <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="weekly-roster-heading">
+          {/* Weekly Schedule Table */}
+          <section 
+            className="neu-card p-4 mb-4" 
+            style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+          >
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
               <div>
-                <h3 id="weekly-roster-heading" className="h5 fw-bold text-primary mb-1">
+                <h3 className="fs-6 fw-bold mb-1" style={{ color: 'var(--hospital-primary-navy)' }}>
                   Weekly Recurring Roster for {doctor?.name}
                 </h3>
-                <p className="hospital-text-supporting mb-0">
+                <p className="small text-muted mb-0">
                   Standard recurring outpatient shift timings and breaks backed by PostgreSQL database.
                 </p>
               </div>
               <div>
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
+                  type="button"
+                  className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center gap-1"
                   onClick={() => setShowOverrideModal(true)}
                 >
-                  + Add Schedule Override
-                </Button>
+                  <Plus size={14} /> Add Override
+                </button>
               </div>
             </div>
 
-            <div className="table-responsive border border-light rounded">
-              <table className="schedule-admin-table table table-hover mb-0">
+            <div className="neu-table-container">
+              <table className="neu-table">
                 <thead>
                   <tr>
-                    <th scope="col" style={{ width: '18%' }}>Day</th>
-                    <th scope="col" style={{ width: '16%' }}>Clinic Status</th>
-                    <th scope="col" style={{ width: '24%' }}>Shift Hours</th>
-                    <th scope="col" style={{ width: '24%' }}>Midday Breaks</th>
-                    <th scope="col" style={{ width: '18%' }}>Actions</th>
+                    <th>Day</th>
+                    <th>Clinic Status</th>
+                    <th>Shift Hours</th>
+                    <th>Midday Breaks</th>
+                    <th className="text-end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -657,11 +719,11 @@ export function AdminSchedulesPage() {
 
                     return (
                       <tr key={day}>
-                        <td className="fw-semibold text-dark">{day}</td>
+                        <td className="fw-semibold">{day}</td>
                         <td>
                           <span
-                            className={`hospital-badge ${
-                              config.enabled ? 'hospital-badge-confirmed' : 'hospital-badge-cancelled'
+                            className={`neu-badge ${
+                              config.enabled ? 'neu-badge-success' : 'neu-badge-secondary'
                             }`}
                           >
                             {config.enabled ? 'Active OPD' : 'Closed / Off Duty'}
@@ -669,7 +731,7 @@ export function AdminSchedulesPage() {
                         </td>
                         <td>
                           {config.enabled ? (
-                            <span className="fw-semibold text-dark">
+                            <span className="fw-semibold">
                               {config.start} - {config.end}
                             </span>
                           ) : (
@@ -678,9 +740,19 @@ export function AdminSchedulesPage() {
                         </td>
                         <td>
                           {config.enabled && config.breaks && config.breaks.length > 0 ? (
-                            <div>
+                            <div className="d-flex flex-wrap gap-1">
                               {config.breaks.map((b, bIdx) => (
-                                <span key={bIdx} className="schedule-break-tag" title={b.label}>
+                                <span 
+                                  key={bIdx} 
+                                  className="px-2 py-0.5 rounded small"
+                                  style={{ 
+                                    background: 'var(--hospital-surface)', 
+                                    boxShadow: 'var(--neu-inset)',
+                                    fontSize: '0.75rem',
+                                    color: '#B7791F'
+                                  }}
+                                  title={b.label}
+                                >
                                   {b.start} - {b.end} ({b.label})
                                 </span>
                               ))}
@@ -691,30 +763,28 @@ export function AdminSchedulesPage() {
                             <span className="text-muted small">N/A</span>
                           )}
                         </td>
-                        <td>
-                          <div className="d-flex gap-1">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary py-0 px-2"
-                              style={{ fontSize: '0.75rem' }}
-                              onClick={() => {
-                                setEditShiftDay(day);
-                                setEditShiftStart(config.start || '09:00');
-                                setEditShiftEnd(config.end || '13:00');
-                                setEditShiftEnabled(config.enabled);
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className={`btn btn-sm ${config.enabled ? 'btn-outline-danger' : 'btn-outline-success'} py-0 px-2`}
-                              style={{ fontSize: '0.75rem' }}
-                              onClick={() => handleToggleDay(day)}
-                            >
-                              {config.enabled ? 'Mark Off' : 'Activate'}
-                            </button>
-                          </div>
+                        <td className="text-end text-nowrap">
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-outline neu-btn-sm me-1"
+                            onClick={() => {
+                              setEditShiftDay(day);
+                              setEditShiftStart(config.start || '09:00');
+                              setEditShiftEnd(config.end || '13:00');
+                              setEditShiftEnabled(config.enabled);
+                            }}
+                          >
+                            <Edit3 size={12} className="me-1" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className={`neu-btn neu-btn-sm ${config.enabled ? 'neu-btn-danger' : 'neu-btn-primary'}`}
+                            onClick={() => handleToggleDay(day)}
+                          >
+                            <Power size={12} className="me-1" />
+                            {config.enabled ? 'Mark Off' : 'Activate'}
+                          </button>
                         </td>
                       </tr>
                     );
@@ -724,74 +794,84 @@ export function AdminSchedulesPage() {
             </div>
           </section>
 
-          {/* ====================================================================
-              4. Weekly Calendar / Roster View (Representative 7-Day Grid)
-              ==================================================================== */}
-          <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="calendar-view-heading">
-            <h3 id="calendar-view-heading" className="h5 fw-bold text-primary mb-1">
+          {/* 7-Day Visual Calendar Grid */}
+          <section 
+            className="neu-card p-4 mb-4" 
+            style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+          >
+            <h3 className="fs-6 fw-bold mb-1" style={{ color: 'var(--hospital-primary-navy)' }}>
               7-Day Visual Roster Calendar View
             </h3>
-            <p className="hospital-text-supporting mb-3">
+            <p className="small text-muted mb-3">
               Consolidated visual matrix incorporating weekly shifts, clinical breaks, scheduled leaves, and active overrides.
             </p>
 
             <div className="row g-2">
-              {representativeCalendar.map((col) => {
-                let borderClass = 'active-day';
-                if (col.isLeave) borderClass = 'leave-day';
-                else if (col.isOverride) borderClass = 'override-day';
-                else if (col.status === 'Closed') borderClass = 'disabled-day';
-
-                return (
-                  <div key={col.day} className="col-12 col-sm-6 col-md-4 col-lg">
-                    <div className={`schedule-calendar-cell ${borderClass}`}>
-                      <div className="d-flex justify-content-between align-items-center mb-1">
-                        <span className="fw-bold text-dark">{col.day.slice(0, 3)}</span>
-                        <span className="small text-muted">{col.displayDate}</span>
-                      </div>
-
-                      <div className="my-1">
-                        <span className={`hospital-badge ${col.badgeClass} w-100 text-center py-1`} style={{ fontSize: '0.65rem' }}>
-                          {col.status}
-                        </span>
-                      </div>
-
-                      <div className="small fw-semibold text-dark mt-1 text-truncate" title={col.hours}>
-                        {col.hours}
-                      </div>
-
-                      {col.breaks.length > 0 && (
-                        <div className="small text-muted mt-auto pt-2 border-top" style={{ fontSize: '0.7rem' }}>
-                          Break: {col.breaks[0].start} - {col.breaks[0].end}
-                        </div>
-                      )}
+              {representativeCalendar.map((col) => (
+                <div key={col.day} className="col-12 col-sm-6 col-md-4 col-lg">
+                  <div 
+                    className="p-3 neu-card-sm h-100 d-flex flex-column"
+                    style={{ 
+                      borderRadius: '14px', 
+                      background: 'var(--hospital-surface)',
+                      borderTop: `3px solid ${col.isLeave ? 'var(--neu-error)' : col.isOverride ? '#B7791F' : col.status === 'Active OPD' ? 'var(--neu-success)' : 'var(--hospital-border)'}`
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <span className="fw-bold">{col.day.slice(0, 3)}</span>
+                      <span className="small text-muted">{col.displayDate}</span>
                     </div>
+
+                    <div className="mb-2">
+                      <span className={`neu-badge ${col.badgeClass} w-100 text-center py-1`} style={{ fontSize: '0.7rem' }}>
+                        {col.status}
+                      </span>
+                    </div>
+
+                    <div className="small fw-semibold mt-1 text-truncate" title={col.hours}>
+                      {col.hours}
+                    </div>
+
+                    {col.breaks.length > 0 && (
+                      <div className="small text-muted mt-auto pt-2 border-top" style={{ fontSize: '0.72rem', borderColor: 'var(--hospital-border)' }}>
+                        Break: {col.breaks[0].start} - {col.breaks[0].end}
+                      </div>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </section>
 
-          {/* ====================================================================
-              5. Break Management Breakdown
-              ==================================================================== */}
-          <section className="hospital-card p-4 mb-4 bg-white" aria-labelledby="breaks-heading">
-            <h3 id="breaks-heading" className="h5 fw-bold text-primary mb-2">
-              Clinical Break Management
-            </h3>
-            <p className="hospital-text-supporting mb-3">
-              Structured intervals reserved for doctor documentation, case discussions, and surgical handoffs.
-              Slots during break hours are automatically protected from appointment booking.
+          {/* Clinical Break Management */}
+          <section 
+            className="neu-card p-4 mb-4" 
+            style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+          >
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <Coffee size={18} color="#B7791F" />
+              <h3 className="fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                Clinical Break Management
+              </h3>
+            </div>
+            <p className="small text-muted mb-3">
+              Structured intervals reserved for documentation, clinical rounds, and handoffs. Break slots are protected from booking.
             </p>
 
             {allWeeklyBreaks.length > 0 ? (
               <div className="row g-3">
                 {allWeeklyBreaks.map((item, idx) => (
                   <div key={idx} className="col-12 col-md-6 col-lg-4">
-                    <div className="p-3 bg-light border border-light rounded">
+                    <div 
+                      className="p-3 neu-card-sm"
+                      style={{ borderRadius: '14px', background: 'var(--hospital-surface)' }}
+                    >
                       <div className="d-flex justify-content-between align-items-center mb-1">
-                        <span className="fw-bold text-dark">{item.day}</span>
-                        <span className="badge bg-warning text-dark py-1 px-2" style={{ fontSize: '0.7rem' }}>
+                        <span className="fw-bold">{item.day}</span>
+                        <span 
+                          className="px-2 py-0.5 rounded small font-monospace"
+                          style={{ background: 'var(--hospital-surface)', boxShadow: 'var(--neu-inset)', color: '#B7791F', fontSize: '0.75rem' }}
+                        >
                           {item.start} - {item.end}
                         </span>
                       </div>
@@ -801,46 +881,47 @@ export function AdminSchedulesPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-3 bg-light border border-light rounded text-muted small">
-                No recurring midday clinical breaks are currently logged for this physician in PostgreSQL.
+              <div className="p-3 neu-card-sm text-muted small" style={{ borderRadius: '14px' }}>
+                No recurring midday clinical breaks are currently logged for this specialist in PostgreSQL.
               </div>
             )}
           </section>
 
-          {/* ====================================================================
-              6. Leave & Overrides Grid (Two Columns)
-              ==================================================================== */}
-          <div className="row g-4 mb-5">
+          {/* Leave & Overrides Grid */}
+          <div className="row g-4 mb-4">
             {/* Scheduled Leaves Column */}
             <div className="col-12 col-lg-6">
-              <section className="hospital-card p-4 h-100 bg-white" aria-labelledby="leaves-mgmt-heading">
+              <section 
+                className="neu-card p-4 h-100" 
+                style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+              >
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h3 id="leaves-mgmt-heading" className="h6 fw-bold text-primary mb-0">
-                    Scheduled Leaves & Unavailability
+                  <h3 className="fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    Scheduled Leaves & Absences
                   </h3>
-                  <span className="small text-muted">{activeSchedule.leaves?.length || 0} Records</span>
+                  <span className="neu-badge neu-badge-info">{activeSchedule.leaves?.length || 0} Records</span>
                 </div>
                 <p className="small text-muted mb-3">
                   Approved clinical leaves, conferences, and institutional holiday absences.
                 </p>
 
                 {activeSchedule.leaves && activeSchedule.leaves.length > 0 ? (
-                  <div className="table-responsive border border-light rounded">
-                    <table className="table table-sm table-hover mb-0 small">
+                  <div className="neu-table-container">
+                    <table className="neu-table">
                       <thead>
-                        <tr className="bg-light">
-                          <th scope="col">Date</th>
-                          <th scope="col">Reason</th>
-                          <th scope="col">Status</th>
+                        <tr>
+                          <th>Date</th>
+                          <th>Reason</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {activeSchedule.leaves.map((l, index) => (
                           <tr key={index}>
-                            <td className="fw-semibold text-dark text-nowrap">{l.date}</td>
+                            <td className="fw-semibold text-nowrap">{l.date}</td>
                             <td>{l.reason}</td>
                             <td>
-                              <span className="hospital-badge hospital-badge-cancelled">
+                              <span className="neu-badge neu-badge-danger">
                                 {l.status || 'On Leave'}
                               </span>
                             </td>
@@ -850,8 +931,8 @@ export function AdminSchedulesPage() {
                     </table>
                   </div>
                 ) : (
-                  <div className="p-3 bg-light border border-light rounded text-muted small text-center">
-                    No scheduled leaves recorded for this physician in PostgreSQL.
+                  <div className="p-3 neu-card-sm text-muted small text-center" style={{ borderRadius: '14px' }}>
+                    No scheduled leaves recorded for this specialist in PostgreSQL.
                   </div>
                 )}
               </section>
@@ -859,42 +940,43 @@ export function AdminSchedulesPage() {
 
             {/* Schedule Overrides Column */}
             <div className="col-12 col-lg-6">
-              <section className="hospital-card p-4 h-100 bg-white" aria-labelledby="overrides-mgmt-heading">
+              <section 
+                className="neu-card p-4 h-100" 
+                style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+              >
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h3 id="overrides-mgmt-heading" className="h6 fw-bold text-primary mb-0">
+                  <h3 className="fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Schedule Overrides & Special OPDs
                   </h3>
-                  <span className="small text-muted">{activeSchedule.overrides?.length || 0} Records</span>
+                  <span className="neu-badge neu-badge-info">{activeSchedule.overrides?.length || 0} Records</span>
                 </div>
                 <p className="small text-muted mb-3">
                   One-off adjustments to recurring hours such as extended clinics, screening camps, or holiday hours.
                 </p>
 
                 {activeSchedule.overrides && activeSchedule.overrides.length > 0 ? (
-                  <div className="table-responsive border border-light rounded">
-                    <table className="table table-sm table-hover mb-0 small">
+                  <div className="neu-table-container">
+                    <table className="neu-table">
                       <thead>
-                        <tr className="bg-light">
-                          <th scope="col">Date</th>
-                          <th scope="col">Type</th>
-                          <th scope="col">Hours</th>
-                          <th scope="col">Reason</th>
+                        <tr>
+                          <th>Date</th>
+                          <th>Type</th>
+                          <th>Hours</th>
+                          <th>Reason</th>
                         </tr>
                       </thead>
                       <tbody>
                         {activeSchedule.overrides.map((ov, index) => (
                           <tr key={index}>
-                            <td className="fw-semibold text-dark text-nowrap">{ov.date}</td>
+                            <td className="fw-semibold text-nowrap">{ov.date}</td>
                             <td>
-                              <span className={`schedule-override-tag ${!ov.is_available ? 'bg-secondary text-white border-0' : ''}`}>
+                              <span className="neu-badge neu-badge-warning">
                                 {ov.type}
                               </span>
                             </td>
                             <td className="text-nowrap">
                               {!ov.is_available ? (
-                                <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-                                  Closed All Day
-                                </span>
+                                <span className="small text-muted">Closed</span>
                               ) : (
                                 `${ov.start} - ${ov.end}`
                               )}
@@ -906,8 +988,8 @@ export function AdminSchedulesPage() {
                     </table>
                   </div>
                 ) : (
-                  <div className="p-3 bg-light border border-light rounded text-muted small text-center">
-                    No active schedule overrides logged for this physician in PostgreSQL.
+                  <div className="p-3 neu-card-sm text-muted small text-center" style={{ borderRadius: '14px' }}>
+                    No active schedule overrides logged for this specialist in PostgreSQL.
                   </div>
                 )}
               </section>
@@ -916,67 +998,66 @@ export function AdminSchedulesPage() {
         </>
       )}
 
-      {/* ====================================================================
-          7. Edit Shift Hours Modal
-          ==================================================================== */}
+      {/* Edit Shift Hours Modal */}
       {editShiftDay && (
         <div
           className="modal show d-block"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)' }}
+          tabIndex="-1"
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
-          aria-modal="true"
-          aria-labelledby="shift-modal-title"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
               <form onSubmit={handleSaveShift}>
-                <div className="modal-header">
-                  <h5 id="shift-modal-title" className="modal-title fw-bold text-primary">
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Configure Shift: {editShiftDay}
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
-                    aria-label="Close"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => setEditShiftDay(null)}
-                  />
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
 
-                <div className="modal-body">
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                   <div className="mb-3">
-                    <label className="hospital-form-label d-flex align-items-center gap-2">
+                    <label className="d-flex align-items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={editShiftEnabled}
                         onChange={(e) => setEditShiftEnabled(e.target.checked)}
                       />
-                      <span>Active OPD on {editShiftDay}</span>
+                      <span className="small fw-semibold">Active OPD on {editShiftDay}</span>
                     </label>
                   </div>
 
                   {editShiftEnabled && (
                     <div className="row g-2 mb-3">
                       <div className="col-6">
-                        <label htmlFor="shift-start" className="hospital-form-label">
-                          Start Time
-                        </label>
+                        <label className="neu-form-label">Start Time</label>
                         <input
-                          id="shift-start"
                           type="time"
-                          className="hospital-form-control"
+                          className="neu-input"
                           value={editShiftStart}
                           onChange={(e) => setEditShiftStart(e.target.value)}
                           required
                         />
                       </div>
                       <div className="col-6">
-                        <label htmlFor="shift-end" className="hospital-form-label">
-                          End Time
-                        </label>
+                        <label className="neu-form-label">End Time</label>
                         <input
-                          id="shift-end"
                           type="time"
-                          className="hospital-form-control"
+                          className="neu-input"
                           value={editShiftEnd}
                           onChange={(e) => setEditShiftEnd(e.target.value)}
                           required
@@ -986,17 +1067,20 @@ export function AdminSchedulesPage() {
                   )}
                 </div>
 
-                <div className="modal-footer">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => setEditShiftDay(null)}
                   >
                     Cancel
-                  </Button>
-                  <Button variant="primary" size="sm" type="submit" disabled={isSaving}>
+                  </button>
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSaving}>
                     {isSaving ? 'Saving...' : 'Save Shift to Database'}
-                  </Button>
+                  </button>
                 </div>
               </form>
             </div>
@@ -1004,50 +1088,60 @@ export function AdminSchedulesPage() {
         </div>
       )}
 
-      {/* ====================================================================
-          8. Add Override Modal
-          ==================================================================== */}
+      {/* Add Override Modal */}
       {showOverrideModal && (
         <div
           className="modal show d-block"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)' }}
+          tabIndex="-1"
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
-          aria-modal="true"
-          aria-labelledby="override-modal-title"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
               <form onSubmit={handleAddOverride}>
-                <div className="modal-header">
-                  <h5 id="override-modal-title" className="modal-title fw-bold text-primary">
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Add Schedule Override for {doctor?.name}
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
-                    aria-label="Close"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => {
                       setShowOverrideModal(false);
                       setModalError(null);
                     }}
-                  />
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
 
-                <div className="modal-body">
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                   {modalError && (
-                    <div className="alert alert-danger py-2 small mb-3 text-break" role="alert">
+                    <div 
+                      className="p-3 mb-3 small"
+                      style={{ 
+                        borderRadius: '12px', 
+                        background: 'var(--hospital-surface)', 
+                        borderLeft: '4px solid var(--neu-error)',
+                        color: 'var(--neu-error)'
+                      }}
+                    >
                       <strong>Validation Error: </strong> {modalError}
                     </div>
                   )}
 
                   <div className="mb-3">
-                    <label htmlFor="modal-date" className="hospital-form-label">
-                      Override Date
-                    </label>
+                    <label className="neu-form-label">Override Date</label>
                     <input
-                      id="modal-date"
                       type="date"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={newOverrideDate}
                       onChange={(e) => {
                         setNewOverrideDate(e.target.value);
@@ -1058,12 +1152,9 @@ export function AdminSchedulesPage() {
                   </div>
 
                   <div className="mb-3">
-                    <label htmlFor="modal-type" className="hospital-form-label">
-                      Override Type
-                    </label>
+                    <label className="neu-form-label">Override Type</label>
                     <select
-                      id="modal-type"
-                      className="hospital-form-select"
+                      className="neu-select"
                       value={newOverrideType}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -1081,25 +1172,21 @@ export function AdminSchedulesPage() {
                       <option value="SPECIAL_OPD">Special OPD</option>
                       <option value="EXTENDED_HOURS">Extended Hours</option>
                       <option value="REDUCED_HOURS">Reduced Hours</option>
-                      <option value="CLOSED">Closed</option>
+                      <option value="CLOSED">Closed All Day</option>
                     </select>
                   </div>
 
                   {newOverrideType === 'CLOSED' ? (
-                    <div className="alert alert-secondary py-2 small mb-3">
-                      <i className="bi bi-info-circle me-1" />
+                    <div className="p-3 mb-3 small text-muted rounded" style={{ background: 'var(--hospital-surface)', boxShadow: 'var(--neu-inset)' }}>
                       Clinic will be marked <strong>Closed</strong> all day on this date. Outpatient appointment bookings will be disabled.
                     </div>
                   ) : (
                     <div className="row g-2 mb-3">
                       <div className="col-6">
-                        <label htmlFor="modal-start" className="hospital-form-label">
-                          Start Time
-                        </label>
+                        <label className="neu-form-label">Start Time</label>
                         <input
-                          id="modal-start"
                           type="time"
-                          className="hospital-form-control"
+                          className="neu-input"
                           value={newOverrideStart}
                           onChange={(e) => {
                             setNewOverrideStart(e.target.value);
@@ -1109,13 +1196,10 @@ export function AdminSchedulesPage() {
                         />
                       </div>
                       <div className="col-6">
-                        <label htmlFor="modal-end" className="hospital-form-label">
-                          End Time
-                        </label>
+                        <label className="neu-form-label">End Time</label>
                         <input
-                          id="modal-end"
                           type="time"
-                          className="hospital-form-control"
+                          className="neu-input"
                           value={newOverrideEnd}
                           onChange={(e) => {
                             setNewOverrideEnd(e.target.value);
@@ -1128,13 +1212,10 @@ export function AdminSchedulesPage() {
                   )}
 
                   <div className="mb-3">
-                    <label htmlFor="modal-reason" className="hospital-form-label">
-                      Clinical Reason
-                    </label>
+                    <label className="neu-form-label">Clinical Reason</label>
                     <input
-                      id="modal-reason"
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       placeholder="e.g. Special Screening Camp, Institutional Review"
                       value={newOverrideReason}
                       onChange={(e) => {
@@ -1146,20 +1227,23 @@ export function AdminSchedulesPage() {
                   </div>
                 </div>
 
-                <div className="modal-footer">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => {
                       setShowOverrideModal(false);
                       setModalError(null);
                     }}
                   >
                     Cancel
-                  </Button>
-                  <Button variant="primary" size="sm" type="submit" disabled={isSaving}>
-                    {isSaving ? 'Saving...' : 'Save to PostgreSQL'}
-                  </Button>
+                  </button>
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSaving}>
+                    {isSaving ? 'Saving...' : 'Save to Database'}
+                  </button>
                 </div>
               </form>
             </div>

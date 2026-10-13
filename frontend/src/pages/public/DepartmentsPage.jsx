@@ -3,13 +3,12 @@ import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import DepartmentCard from '../../components/departments/DepartmentCard';
 import EmptyState from '../../components/common/EmptyState';
-import Button from '../../components/common/Button';
 import { DEMO_DEPARTMENTS } from '../../data/hospitalData';
+import { Search, X, Building2, Filter } from 'lucide-react';
 
 /**
- * Hospital Platform — Clinical Departments Directory (Phase 3)
- * Full department discovery interface with client-side real-time search,
- * specialty category filtering, and accessible state management.
+ * Hospital Platform — Clinical Departments Directory
+ * Full department discovery interface with Neumorphic styling.
  */
 export function DepartmentsPage() {
   const breadcrumbs = [
@@ -17,17 +16,14 @@ export function DepartmentsPage() {
     { label: 'Clinical Departments' },
   ];
 
-  // Search and filter states (Client-side local mock data)
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('ALL');
 
-  // Extract unique specialties for filter options
   const specialtyCategories = useMemo(() => {
     const specialties = new Set(DEMO_DEPARTMENTS.map((d) => d.specialty));
     return ['ALL', ...Array.from(specialties)];
   }, []);
 
-  // Filter departments based on search query and category
   const filteredDepartments = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -55,7 +51,7 @@ export function DepartmentsPage() {
   };
 
   return (
-    <div className="departments-page">
+    <div className="departments-page py-4">
       <Container>
         <PageHeader
           title="Clinical Departments & Specialties"
@@ -64,9 +60,10 @@ export function DepartmentsPage() {
         />
 
         {/* Introduction Panel */}
-        <div className="hospital-card p-4 mb-4 bg-white">
-          <h2 className="h5 fw-bold text-primary mb-2">
-            Outpatient & Inpatient Clinical Services
+        <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
+          <h2 className="h5 fw-bold text-primary mb-2 d-flex align-items-center gap-2">
+            <Building2 size={20} />
+            <span>Outpatient & Inpatient Clinical Services</span>
           </h2>
           <p className="hospital-body mb-0 text-muted">
             Our medical center encompasses acute inpatient divisions, diagnostic laboratories,
@@ -76,32 +73,35 @@ export function DepartmentsPage() {
         </div>
 
         {/* Search & Category Filter Control Bar */}
-        <div className="dept-filter-bar">
+        <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
           <div className="row g-3 align-items-center">
             {/* Search Input Column */}
             <div className="col-12 col-md-6 col-lg-5">
               <label htmlFor="dept-search" className="hospital-form-label mb-1">
                 Search Departments or Specialties
               </label>
-              <div className="d-flex gap-2">
+              <div className="neu-inset rounded-3 p-1 d-flex align-items-center gap-2">
+                <span className="text-muted ps-2">
+                  <Search size={16} />
+                </span>
                 <input
                   id="dept-search"
                   type="text"
-                  className="hospital-form-control"
-                  placeholder="e.g. Cardiology, Stroke, Bone, Joint, Skin..."
+                  className="form-control bg-transparent border-0 shadow-none ps-0"
+                  placeholder="e.g. Cardiology, Bone, Skin..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   aria-label="Search departments by name or clinical keywords"
                 />
                 {searchQuery && (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link text-muted p-1 me-1"
                     onClick={() => setSearchQuery('')}
-                    ariaLabel="Clear search input"
+                    aria-label="Clear search input"
                   >
-                    Clear
-                  </Button>
+                    <X size={16} />
+                  </button>
                 )}
               </div>
             </div>
@@ -113,10 +113,10 @@ export function DepartmentsPage() {
               </label>
 
               {/* Mobile Dropdown View */}
-              <div className="d-md-none">
+              <div className="d-md-none neu-inset rounded-3 p-1">
                 <select
                   id="dept-specialty-select"
-                  className="hospital-form-control"
+                  className="form-select bg-transparent border-0 shadow-none"
                   value={selectedSpecialty}
                   onChange={(e) => setSelectedSpecialty(e.target.value)}
                   aria-label="Filter departments by specialty"
@@ -133,19 +133,21 @@ export function DepartmentsPage() {
               </div>
 
               {/* Desktop Pill Buttons View */}
-              <div className="dept-category-pills d-none d-md-flex">
+              <div className="d-none d-md-flex flex-wrap gap-2">
                 {specialtyCategories.map((spec) => {
                   const isActive = selectedSpecialty === spec;
                   const label =
                     spec === 'ALL'
-                      ? `All Departments (${DEMO_DEPARTMENTS.length})`
+                      ? `All (${DEMO_DEPARTMENTS.length})`
                       : spec;
 
                   return (
                     <button
                       key={spec}
                       type="button"
-                      className={`dept-category-btn ${isActive ? 'active' : ''}`}
+                      className={`neu-btn neu-btn-sm py-1 px-3 ${
+                        isActive ? 'neu-btn-primary' : 'neu-btn-secondary'
+                      }`}
                       onClick={() => setSelectedSpecialty(spec)}
                       aria-pressed={isActive}
                     >
@@ -170,10 +172,10 @@ export function DepartmentsPage() {
           {(searchQuery || selectedSpecialty !== 'ALL') && (
             <button
               type="button"
-              className="btn btn-link btn-sm text-decoration-none text-secondary p-0"
+              className="neu-btn neu-btn-outline neu-btn-sm py-1 px-2"
               onClick={handleResetFilters}
             >
-              Reset all filters
+              Reset filters
             </button>
           )}
         </div>
@@ -193,9 +195,9 @@ export function DepartmentsPage() {
               title="No Departments Match Your Query"
               message={`No clinical departments were found matching your search "${searchQuery}". Please check spelling or select another specialty filter.`}
               action={
-                <Button variant="primary" size="sm" onClick={handleResetFilters}>
+                <button type="button" className="neu-btn neu-btn-primary" onClick={handleResetFilters}>
                   Clear Search & View All Departments
-                </Button>
+                </button>
               }
             />
           </div>

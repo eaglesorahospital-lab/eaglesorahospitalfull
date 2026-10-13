@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import scheduleService from '../../services/scheduleService';
+import { Calendar, Clock, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 
-/**
- * Formats 24h time string ("09:00:00" or "09:00") into clean 12h display ("09:00 AM").
- */
 function formatTime12h(timeStr) {
   if (!timeStr) return '';
   const parts = timeStr.split(':');
@@ -14,10 +12,6 @@ function formatTime12h(timeStr) {
   return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
 }
 
-/**
- * Computes calendar date string "YYYY-MM-DD" using local date components.
- * Defends against UTC timezone shifts.
- */
 function getLocalDateString(d) {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -27,8 +21,7 @@ function getLocalDateString(d) {
 
 /**
  * Hospital Platform — Date and Time Slot Picker
- * Authoritatively integrated with Django REST Framework / PostgreSQL (/api/schedules/availability/).
- * Respects working days, clinical shifts, breaks, overrides, leaves, and booked appointment capacity.
+ * Integrated with backend /api/schedules/availability/ with Neumorphic styling.
  */
 export function DateSlotPicker({
   doctor,
@@ -46,7 +39,6 @@ export function DateSlotPicker({
   const [apiError, setApiError] = useState(null);
   const [dayNotice, setDayNotice] = useState(null);
 
-  // Generate 10 upcoming calendar days
   const targetDateRange = useMemo(() => {
     const today = new Date();
     const days = [];
@@ -64,7 +56,6 @@ export function DateSlotPicker({
   const startDateStr = targetDateRange[0]?.dateString;
   const endDateStr = targetDateRange[targetDateRange.length - 1]?.dateString;
 
-  // Fetch 10-day availability range for doctor from PostgreSQL
   const fetchAvailabilityRange = useCallback(async () => {
     if (!doctor || (!doctor.id && !doctor.slug)) return;
     setIsLoadingRange(true);
@@ -101,7 +92,6 @@ export function DateSlotPicker({
         });
         setRangeDays(mapped);
 
-        // Auto-select first selectable date if none selected or if selected date is closed
         const currentSelectedValid = mapped.some((d) => d.dateString === selectedDate && d.isSelectable);
         if (!currentSelectedValid) {
           const firstSelectable = mapped.find((d) => d.isSelectable);
@@ -122,11 +112,9 @@ export function DateSlotPicker({
     fetchAvailabilityRange();
   }, [fetchAvailabilityRange]);
 
-  // Determine active date object
   const activeSelectedDate = selectedDate || rangeDays.find((d) => d.isSelectable)?.dateString;
   const activeDayObj = rangeDays.find((d) => d.dateString === activeSelectedDate) || targetDateRange.find((d) => d.dateString === activeSelectedDate) || targetDateRange[0];
 
-  // Fetch authoritative slots for activeSelectedDate from PostgreSQL
   useEffect(() => {
     if (!doctor || !activeSelectedDate) return;
     let isMounted = true;
@@ -181,24 +169,27 @@ export function DateSlotPicker({
   }));
 
   return (
-    <div className="hospital-card p-4 bg-white mb-4">
+    <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
       <div className="d-flex justify-content-between align-items-center mb-1">
-        <h3 className="h5 fw-bold text-primary mb-0">Select Consultation Date & Time Slot</h3>
+        <h3 className="h5 fw-bold text-primary mb-0 d-flex align-items-center gap-2">
+          <Calendar size={18} />
+          <span>Select Consultation Date & Time Slot</span>
+        </h3>
         {isLoadingRange && (
-          <span className="badge bg-light text-secondary d-flex align-items-center gap-1">
-            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <span className="small text-muted d-flex align-items-center gap-1">
+            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
             Syncing roster...
           </span>
         )}
       </div>
-      <p className="hospital-text-supporting mb-3">
+      <p className="text-muted small mb-3">
         Choose a clinical OPD date to inspect verified consultation time slots with {doctor?.name || 'Physician'}.
       </p>
 
       {apiError && (
-        <div className="alert alert-warning py-2 px-3 mb-3 small d-flex justify-content-between align-items-center" role="alert">
+        <div className="neu-inset p-3 rounded-3 border-start border-4 border-warning small mb-3 text-warning d-flex justify-content-between align-items-center" role="alert">
           <span>{apiError}</span>
-          <button type="button" className="btn btn-sm btn-outline-dark" onClick={fetchAvailabilityRange}>
+          <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={fetchAvailabilityRange}>
             Retry
           </button>
         </div>
@@ -210,27 +201,28 @@ export function DateSlotPicker({
         <div className="row g-2">
           {displayDays.map((day) => {
             const isSelected = activeSelectedDate === day.dateString;
-            let badgeClass = 'hospital-badge-scheduled';
-            if (day.statusType === 'available') badgeClass = 'hospital-badge-confirmed';
-            else if (day.statusType === 'override') badgeClass = 'hospital-badge-pending';
-            else if (day.statusType === 'leave') badgeClass = 'hospital-badge-cancelled';
-            else if (day.statusType === 'closed') badgeClass = 'hospital-badge-scheduled';
+            let badgeType = 'neutral';
+            if (day.statusType === 'available') badgeType = 'success';
+            else if (day.statusType === 'override') badgeType = 'warning';
+            else if (day.statusType === 'leave') badgeType = 'danger';
 
             return (
               <div key={day.dateString} className="col-6 col-sm-4 col-md-3 col-lg">
                 <button
                   type="button"
-                  className={`w-100 day-tab-btn ${isSelected ? 'active' : ''}`}
+                  className={`w-100 p-2-5 rounded-4 border-0 text-center transition-all ${
+                    isSelected ? 'neu-inset' : 'neu-raised neu-surface'
+                  }`}
                   onClick={() => onSelectDate(day.dateString, day.dayName)}
                   disabled={!day.isSelectable}
                   aria-pressed={isSelected}
-                  style={!day.isSelectable ? { opacity: 0.55, cursor: 'not-allowed' } : {}}
+                  style={!day.isSelectable ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   title={day.reason || day.status}
                 >
-                  <div className="fw-bold">{day.dayName.slice(0, 3)}</div>
-                  <div className="small">{day.displayDate}</div>
+                  <div className="fw-bold text-body small">{day.dayName.slice(0, 3)}</div>
+                  <div className="small text-muted" style={{ fontSize: '0.75rem' }}>{day.displayDate}</div>
                   <div className="mt-1">
-                    <span className={`hospital-badge ${badgeClass} text-nowrap`} style={{ fontSize: '0.65rem' }}>
+                    <span className={`neu-badge neu-badge-${badgeType} text-nowrap`} style={{ fontSize: '0.6rem' }}>
                       {day.status}
                     </span>
                   </div>
@@ -241,8 +233,9 @@ export function DateSlotPicker({
         </div>
 
         {errors.date && (
-          <div className="text-danger small mt-2" role="alert">
-            {errors.date}
+          <div className="text-danger small mt-2 d-flex align-items-center gap-1" role="alert">
+            <AlertTriangle size={13} />
+            <span>{errors.date}</span>
           </div>
         )}
       </div>
@@ -259,16 +252,14 @@ export function DateSlotPicker({
         </div>
 
         {dayNotice && (
-          <div className={`alert ${activeDayObj?.isSelectable ? 'alert-info' : 'alert-secondary'} py-2 px-3 mb-3 small`} role="alert">
-            <strong>Schedule Notice: </strong> {dayNotice}
+          <div className="neu-inset p-3 rounded-3 small mb-3 text-muted" role="alert">
+            <strong className="text-body">Schedule Notice: </strong> {dayNotice}
           </div>
         )}
 
         {isLoadingSlots ? (
           <div className="py-4 text-center text-muted">
-            <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-              <span className="visually-hidden">Loading slots...</span>
-            </div>
+            <div className="spinner-border spinner-border-sm text-primary me-2" role="status" />
             Retrieving available time slots from hospital scheduling engine...
           </div>
         ) : activeDayObj?.isSelectable && slots.length > 0 ? (
@@ -285,14 +276,20 @@ export function DateSlotPicker({
                   <div key={index} className="col-6 col-sm-4 col-md-3 col-lg-2">
                     <button
                       type="button"
-                      className={`slot-selection-btn ${isSelected ? 'selected' : ''}`}
+                      className={`w-100 p-2 rounded-3 border-0 text-center transition-all ${
+                        isSelected
+                          ? 'neu-inset border border-2 border-primary fw-bold text-primary'
+                          : isAvailable
+                          ? 'neu-raised neu-surface'
+                          : 'neu-inset opacity-50'
+                      }`}
                       disabled={!isAvailable}
                       onClick={() => onSelectTime(slot.time)}
                       aria-pressed={isSelected}
                       title={slot.reason || (isAvailable ? 'Available for consultation' : 'Slot unavailable')}
                     >
-                      <div className="fw-semibold">{slot.time}</div>
-                      <div className="small" style={{ fontSize: '0.7rem' }}>
+                      <div className="fw-semibold small">{slot.time}</div>
+                      <div className="small mt-1" style={{ fontSize: '0.65rem' }}>
                         {isBreak ? (
                           <span className="text-muted">Break</span>
                         ) : isBooked ? (
@@ -300,7 +297,7 @@ export function DateSlotPicker({
                         ) : isPast ? (
                           <span className="text-muted">Past</span>
                         ) : (
-                          <span className={isSelected ? 'text-white' : 'text-success fw-bold'}>Open</span>
+                          <span className="text-success fw-bold">Open</span>
                         )}
                       </div>
                     </button>
@@ -310,19 +307,20 @@ export function DateSlotPicker({
             </div>
 
             {errors.time && (
-              <div className="text-danger small mt-2" role="alert">
-                {errors.time}
+              <div className="text-danger small mt-2 d-flex align-items-center gap-1" role="alert">
+                <AlertTriangle size={13} />
+                <span>{errors.time}</span>
               </div>
             )}
           </div>
         ) : (
-          <div className="p-3 bg-light border border-light rounded text-muted small">
+          <div className="neu-inset p-3 rounded-3 text-muted small text-center">
             {dayNotice || 'No appointment consultation slots are available for the selected date.'}
           </div>
         )}
 
-        <div className="mt-3 p-2 bg-light border border-light rounded small text-muted d-flex align-items-center gap-2">
-          <span className="badge bg-success-subtle text-success border border-success-subtle">Live Sync</span>
+        <div className="mt-3 p-2 neu-inset rounded-3 small text-muted d-flex align-items-center gap-2">
+          <ShieldCheck size={16} className="text-success flex-shrink-0" />
           <span>
             Consultation slots are verified in real time against doctor shifts, clinical breaks, and existing patient bookings in PostgreSQL.
           </span>

@@ -1,14 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { 
+  FileText, 
+  Eye, 
+  Edit3, 
+  Power, 
+  CheckCircle2, 
+  X, 
+  Tag, 
+  Calendar 
+} from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import RoleRestrictedNotice from '../../components/admin/RoleRestrictedNotice';
 import { INITIAL_CONTENT_SECTIONS } from '../../data/adminData';
 
 /**
- * Hospital Platform — Admin Public Website Content Management (Phase 8)
+ * Hospital Platform — Admin Public Website Content Management (Neumorphic Redesign)
  * Interface to configure institutional overviews, clinical facilities descriptions,
  * visiting policies, emergency hotlines, and public health advisories.
  */
@@ -65,7 +74,7 @@ export function AdminContentPage() {
       prev.map((s) => {
         if (s.id === secId) {
           const next = s.status === 'Published' ? 'Draft' : 'Published';
-          setActionNotice(`Section "${s.title}" status changed to ${next} (local state).`);
+          setActionNotice(`Section "${s.title}" status changed to ${next} in local state.`);
           return { ...s, status: next };
         }
         return s;
@@ -89,12 +98,12 @@ export function AdminContentPage() {
       )
     );
 
-    setActionNotice(`Saved revisions to "${editSection.title}" in local prototype state.`);
+    setActionNotice(`Saved revisions to "${editSection.title}".`);
     setEditSection(null);
   };
 
   return (
-    <div>
+    <div className="admin-content-view">
       <PageHeader
         title="Public Website Content & Announcements"
         description="Institutional governance text, visiting policies, triage guidelines, and clinical facility documentation."
@@ -102,19 +111,32 @@ export function AdminContentPage() {
       />
 
       {actionNotice && (
-        <div className="alert alert-success py-2 px-3 mb-3 small d-flex justify-content-between align-items-center">
-          <span>{actionNotice}</span>
+        <div 
+          className="neu-card p-3 mb-4 d-flex justify-content-between align-items-center"
+          style={{ 
+            borderRadius: '14px', 
+            background: 'var(--hospital-surface)',
+            borderLeft: '4px solid var(--neu-success)'
+          }}
+        >
+          <div className="d-flex align-items-center gap-2 small">
+            <CheckCircle2 size={16} color="var(--neu-success)" />
+            <span style={{ color: 'var(--hospital-primary-navy)', fontWeight: 600 }}>{actionNotice}</span>
+          </div>
           <button
             type="button"
-            className="btn-close btn-close-sm"
+            className="neu-btn-icon"
+            style={{ width: '28px', height: '28px', padding: 0 }}
             onClick={() => setActionNotice(null)}
-          />
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
       {/* Filter Bar */}
       <AdminFilterBar
-        searchPlaceholder="Search sections by title or keywords..."
+        searchPlaceholder="Search content sections by title, key, or category..."
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         hasActiveFilters={searchTerm !== '' || categoryFilter !== 'ALL'}
@@ -125,7 +147,7 @@ export function AdminContentPage() {
       >
         <div className="col-12 col-sm-6 col-md-3">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             aria-label="Filter by category"
@@ -141,23 +163,26 @@ export function AdminContentPage() {
       </AdminFilterBar>
 
       {/* Content Sections Table */}
-      <div className="hospital-card p-0 mb-4 overflow-hidden">
-        <div className="admin-table-container">
-          <table className="admin-table">
+      <div 
+        className="neu-card p-0 mb-4 overflow-hidden" 
+        style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+      >
+        <div className="neu-table-container">
+          <table className="neu-table">
             <thead>
               <tr>
-                <th>Section Title</th>
-                <th>Category</th>
-                <th>Summary Description</th>
-                <th>Last Revision</th>
-                <th>Status</th>
-                <th className="text-end">Actions</th>
+                <th className="col-content-title">Section Title & Key</th>
+                <th className="col-content-cat">Category</th>
+                <th className="col-content-summary">Summary Description</th>
+                <th className="col-content-updated">Last Revision</th>
+                <th className="col-content-status">Status</th>
+                <th className="col-content-actions text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredSections.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-muted">
+                  <td colSpan="6" className="text-center py-5 text-muted">
                     No content sections found matching your filter criteria.
                   </td>
                 </tr>
@@ -166,13 +191,25 @@ export function AdminContentPage() {
                   <tr key={sec.id}>
                     <td>
                       <div className="fw-bold">{sec.title}</div>
-                      <code>{sec.sectionKey}</code>
+                      <span 
+                        className="px-2 py-0.5 rounded small font-monospace mt-1 d-inline-block"
+                        style={{ 
+                          background: 'var(--hospital-surface)', 
+                          boxShadow: 'var(--neu-inset)',
+                          fontSize: '0.72rem',
+                          color: 'var(--hospital-blue)'
+                        }}
+                      >
+                        {sec.sectionKey}
+                      </span>
                     </td>
                     <td>
-                      <span className="badge bg-secondary">{sec.category}</span>
+                      <span className="neu-badge neu-badge-info">{sec.category}</span>
                     </td>
                     <td>
-                      <span className="small text-muted">{sec.summary}</span>
+                      <span className="small text-muted text-truncate d-inline-block" style={{ maxWidth: '280px' }}>
+                        {sec.summary}
+                      </span>
                     </td>
                     <td>
                       <span className="small text-muted">{sec.lastUpdated}</span>
@@ -180,30 +217,38 @@ export function AdminContentPage() {
                     <td>
                       <AdminStatusBadge status={sec.status} />
                     </td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => setViewSection(sec)}
-                      >
-                        Preview
-                      </button>
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => setEditSection(sec)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className={`hospital-btn hospital-btn-sm ${
-                          sec.status === 'Published' ? 'btn-outline-warning' : 'btn-outline-success'
-                        }`}
-                        onClick={() => handleToggleStatus(sec.id)}
-                      >
-                        {sec.status === 'Published' ? 'Unpublish' : 'Publish'}
-                      </button>
+                    <td className="text-end">
+                      <div className="neu-action-btns">
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => setViewSection(sec)}
+                          title="Preview content rendered"
+                        >
+                          <Eye size={13} className="me-1" />
+                          Preview
+                        </button>
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => setEditSection(sec)}
+                          title="Edit text content"
+                        >
+                          <Edit3 size={13} className="me-1" />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className={`neu-btn neu-btn-sm ${
+                            sec.status === 'Published' ? 'neu-btn-outline' : 'neu-btn-primary'
+                          }`}
+                          onClick={() => handleToggleStatus(sec.id)}
+                          title={sec.status === 'Published' ? 'Set as Draft' : 'Publish Section'}
+                        >
+                          <Power size={13} className="me-1" />
+                          {sec.status === 'Published' ? 'Unpublish' : 'Publish'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -218,14 +263,20 @@ export function AdminContentPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <div 
+                className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <div>
-                  <h5 className="modal-title fs-6 fw-bold mb-0">
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Content Preview: {viewSection.title}
                   </h5>
                   <span className="small text-muted">
@@ -234,26 +285,38 @@ export function AdminContentPage() {
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="neu-btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0 }}
                   onClick={() => setViewSection(null)}
-                />
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <div className="modal-body">
-                <div className="p-3 bg-light rounded border mb-3">
-                  <div className="small text-muted fw-bold mb-1">Public Summary</div>
+              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                <div 
+                  className="p-3 neu-card-sm mb-3"
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  <div className="small text-muted fw-bold mb-1 text-uppercase">Public Summary</div>
                   <div className="small">{viewSection.summary}</div>
                 </div>
 
-                <div className="p-3 bg-white rounded border mb-3">
-                  <div className="small text-muted fw-bold mb-2">Main Body Content</div>
-                  <p className="small mb-0 text-dark" style={{ lineHeight: '1.6' }}>
+                <div 
+                  className="p-3 neu-card-sm mb-3"
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  <div className="small text-muted fw-bold mb-2 text-uppercase">Main Body Content</div>
+                  <p className="small mb-0 text-muted" style={{ lineHeight: '1.6' }}>
                     {viewSection.contentBody}
                   </p>
                 </div>
 
                 {viewSection.highlights && viewSection.highlights.length > 0 && (
-                  <div className="p-3 bg-light rounded border">
-                    <div className="small text-muted fw-bold mb-2">Key Highlights / Bullet Items</div>
+                  <div 
+                    className="p-3 neu-card-sm"
+                    style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                  >
+                    <div className="small text-muted fw-bold mb-2 text-uppercase">Key Highlights</div>
                     <ul className="small mb-0 ps-3">
                       {viewSection.highlights.map((item, idx) => (
                         <li key={idx} className="mb-1">{item}</li>
@@ -262,10 +325,13 @@ export function AdminContentPage() {
                   </div>
                 )}
               </div>
-              <div className="modal-footer">
+              <div 
+                className="modal-footer px-4 py-3 border-top"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <button
                   type="button"
-                  className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                  className="neu-btn neu-btn-outline neu-btn-sm"
                   onClick={() => setViewSection(null)}
                 >
                   Close Preview
@@ -281,28 +347,37 @@ export function AdminContentPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
               <form onSubmit={handleSaveEdit}>
-                <div className="modal-header">
-                  <h5 className="modal-title fs-6 fw-bold">
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                     Edit Content: {editSection.title}
                   </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => setEditSection(null)}
-                  />
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Section Title</label>
+                    <label className="neu-form-label">Section Title</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={editSection.title}
                       onChange={(e) =>
                         setEditSection({ ...editSection, title: e.target.value })
@@ -311,10 +386,10 @@ export function AdminContentPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Brief Summary</label>
+                    <label className="neu-form-label">Brief Summary</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={editSection.summary}
                       onChange={(e) =>
                         setEditSection({ ...editSection, summary: e.target.value })
@@ -323,10 +398,10 @@ export function AdminContentPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Main Content Text</label>
+                    <label className="neu-form-label">Main Content Text</label>
                     <textarea
-                      rows="5"
-                      className="hospital-form-control"
+                      rows="6"
+                      className="neu-textarea"
                       value={editSection.contentBody}
                       onChange={(e) =>
                         setEditSection({ ...editSection, contentBody: e.target.value })
@@ -335,15 +410,18 @@ export function AdminContentPage() {
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
                   <button
                     type="button"
-                    className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => setEditSection(null)}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="hospital-btn hospital-btn-primary hospital-btn-sm">
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm">
                     Save Changes
                   </button>
                 </div>

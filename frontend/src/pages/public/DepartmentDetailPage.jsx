@@ -2,34 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import EmptyState from '../../components/common/EmptyState';
 import DoctorCard from '../../components/doctors/DoctorCard';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
 import { DEMO_DEPARTMENTS, DEMO_DOCTORS } from '../../data/hospitalData';
+import {
+  Calendar,
+  Clock,
+  PhoneCall,
+  Mail,
+  MapPin,
+  Building2,
+  ChevronRight,
+  Plus,
+  Minus,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
 
 /**
- * Hospital Platform — Department Details Page (Phase 3)
- * Full clinical department profile covering services, OPD schedules, contact details,
- * associated doctors preview, department-specific FAQs, and appointment CTA.
+ * Hospital Platform — Department Details Page
+ * Full clinical department profile in Neumorphism / Soft UI design.
  */
 export function DepartmentDetailPage() {
   const { slug } = useParams();
-
-  // State for department FAQ accordion
   const [openFaq, setOpenFaq] = useState(null);
 
   const toggleFaq = (id) => {
     setOpenFaq((prev) => (prev === id ? null : id));
   };
 
-  // Find department by slug
   const department = DEMO_DEPARTMENTS.find(
     (d) => d.slug.toLowerCase() === (slug || '').toLowerCase()
   );
 
-  // Fallback if department slug does not exist
   if (!department) {
     return (
       <Container className="py-5">
@@ -37,10 +44,8 @@ export function DepartmentDetailPage() {
           title="Clinical Department Not Found"
           message={`No clinical department with the identifier "${slug}" was located in the hospital registry.`}
           action={
-            <Link to="/departments">
-              <Button variant="primary" size="md">
-                Browse All Departments
-              </Button>
+            <Link to="/departments" className="neu-btn neu-btn-primary">
+              Browse All Departments
             </Link>
           }
         />
@@ -48,7 +53,6 @@ export function DepartmentDetailPage() {
     );
   }
 
-  // Lookup associated doctors with database fallback
   const [associatedDoctors, setAssociatedDoctors] = useState(() =>
     (department.doctorIds || [])
       .map((id) => DEMO_DOCTORS.find((doc) => doc.id === id && doc.status === 'active'))
@@ -84,39 +88,32 @@ export function DepartmentDetailPage() {
   ];
 
   return (
-    <div className="department-detail-page">
+    <div className="department-detail-page py-4">
       <Container>
-        {/* ====================================================================
-            1. Page Header & Breadcrumb
-            ==================================================================== */}
+        {/* 1. Page Header & Breadcrumb */}
         <PageHeader
           title={department.name}
           description={`Clinical Specialty: ${department.specialty}`}
           breadcrumbs={breadcrumbs}
         >
           <div className="d-flex flex-wrap gap-2">
-            <Link to="/appointments/book">
-              <Button variant="secondary" size="md">
-                Book Consultation
-              </Button>
+            <Link to="/appointments/book" className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1">
+              <Calendar size={15} />
+              <span>Book Consultation</span>
             </Link>
-            <Link to="/departments">
-              <Button variant="outline" size="md">
-                All Departments
-              </Button>
+            <Link to="/departments" className="neu-btn neu-btn-outline">
+              All Departments
             </Link>
           </div>
         </PageHeader>
 
-        {/* ====================================================================
-            2. Department Overview & Clinical Description
-            ==================================================================== */}
+        {/* 2. Department Overview & Clinical Description */}
         <div className="row g-4 mb-5">
           <div className="col-12 col-lg-8">
-            <div className="hospital-card p-4 p-md-5 h-100">
-              <span className="dept-card-specialty mb-2">{department.specialty}</span>
-              <h2 className="hospital-section-title mb-3">Department Overview</h2>
-              <p className="hospital-body lead text-dark mb-4">
+            <div className="neu-raised neu-surface p-4 p-md-5 rounded-4 h-100">
+              <span className="neu-badge neu-badge-primary mb-3 d-inline-block">{department.specialty}</span>
+              <h2 className="hospital-section-title mb-3 fs-3">Department Overview</h2>
+              <p className="hospital-body lead text-body mb-4 fs-6">
                 {department.shortDescription}
               </p>
               <h3 className="h6 fw-bold text-primary mb-2">Clinical Scope & Approach</h3>
@@ -128,47 +125,59 @@ export function DepartmentDetailPage() {
 
           {/* Quick Department Information Card */}
           <div className="col-12 col-lg-4">
-            <div className="hospital-card p-4 h-100 bg-light border">
-              <h3 className="h6 fw-bold text-primary mb-3">Department Information</h3>
-              <div className="mb-3 pb-2 border-bottom">
-                <div className="small text-muted">Clinic Location</div>
-                <div className="fw-semibold text-dark">{department.contact?.location}</div>
-              </div>
-              <div className="mb-3 pb-2 border-bottom">
-                <div className="small text-muted">OPD Timing Summary</div>
-                <div className="fw-semibold text-dark">{department.opdHours}</div>
-              </div>
-              <div className="mb-3 pb-2 border-bottom">
-                <div className="small text-muted">Department Direct Line</div>
-                <div className="fw-semibold text-dark">
-                  {department.contact?.phone}{' '}
-                  <span className="small text-muted">({department.contact?.extension})</span>
+            <div className="neu-raised neu-surface p-4 rounded-4 h-100 d-flex flex-column justify-content-between">
+              <div>
+                <h3 className="h6 fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+                  <Building2 size={18} />
+                  <span>Department Information</span>
+                </h3>
+                <div className="mb-3 pb-2 border-bottom">
+                  <div className="small text-muted">Clinic Location</div>
+                  <div className="fw-semibold text-body d-flex align-items-center gap-1 mt-1">
+                    <MapPin size={14} className="text-primary flex-shrink-0" />
+                    <span>{department.contact?.location}</span>
+                  </div>
+                </div>
+                <div className="mb-3 pb-2 border-bottom">
+                  <div className="small text-muted">OPD Timing Summary</div>
+                  <div className="fw-semibold text-body d-flex align-items-center gap-1 mt-1">
+                    <Clock size={14} className="text-primary flex-shrink-0" />
+                    <span>{department.opdHours}</span>
+                  </div>
+                </div>
+                <div className="mb-3 pb-2 border-bottom">
+                  <div className="small text-muted">Department Direct Line</div>
+                  <div className="fw-semibold text-body d-flex align-items-center gap-1 mt-1">
+                    <PhoneCall size={14} className="text-primary flex-shrink-0" />
+                    <span>{department.contact?.phone}</span>
+                    <span className="small text-muted">({department.contact?.extension})</span>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <div className="small text-muted">Department Email</div>
+                  <div className="fw-semibold text-body small d-flex align-items-center gap-1 mt-1">
+                    <Mail size={14} className="text-primary flex-shrink-0" />
+                    <span>{department.contact?.email}</span>
+                  </div>
                 </div>
               </div>
-              <div className="mb-3">
-                <div className="small text-muted">Department Email</div>
-                <div className="fw-semibold text-dark small">{department.contact?.email}</div>
-              </div>
 
-              <div className="pt-2">
-                <Link to="/appointments/book" className="w-100 d-block">
-                  <Button variant="primary" size="sm" className="w-100">
-                    Book Appointment in this Department
-                  </Button>
+              <div className="pt-3">
+                <Link to="/appointments/book" className="neu-btn neu-btn-primary w-100 text-center justify-content-center d-flex align-items-center gap-2 py-2">
+                  <Calendar size={15} />
+                  <span>Book in this Department</span>
                 </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ====================================================================
-            3. Clinical Services Section (Grid layout, NO checkmarks)
-            ==================================================================== */}
+        {/* 3. Clinical Services Section */}
         <section className="mb-5" aria-label="Department Services">
-          <div className="border-bottom pb-2 mb-4">
-            <span className="text-uppercase small fw-bold text-primary">Procedures & Care</span>
-            <h2 className="hospital-section-title mb-1">Services Provided</h2>
-            <p className="hospital-text-supporting mb-0">
+          <div className="mb-4">
+            <span className="neu-eyebrow text-uppercase fw-bold text-primary">Procedures & Care</span>
+            <h2 className="hospital-section-title mb-1 fs-3">Services Provided</h2>
+            <p className="hospital-text-supporting text-muted mb-0">
               Diagnostic assessments, outpatient treatments, and continuous specialized care.
             </p>
           </div>
@@ -176,15 +185,15 @@ export function DepartmentDetailPage() {
           <div className="row g-3">
             {(department.services || []).map((service, index) => (
               <div key={index} className="col-12 col-md-6">
-                <div className="dept-service-item d-flex align-items-start">
+                <div className="neu-raised neu-surface p-3 rounded-4 d-flex align-items-start gap-3 transition-all hover-lift">
                   <span
-                    className="badge bg-secondary text-white me-3 mt-1"
-                    style={{ minWidth: '1.75rem', textAlign: 'center' }}
+                    className="neu-inset rounded-3 text-primary fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+                    style={{ width: '36px', height: '36px' }}
                   >
                     {index + 1}
                   </span>
                   <div>
-                    <h3 className="h6 fw-semibold mb-1 text-dark">{service}</h3>
+                    <h3 className="h6 fw-semibold mb-1 text-body">{service}</h3>
                     <p className="small text-muted mb-0">
                       Standard clinical protocol delivered by department specialists and nursing staff.
                     </p>
@@ -195,20 +204,18 @@ export function DepartmentDetailPage() {
           </div>
         </section>
 
-        {/* ====================================================================
-            4. Consultation Timings (Structured Schedule Table)
-            ==================================================================== */}
+        {/* 4. Consultation Timings (Structured Schedule Table) */}
         <section className="mb-5" aria-label="Consultation Timings">
-          <div className="border-bottom pb-2 mb-4">
-            <span className="text-uppercase small fw-bold text-primary">Clinic Hours</span>
-            <h2 className="hospital-section-title mb-1">Outpatient (OPD) Consultation Timings</h2>
-            <p className="hospital-text-supporting mb-0">
+          <div className="mb-4">
+            <span className="neu-eyebrow text-uppercase fw-bold text-primary">Clinic Hours</span>
+            <h2 className="hospital-section-title mb-1 fs-3">Outpatient (OPD) Consultation Timings</h2>
+            <p className="hospital-text-supporting text-muted mb-0">
               Weekly outpatient clinic hours. Emergency cases are received 24/7 at the trauma department.
             </p>
           </div>
 
-          <div className="table-responsive hospital-card p-0 overflow-hidden">
-            <table className="dept-schedule-table table table-hover mb-0">
+          <div className="neu-table-container">
+            <table className="neu-table">
               <thead>
                 <tr>
                   <th scope="col" style={{ width: '25%' }}>Day</th>
@@ -222,12 +229,12 @@ export function DepartmentDetailPage() {
 
                   return (
                     <tr key={slot.day}>
-                      <td className="fw-semibold text-dark">{slot.day}</td>
+                      <td className="fw-semibold text-body">{slot.day}</td>
                       <td>{slot.timing}</td>
                       <td>
                         <span
-                          className={`hospital-badge ${
-                            isClosed ? 'hospital-badge-cancelled' : 'hospital-badge-confirmed'
+                          className={`neu-badge ${
+                            isClosed ? 'neu-badge-danger' : 'neu-badge-success'
                           }`}
                         >
                           {slot.status}
@@ -241,14 +248,12 @@ export function DepartmentDetailPage() {
           </div>
         </section>
 
-        {/* ====================================================================
-            5. Associated Doctors Preview
-            ==================================================================== */}
+        {/* 5. Associated Doctors Preview */}
         <section className="mb-5" aria-label="Department Specialists">
-          <div className="border-bottom pb-2 mb-4">
-            <span className="text-uppercase small fw-bold text-primary">Department Faculty</span>
-            <h2 className="hospital-section-title mb-1">Attending Consultant Specialists</h2>
-            <p className="hospital-text-supporting mb-0">
+          <div className="mb-4">
+            <span className="neu-eyebrow text-uppercase fw-bold text-primary">Department Faculty</span>
+            <h2 className="hospital-section-title mb-1 fs-3">Attending Consultant Specialists</h2>
+            <p className="hospital-text-supporting text-muted mb-0">
               Medical specialists and surgeons consulting within this clinical division.
             </p>
           </div>
@@ -262,21 +267,19 @@ export function DepartmentDetailPage() {
               ))}
             </div>
           ) : (
-            <div className="hospital-card p-4 text-center text-muted">
+            <div className="neu-raised neu-surface p-4 rounded-4 text-center text-muted">
               Consultant roster for this department is being scheduled for the upcoming clinical term.
             </div>
           )}
         </section>
 
-        {/* ====================================================================
-            6. Department FAQs
-            ==================================================================== */}
+        {/* 6. Department FAQs */}
         {(department.faqs || []).length > 0 && (
           <section className="mb-5" aria-label="Department Questions">
-            <div className="border-bottom pb-2 mb-4">
-              <span className="text-uppercase small fw-bold text-primary">Patient Guidance</span>
-              <h2 className="hospital-section-title mb-1">Frequently Asked Questions</h2>
-              <p className="hospital-text-supporting mb-0">
+            <div className="mb-4">
+              <span className="neu-eyebrow text-uppercase fw-bold text-primary">Patient Guidance</span>
+              <h2 className="hospital-section-title mb-1 fs-3">Frequently Asked Questions</h2>
+              <p className="hospital-text-supporting text-muted mb-0">
                 Common inquiries regarding preparations, reports, and follow-ups in this department.
               </p>
             </div>
@@ -286,23 +289,23 @@ export function DepartmentDetailPage() {
                 const isOpen = openFaq === faq.id;
 
                 return (
-                  <div key={faq.id} className="hospital-faq-item">
+                  <div key={faq.id} className="neu-raised neu-surface mb-3 rounded-4 overflow-hidden transition-all">
                     <button
                       type="button"
-                      className="hospital-faq-trigger"
+                      className="w-100 text-start p-3 bg-transparent border-0 d-flex justify-content-between align-items-center fw-semibold text-body"
                       onClick={() => toggleFaq(faq.id)}
                       aria-expanded={isOpen}
                       aria-controls={`${faq.id}-body`}
                     >
-                      <span>{faq.question}</span>
-                      <span className="ms-2 fw-bold" aria-hidden="true">
-                        {isOpen ? '−' : '+'}
+                      <span className="pe-2">{faq.question}</span>
+                      <span className="neu-inset p-1 rounded-circle text-muted d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: '28px', height: '28px' }} aria-hidden="true">
+                        {isOpen ? <Minus size={14} /> : <Plus size={14} />}
                       </span>
                     </button>
 
                     {isOpen && (
-                      <div id={`${faq.id}-body`} className="hospital-faq-body">
-                        {faq.answer}
+                      <div id={`${faq.id}-body`} className="p-3 pt-0 text-muted small neu-inset m-2 rounded-3">
+                        <div className="p-2">{faq.answer}</div>
                       </div>
                     )}
                   </div>
@@ -312,28 +315,24 @@ export function DepartmentDetailPage() {
           </section>
         )}
 
-        {/* ====================================================================
-            7. Department Appointment Call to Action
-            ==================================================================== */}
+        {/* 7. Department Appointment Call to Action */}
         <section className="mb-5" aria-label="Book Department Consultation">
-          <div className="hospital-card p-5 bg-white border text-center">
-            <h2 className="hospital-section-title mb-2">
+          <div className="neu-raised neu-surface p-5 rounded-4 text-center">
+            <h2 className="hospital-section-title mb-2 fs-3">
               Book a Consultation in {department.name}
             </h2>
             <p className="hospital-body text-muted mb-4 mx-auto" style={{ maxWidth: '600px' }}>
               Schedule your outpatient visit with attending specialists. Our clinic reception
-              confirms slot allocations and room details upon appointment reservation.
+              confirms slot allocations upon appointment reservation.
             </p>
             <div className="d-flex flex-wrap justify-content-center gap-3">
-              <Link to="/appointments/book">
-                <Button variant="secondary" size="lg">
-                  Book Appointment Now
-                </Button>
+              <Link to="/appointments/book" className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-2 py-2 px-4">
+                <Calendar size={16} />
+                <span>Book Appointment Now</span>
               </Link>
-              <Link to="/contact">
-                <Button variant="outline" size="lg">
-                  Contact Department Desk
-                </Button>
+              <Link to="/contact" className="neu-btn neu-btn-outline d-inline-flex align-items-center gap-2 py-2 px-4">
+                <PhoneCall size={16} />
+                <span>Contact Department Desk</span>
               </Link>
             </div>
           </div>

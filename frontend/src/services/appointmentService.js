@@ -52,7 +52,7 @@ export function normalizeAppointment(apt) {
     endTime: apt.end_time,
     type: apt.appointment_type || 'In-Person OPD',
     location: apt.consultation_location || 'Clinical Suite, OPD',
-    status: (apt.status || 'CONFIRMED').toUpperCase(),
+    status: (apt.status || 'REQUESTED').toUpperCase(),
     rawStatus: apt.status,
     reasonForVisit: apt.reason_for_visit || 'Outpatient Consultation',
     notes: apt.notes || '',
@@ -97,7 +97,7 @@ export const appointmentService = {
    * Retrieve appointments for authenticated patient/staff with filtering
    */
   async getAppointments(params = {}) {
-    const token = authService.getAccessToken();
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
     const headers = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -124,7 +124,7 @@ export const appointmentService = {
    * Retrieve a single appointment by reference code
    */
   async getAppointment(reference) {
-    const token = authService.getAccessToken();
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
     const headers = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -146,7 +146,7 @@ export const appointmentService = {
    * Cancel an appointment via POST /api/appointments/<reference>/cancel/
    */
   async cancelAppointment(reference, reason = '') {
-    const token = authService.getAccessToken();
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -169,14 +169,41 @@ export const appointmentService = {
       throw new Error(errMsg);
     }
 
-    return normalizeAppointment(data);
+    const normalized = normalizeAppointment(data);
+
+    try {
+      const stored = sessionStorage.getItem('eglesora_latest_appointment');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.reference?.toLowerCase() === reference?.toLowerCase()) {
+          sessionStorage.setItem(
+            'eglesora_latest_appointment',
+            JSON.stringify({
+              ...parsed,
+              ...normalized,
+              status: 'CANCELLED',
+            })
+          );
+        }
+      }
+    } catch (e) {}
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('eglesora-appointment-updated', {
+          detail: { reference, status: 'CANCELLED', appointment: normalized },
+        })
+      );
+    }
+
+    return normalized;
   },
 
   /**
    * Reschedule an appointment via POST /api/appointments/<reference>/reschedule/
    */
   async rescheduleAppointment(reference, { newDate, newStartTime, newEndTime, reason = '' }) {
-    const token = authService.getAccessToken();
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -204,14 +231,24 @@ export const appointmentService = {
       throw new Error(errMsg);
     }
 
-    return normalizeAppointment(data);
+    const normalized = normalizeAppointment(data);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('eglesora-appointment-updated', {
+          detail: { reference, status: normalized.status, appointment: normalized },
+        })
+      );
+    }
+
+    return normalized;
   },
 
   /**
    * Update appointment status or clinical notes via PATCH /api/appointments/<reference>/
    */
   async updateAppointmentStatus(reference, status, notes = '') {
-    const token = authService.getAccessToken();
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
     if (!token) {
       throw new Error('Authentication required for administrative status updates.');
     }
@@ -236,8 +273,91 @@ export const appointmentService = {
       throw new Error(errMsg);
     }
 
-    return normalizeAppointment(data);
+    const normalized = normalizeAppointment(data);
+
+    try {
+      const stored = sessionStorage.getItem('eglesora_latest_appointment');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.reference?.toLowerCase() === reference?.toLowerCase()) {
+          sessionStorage.setItem(
+            'eglesora_latest_appointment',
+            JSON.stringify({
+              ...parsed,
+              ...normalized,
+              status: (normalized.status || status).toUpperCase(),
+            })
+          );
+        }
+      }
+    } catch (e) {}
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('eglesora-appointment-updated', {
+          detail: { reference, status: normalized.status, appointment: normalized },
+        })
+      );
+    }
+
+    return normalized;
   },
+
+  /**
+   * Approve a REQUESTED appointment via POST /api/appointments/<reference>/approve/
+   */
+  async approveAppointment(reference) {
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required for appointment approval.');
+    }
+
+    const res = await fetch(`${API_BASE_URL}/api/appointments/${encodeURIComponent(reference)}/approve/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const errMsg = data.detail || 'Appointment approval failed.';
+      throw new Error(errMsg);
+    }
+
+    const normalized = normalizeAppointment(data);
+
+    // Invalidate/refresh session cache if this appointment is in sessionStorage
+    try {
+      const stored = sessionStorage.getItem('eglesora_latest_appointment');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.reference?.toLowerCase() === reference?.toLowerCase()) {
+          sessionStorage.setItem(
+            'eglesora_latest_appointment',
+            JSON.stringify({
+              ...parsed,
+              ...normalized,
+              status: 'CONFIRMED',
+            })
+          );
+        }
+      }
+    } catch (e) {}
+
+    // Dispatch global event for active tabs/listeners
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('eglesora-appointment-updated', {
+          detail: { reference, status: 'CONFIRMED', appointment: normalized },
+        })
+      );
+    }
+
+    return normalized;
+  },
+
 };
 
 export default appointmentService;

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from .models import PatientProfile
 
 User = get_user_model()
@@ -109,6 +110,17 @@ class RegisterPatientSerializer(serializers.Serializer):
     emergency_contact = serializers.CharField(max_length=255, required=False, allow_blank=True)
     address = serializers.CharField(required=False, allow_blank=True)
 
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        # Convert empty string date_of_birth to None so DateField does not fail validation
+        if 'date_of_birth' in data and (data['date_of_birth'] == '' or data['date_of_birth'] is None):
+            data['date_of_birth'] = None
+        if 'gender' in data and isinstance(data['gender'], str):
+            data['gender'] = data['gender'].strip().upper()
+        if 'blood_group' in data and (data['blood_group'] == '' or data['blood_group'] is None):
+            data['blood_group'] = ''
+        return super().to_internal_value(data)
+
     def validate_email(self, value):
         normalized = value.strip().lower()
         if User.objects.filter(email__iexact=normalized).exists():
@@ -132,37 +144,38 @@ class RegisterPatientSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         validated_data.pop('password_confirm', None)
-        email = validated_data.pop('email')
+        email = validated_data.pop('email').strip().lower()
         password = validated_data.pop('password')
-        first_name = validated_data.pop('first_name', '')
-        last_name = validated_data.pop('last_name', '')
-        phone = validated_data.pop('phone', '')
+        first_name = validated_data.pop('first_name', '').strip()
+        last_name = validated_data.pop('last_name', '').strip()
+        phone = validated_data.pop('phone', '').strip()
 
-        # Strictly enforce PATIENT role
-        user = User.objects.create_user(
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            phone=phone,
-            role=User.Role.PATIENT,
-        )
+        with transaction.atomic():
+            # Strictly enforce PATIENT role
+            user = User.objects.create_user(
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                role=User.Role.PATIENT,
+            )
 
-        # Create linked outpatient demographic profile
-        PatientProfile.objects.create(
-            user=user,
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone,
-            date_of_birth=validated_data.get('date_of_birth'),
-            gender=validated_data.get('gender', PatientProfile.Gender.MALE),
-            blood_group=validated_data.get('blood_group', ''),
-            emergency_contact=validated_data.get('emergency_contact', ''),
-            address=validated_data.get('address', ''),
-        )
+            # Create linked outpatient demographic profile
+            PatientProfile.objects.create(
+                user=user,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                date_of_birth=validated_data.get('date_of_birth'),
+                gender=validated_data.get('gender', PatientProfile.Gender.MALE),
+                blood_group=validated_data.get('blood_group', ''),
+                emergency_contact=validated_data.get('emergency_contact', ''),
+                address=validated_data.get('address', ''),
+            )
 
-        return user
+            return user
 
 
 class LogoutSerializer(serializers.Serializer):

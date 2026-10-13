@@ -114,7 +114,9 @@ def test_django_settings_load_env():
     os.environ['DB_PORT'] = '5432'
     os.environ['REDIS_URL'] = 'redis://verify_redis:6379/3'
 
+    import importlib
     from config import settings
+    importlib.reload(settings)
 
     # Database checks
     default_db = settings.DATABASES['default']

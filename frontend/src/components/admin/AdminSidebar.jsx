@@ -2,11 +2,36 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { ADMIN_NAV_LINKS } from '../../data/navigation';
 import authService from '../../services/authService';
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  Calendar,
+  ClipboardList,
+  HeartPulse,
+  FileText,
+  Bell,
+  ShieldCheck,
+  History,
+  Lock,
+} from 'lucide-react';
+
+const ICON_MAP = {
+  '/admin': LayoutDashboard,
+  '/admin/doctors': Users,
+  '/admin/departments': Building2,
+  '/admin/schedules': Calendar,
+  '/admin/appointments': ClipboardList,
+  '/admin/patients': HeartPulse,
+  '/admin/content': FileText,
+  '/admin/notifications': Bell,
+  '/admin/administrators': ShieldCheck,
+  '/admin/audit': History,
+};
 
 /**
  * Hospital Platform — Admin Sidebar Navigation Component
- * Clean, structured sidebar for clinical and administrative modules.
- * Demonstrates role-aware access indicators and real database connection status.
+ * Neumorphic Soft UI sidebar for clinical and administrative modules.
  */
 export function AdminSidebar({
   currentRole,
@@ -31,8 +56,8 @@ export function AdminSidebar({
     >
       <div className="admin-sidebar-header p-3 border-bottom d-flex justify-content-between align-items-center">
         <div>
-          <div className="fw-bold small text-uppercase text-muted">Active Role</div>
-          <div className="fw-semibold text-primary">{currentRole?.label}</div>
+          <div className="neu-eyebrow text-uppercase small text-muted">Active Role</div>
+          <div className="fw-bold text-primary">{currentRole?.label}</div>
         </div>
         <button
           type="button"
@@ -43,11 +68,13 @@ export function AdminSidebar({
       </div>
 
       <nav className="admin-sidebar-nav p-2">
-        <div className="text-muted small px-3 py-2 text-uppercase fw-bold letter-spacing-1">
-          Operations
+        <div className="neu-eyebrow text-muted small px-3 py-2 text-uppercase fw-bold">
+          Operations Modules
         </div>
         {ADMIN_NAV_LINKS.map((link) => {
           const allowed = isAllowed(link.path);
+          const IconComp = ICON_MAP[link.path] || FileText;
+
           return (
             <NavLink
               key={link.path}
@@ -55,12 +82,16 @@ export function AdminSidebar({
               end={link.path === '/admin'}
               onClick={onCloseSidebar}
               className={({ isActive }) =>
-                `admin-sidebar-link ${isActive ? 'active' : ''} ${!allowed ? 'restricted' : ''}`
+                `admin-sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-decoration-none my-1 transition-all ${
+                  isActive ? 'active neu-inset fw-bold text-primary' : 'text-body hover-text-primary'
+                } ${!allowed ? 'restricted opacity-75' : ''}`
               }
             >
-              <span className="link-title">{link.label}</span>
+              <IconComp size={16} className="flex-shrink-0" />
+              <span className="link-title flex-grow-1">{link.label}</span>
               {!allowed && (
-                <span className="badge bg-secondary ms-auto small" style={{ fontSize: '0.65rem' }}>
+                <span className="neu-badge neu-badge-neutral ms-auto small d-inline-flex align-items-center gap-1" style={{ fontSize: '0.65rem' }}>
+                  <Lock size={10} />
                   Restricted
                 </span>
               )}
@@ -73,18 +104,18 @@ export function AdminSidebar({
         {isLiveSession ? (
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
-              <span className="badge bg-success p-1 rounded-circle" style={{ width: '8px', height: '8px', display: 'inline-block' }}></span>
-              <span className="fw-bold text-dark">Live Database Mode</span>
+              <span className="pulse-dot"></span>
+              <span className="fw-bold text-body">Live PostgreSQL Mode</span>
             </div>
             <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-              DRF &amp; PostgreSQL &bull; {staffUser?.email || 'Authenticated'}
+              DRF API &bull; {staffUser?.email || 'Authenticated'}
             </div>
           </div>
         ) : (
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
-              <span className="badge bg-warning p-1 rounded-circle" style={{ width: '8px', height: '8px', display: 'inline-block' }}></span>
-              <span className="fw-bold text-dark">Prototype Demo Mode</span>
+              <span className="neu-badge neu-badge-warning p-1 rounded-circle" style={{ width: '8px', height: '8px', display: 'inline-block' }}></span>
+              <span className="fw-bold text-body">Prototype Demo Mode</span>
             </div>
             <div className="text-muted" style={{ fontSize: '0.75rem' }}>Local Mock State Only</div>
           </div>
@@ -95,4 +126,3 @@ export function AdminSidebar({
 }
 
 export default AdminSidebar;
-

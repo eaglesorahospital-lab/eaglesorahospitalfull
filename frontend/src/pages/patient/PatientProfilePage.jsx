@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import PatientNav from '../../components/patient/PatientNav';
 import usePatientSession from '../../hooks/usePatientSession';
+import { User, Phone, Mail, MapPin, CheckCircle2, AlertTriangle, ShieldCheck, Edit3, X } from 'lucide-react';
 
 /**
  * Hospital Platform — Patient Profile Page
- * Displays authenticated patient demographics, contact details, and emergency contact information.
- * Enforces PostgreSQL persistence via /api/patients/me/ and protects patient identity isolation.
+ * Displays authenticated patient demographics with Neumorphism styling.
  */
 export function PatientProfilePage() {
   const { t } = useTranslation();
@@ -27,7 +26,6 @@ export function PatientProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [feedbackNotice, setFeedbackNotice] = useState(null);
 
-  // Synchronize when patientProfile updates
   useEffect(() => {
     if (patientProfile) {
       setFormData({
@@ -116,58 +114,57 @@ export function PatientProfilePage() {
 
         {/* Feedback Alert if Action Performed */}
         {feedbackNotice && (
-          <div className="alert alert-success alert-dismissible fade show mb-4 small py-2 px-3" role="alert">
-            {feedbackNotice}
+          <div className="neu-inset p-3 rounded-4 mb-4 border-start border-4 border-success small text-success d-flex justify-content-between align-items-center" role="alert">
+            <span className="d-flex align-items-center gap-2">
+              <CheckCircle2 size={16} />
+              <span>{feedbackNotice}</span>
+            </span>
             <button
               type="button"
-              className="btn-close py-2"
+              className="btn btn-sm btn-link text-muted p-0"
               onClick={() => setFeedbackNotice(null)}
               aria-label="Close"
-            />
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
 
         {/* General Error Banner */}
         {errors.general && (
-          <div className="alert alert-danger mb-4 small py-2 px-3" role="alert">
+          <div className="neu-inset p-3 rounded-4 mb-4 border-start border-4 border-danger small text-danger" role="alert">
             {errors.general}
           </div>
         )}
 
         {!isAuthenticated ? (
-          /* Unauthenticated Prompt */
-          <div className="patient-card bg-white border rounded-3 p-4 p-md-5 text-center shadow-sm">
-            <div className="mb-3 text-primary">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
+          <div className="neu-raised neu-surface rounded-4 p-4 p-md-5 text-center">
+            <div className="neu-inset rounded-circle d-inline-flex p-3 text-primary mb-3">
+              <User size={36} />
             </div>
-            <h3 className="fs-5 fw-bold text-dark mb-2">Patient Authentication Required</h3>
+            <h3 className="fs-5 fw-bold text-body mb-2">Patient Authentication Required</h3>
             <p className="text-muted small mx-auto mb-4" style={{ maxWidth: '520px' }}>
               Your medical and demographic records are strictly isolated and protected. Please sign in to your verified patient account to access your medical file.
             </p>
             <div className="d-flex justify-content-center gap-3">
-              <Link to="/patient/login" className="hospital-btn hospital-btn-primary px-4 py-2">
+              <Link to="/patient/login" className="neu-btn neu-btn-primary px-4 py-2">
                 Sign In to Patient Portal
               </Link>
-              <Link to="/patient/login?mode=register" className="btn btn-outline-secondary px-4 py-2">
+              <Link to="/patient/login?mode=register" className="neu-btn neu-btn-outline px-4 py-2">
                 Register New Patient
               </Link>
             </div>
           </div>
         ) : profileLoading ? (
-          /* Loading State */
-          <div className="patient-card bg-white border rounded-3 p-5 text-center shadow-sm">
+          <div className="neu-raised neu-surface rounded-4 p-5 text-center">
             <div className="spinner-border spinner-border-sm text-primary mb-2" role="status" />
             <div className="text-muted small">Loading patient profile from database...</div>
           </div>
         ) : (
-          /* Main Profile Card */
-          <div className="patient-card bg-white border rounded-3 p-3 p-md-4 mb-5 shadow-sm">
+          <div className="neu-raised neu-surface rounded-4 p-4 p-md-5 mb-5">
             <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 border-bottom pb-3 mb-4">
               <div>
-                <h2 className="fs-6 fw-bold text-dark mb-1">
+                <h2 className="fs-6 fw-bold text-body mb-1">
                   {isEditing ? t('patient.editProfile') : t('patient.personalDetails')}
                 </h2>
                 <div className="small text-muted">
@@ -178,16 +175,17 @@ export function PatientProfilePage() {
               </div>
 
               {!isEditing && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
+                  type="button"
+                  className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1"
                   onClick={() => {
                     setIsEditing(true);
                     setFeedbackNotice(null);
                   }}
                 >
-                  {t('patient.editProfile')}
-                </Button>
+                  <Edit3 size={14} />
+                  <span>{t('patient.editProfile')}</span>
+                </button>
               )}
             </div>
 
@@ -195,44 +193,44 @@ export function PatientProfilePage() {
               /* VIEW MODE */
               <div className="row g-3 g-md-4">
                 <div className="col-12 col-md-6">
-                  <div className="p-3 bg-slate-50 border rounded-2 h-100">
-                    <div className="text-uppercase small fw-bold text-primary mb-2">Primary Identity</div>
+                  <div className="neu-inset p-3 rounded-4 h-100">
+                    <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">Primary Identity</div>
                     <div className="mb-2">
-                      <span className="fw-semibold text-dark">{t('patient.fullName')}: </span>
+                      <strong className="text-body">{t('patient.fullName')}: </strong>
                       <span className="text-muted">{patientProfile?.fullName || 'Not specified'}</span>
                     </div>
                     <div className="mb-2">
-                      <span className="fw-semibold text-dark">MRN: </span>
-                      <span className="badge bg-light text-primary border">{patientProfile?.mrn || 'Pending'}</span>
+                      <strong className="text-body">MRN: </strong>
+                      <span className="neu-badge neu-badge-primary">{patientProfile?.mrn || 'Pending'}</span>
                     </div>
                     <div className="mb-2">
-                      <span className="fw-semibold text-dark">{t('patient.dob')}: </span>
+                      <strong className="text-body">{t('patient.dob')}: </strong>
                       <span className="text-muted">{patientProfile?.dateOfBirth || 'Not specified'}</span>
                     </div>
                     <div>
-                      <span className="fw-semibold text-dark">{t('patient.gender')}: </span>
+                      <strong className="text-body">{t('patient.gender')}: </strong>
                       <span className="text-muted">{patientProfile?.gender || 'Not specified'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="col-12 col-md-6">
-                  <div className="p-3 bg-slate-50 border rounded-2 h-100">
-                    <div className="text-uppercase small fw-bold text-primary mb-2">Contact Details</div>
+                  <div className="neu-inset p-3 rounded-4 h-100">
+                    <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">Contact Details</div>
                     <div className="mb-2">
-                      <span className="fw-semibold text-dark">{t('patient.mobile')}: </span>
+                      <strong className="text-body">{t('patient.mobile')}: </strong>
                       <span className="text-muted">{patientProfile?.mobile || 'Not specified'}</span>
                     </div>
                     <div>
-                      <span className="fw-semibold text-dark">{t('patient.email')}: </span>
+                      <strong className="text-body">{t('patient.email')}: </strong>
                       <span className="text-muted">{patientProfile?.email || 'Not specified'}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="col-12 col-md-6">
-                  <div className="p-3 bg-slate-50 border rounded-2 h-100">
-                    <div className="text-uppercase small fw-bold text-primary mb-2">{t('patient.address')}</div>
+                  <div className="neu-inset p-3 rounded-4 h-100">
+                    <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">{t('patient.address')}</div>
                     <div className="text-muted">
                       {patientProfile?.address || 'No residential address recorded.'}
                     </div>
@@ -240,8 +238,8 @@ export function PatientProfilePage() {
                 </div>
 
                 <div className="col-12 col-md-6">
-                  <div className="p-3 bg-slate-50 border rounded-2 h-100">
-                    <div className="text-uppercase small fw-bold text-primary mb-2">{t('patient.emergencyContact')}</div>
+                  <div className="neu-inset p-3 rounded-4 h-100">
+                    <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">{t('patient.emergencyContact')}</div>
                     <div className="text-muted">
                       {patientProfile?.emergencyContact || 'No emergency contact registered.'}
                     </div>
@@ -253,109 +251,123 @@ export function PatientProfilePage() {
               <form onSubmit={handleSave}>
                 <div className="row g-3">
                   <div className="col-12 col-md-6">
-                    <label htmlFor="edit-name" className="form-label small fw-semibold text-dark">
+                    <label htmlFor="edit-name" className="hospital-form-label mb-1">
                       {t('patient.fullName')} <span className="text-danger">*</span>
                     </label>
-                    <input
-                      id="edit-name"
-                      type="text"
-                      className={`form-control form-control-sm ${errors.fullName ? 'is-invalid' : ''}`}
-                      value={formData.fullName || ''}
-                      onChange={(e) => handleChange('fullName', e.target.value)}
-                    />
-                    {errors.fullName && <div className="invalid-feedback d-block">{errors.fullName}</div>}
+                    <div className="neu-inset rounded-3 p-1">
+                      <input
+                        id="edit-name"
+                        type="text"
+                        className="form-control bg-transparent border-0 shadow-none"
+                        value={formData.fullName || ''}
+                        onChange={(e) => handleChange('fullName', e.target.value)}
+                      />
+                    </div>
+                    {errors.fullName && <div className="text-danger small mt-1">{errors.fullName}</div>}
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label htmlFor="edit-mobile" className="form-label small fw-semibold text-dark">
+                    <label htmlFor="edit-mobile" className="hospital-form-label mb-1">
                       {t('patient.mobile')} <span className="text-danger">*</span>
                     </label>
-                    <input
-                      id="edit-mobile"
-                      type="tel"
-                      className={`form-control form-control-sm ${errors.mobile ? 'is-invalid' : ''}`}
-                      value={formData.mobile || ''}
-                      onChange={(e) => handleChange('mobile', e.target.value)}
-                    />
-                    {errors.mobile && <div className="invalid-feedback d-block">{errors.mobile}</div>}
+                    <div className="neu-inset rounded-3 p-1">
+                      <input
+                        id="edit-mobile"
+                        type="tel"
+                        className="form-control bg-transparent border-0 shadow-none"
+                        value={formData.mobile || ''}
+                        onChange={(e) => handleChange('mobile', e.target.value)}
+                      />
+                    </div>
+                    {errors.mobile && <div className="text-danger small mt-1">{errors.mobile}</div>}
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label htmlFor="edit-email" className="form-label small fw-semibold text-dark">
+                    <label htmlFor="edit-email" className="hospital-form-label mb-1">
                       {t('patient.email')} <span className="text-danger">*</span>
                     </label>
-                    <input
-                      id="edit-email"
-                      type="email"
-                      className={`form-control form-control-sm ${errors.email ? 'is-invalid' : ''}`}
-                      value={formData.email || ''}
-                      onChange={(e) => handleChange('email', e.target.value)}
-                    />
-                    {errors.email && <div className="invalid-feedback d-block">{errors.email}</div>}
+                    <div className="neu-inset rounded-3 p-1">
+                      <input
+                        id="edit-email"
+                        type="email"
+                        className="form-control bg-transparent border-0 shadow-none"
+                        value={formData.email || ''}
+                        onChange={(e) => handleChange('email', e.target.value)}
+                      />
+                    </div>
+                    {errors.email && <div className="text-danger small mt-1">{errors.email}</div>}
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label htmlFor="edit-gender" className="form-label small fw-semibold text-dark">
+                    <label htmlFor="edit-gender" className="hospital-form-label mb-1">
                       {t('patient.gender')}
                     </label>
-                    <select
-                      id="edit-gender"
-                      className="form-select form-select-sm"
-                      value={formData.gender || 'OTHER'}
-                      onChange={(e) => handleChange('gender', e.target.value)}
-                    >
-                      <option value="MALE">Male</option>
-                      <option value="FEMALE">Female</option>
-                      <option value="OTHER">Other</option>
-                    </select>
+                    <div className="neu-inset rounded-3 p-1">
+                      <select
+                        id="edit-gender"
+                        className="form-select bg-transparent border-0 shadow-none"
+                        value={formData.gender || 'OTHER'}
+                        onChange={(e) => handleChange('gender', e.target.value)}
+                      >
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label htmlFor="edit-dob" className="form-label small fw-semibold text-dark">
+                    <label htmlFor="edit-dob" className="hospital-form-label mb-1">
                       {t('patient.dob')}
                     </label>
-                    <input
-                      id="edit-dob"
-                      type="date"
-                      className="form-control form-control-sm"
-                      value={formData.dateOfBirth || ''}
-                      onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-                    />
+                    <div className="neu-inset rounded-3 p-1">
+                      <input
+                        id="edit-dob"
+                        type="date"
+                        className="form-control bg-transparent border-0 shadow-none"
+                        value={formData.dateOfBirth || ''}
+                        onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+                      />
+                    </div>
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label htmlFor="edit-emergency" className="form-label small fw-semibold text-dark">
+                    <label htmlFor="edit-emergency" className="hospital-form-label mb-1">
                       {t('patient.emergencyContact')}
                     </label>
-                    <input
-                      id="edit-emergency"
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={formData.emergencyContact || ''}
-                      onChange={(e) => handleChange('emergencyContact', e.target.value)}
-                    />
+                    <div className="neu-inset rounded-3 p-1">
+                      <input
+                        id="edit-emergency"
+                        type="text"
+                        className="form-control bg-transparent border-0 shadow-none"
+                        value={formData.emergencyContact || ''}
+                        onChange={(e) => handleChange('emergencyContact', e.target.value)}
+                      />
+                    </div>
                   </div>
 
                   <div className="col-12">
-                    <label htmlFor="edit-address" className="form-label small fw-semibold text-dark">
+                    <label htmlFor="edit-address" className="hospital-form-label mb-1">
                       {t('patient.address')}
                     </label>
-                    <input
-                      id="edit-address"
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={formData.address || ''}
-                      onChange={(e) => handleChange('address', e.target.value)}
-                    />
+                    <div className="neu-inset rounded-3 p-1">
+                      <input
+                        id="edit-address"
+                        type="text"
+                        className="form-control bg-transparent border-0 shadow-none"
+                        value={formData.address || ''}
+                        onChange={(e) => handleChange('address', e.target.value)}
+                      />
+                    </div>
                   </div>
 
                   <div className="col-12 d-flex flex-wrap gap-2 pt-3 border-top mt-3">
-                    <Button type="submit" variant="primary" size="sm" disabled={isSaving}>
+                    <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSaving}>
                       {isSaving ? 'Saving to Database...' : t('patient.saveChanges')}
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={handleCancelEdit} disabled={isSaving}>
+                    </button>
+                    <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={handleCancelEdit} disabled={isSaving}>
                       {t('patient.cancelEdit')}
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </form>

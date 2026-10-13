@@ -218,7 +218,7 @@ export function useAppointmentBooking() {
         ...patient,
         mrn: serverRecord.patient?.mrn || 'MRN-NEW',
       },
-      status: serverRecord.status || 'Confirmed',
+      status: serverRecord.status || 'REQUESTED',
       createdAt: serverRecord.created_at || new Date().toISOString(),
     };
 

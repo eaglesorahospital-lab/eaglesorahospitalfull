@@ -1,31 +1,45 @@
 /* ==============================================================================
-   Hospital Platform — Typography System (Phase 1)
-   Readable, accessible medical typography using system font stacks.
+   EgleSora Hospital Platform — Typography System
+   Premium healthcare typography with Inter & Plus Jakarta Sans
    ============================================================================== */
 
 body, html {
   font-family: var(--font-stack);
   color: var(--hospital-text);
-  line-height: 1.5;
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
+  line-height: 1.55;
+  font-size: 15.5px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6,
+.hospital-page-title,
+.hospital-section-title {
+  font-family: var(--font-display);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 /* Page Title (H1) */
 .hospital-page-title,
 h1.hospital-page-title {
-  font-size: 1.875rem; /* 30px */
+  font-size: 2rem; /* 32px */
   font-weight: 700;
   line-height: 1.25;
-  color: var(--hospital-primary-dark);
-  margin-bottom: var(--space-3);
-  letter-spacing: -0.01em;
+  color: var(--hospital-primary-navy);
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.02em;
+}
+
+[data-theme="dark"] .hospital-page-title,
+[data-theme="dark"] h1.hospital-page-title {
+  color: var(--hospital-text);
 }
 
 @media (max-width: 576px) {
   .hospital-page-title,
   h1.hospital-page-title {
-    font-size: 1.375rem; /* 22px */
+    font-size: 1.5rem; /* 24px */
     overflow-wrap: break-word;
     word-break: break-word;
   }
@@ -41,17 +55,23 @@ h1.hospital-page-title {
 /* Section Title (H2) */
 .hospital-section-title,
 h2.hospital-section-title {
-  font-size: 1.5rem; /* 24px */
-  font-weight: 600;
+  font-size: 1.625rem; /* 26px */
+  font-weight: 700;
   line-height: 1.3;
-  color: var(--hospital-primary);
+  color: var(--hospital-primary-navy);
   margin-bottom: var(--space-2);
+  letter-spacing: -0.015em;
+}
+
+[data-theme="dark"] .hospital-section-title,
+[data-theme="dark"] h2.hospital-section-title {
+  color: var(--hospital-text);
 }
 
 @media (min-width: 768px) {
   .hospital-section-title,
   h2.hospital-section-title {
-    font-size: 1.75rem; /* 28px */
+    font-size: 1.875rem; /* 30px */
   }
 }
 
@@ -63,62 +83,55 @@ h3.hospital-subsection-title {
   line-height: 1.4;
   color: var(--hospital-text);
   margin-bottom: var(--space-2);
+  letter-spacing: -0.01em;
 }
 
 /* Small Header (H4 / H5) */
 .hospital-header-sm {
   font-size: 1.0625rem; /* 17px */
   font-weight: 600;
-  line-height: 1.45;
-  color: var(--hospital-text);
-  margin-bottom: var(--space-1);
-}
-
-/* Body Text */
-.hospital-body,
-p {
-  font-size: 1rem; /* 16px */
-  font-weight: 400;
-  line-height: 1.6;
-  color: var(--hospital-text);
-  margin-bottom: var(--space-4);
-}
-
-/* Small Supporting Text */
-.hospital-text-supporting,
-small {
-  font-size: 0.875rem; /* 14px */
-  font-weight: 400;
-  line-height: 1.5;
-  color: var(--hospital-text-muted);
-}
-
-.hospital-text-micro {
-  font-size: 0.75rem; /* 12px */
-  font-weight: 500;
   line-height: 1.4;
-  color: var(--hospital-text-light);
+  color: var(--hospital-text);
+  margin-bottom: var(--space-2);
 }
 
-/* Navigation Links */
-.hospital-nav-link {
-  font-size: 0.9375rem; /* 15px */
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--hospital-primary-dark);
-  text-decoration: none;
+/* Description / Subtitles */
+.hospital-page-description {
+  font-size: 0.95rem;
+  color: var(--hospital-text-muted);
+  line-height: 1.55;
+  margin-bottom: 0;
+  max-width: 720px;
 }
 
-/* Button Text */
-.hospital-btn-text {
-  font-size: 0.9375rem; /* 15px */
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: 0.01em;
+.hospital-section-description {
+  font-size: 1rem;
+  color: var(--hospital-text-muted);
+  line-height: 1.6;
+  max-width: 640px;
 }
 
-/* High-contrast focus state for accessibility */
-:focus-visible {
-  outline: 2px solid var(--hospital-secondary);
-  outline-offset: 2px;
+/* Muted & Micro Labels */
+.text-muted {
+  color: var(--hospital-text-muted) !important;
+}
+
+.neu-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hospital-medical-blue);
+  background-color: var(--hospital-surface);
+  box-shadow: var(--neu-raised-sm);
+  border: 1px solid var(--hospital-border);
+}
+
+[data-theme="dark"] .neu-eyebrow {
+  color: var(--hospital-accent-cyan);
 }

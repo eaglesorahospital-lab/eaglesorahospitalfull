@@ -196,11 +196,41 @@ class AuthenticationRBACTests(TestCase):
         self.assertIn('refresh', data)
         self.assertEqual(data['user']['role'], User.Role.PATIENT)
         self.assertEqual(data['user']['email'], "newpatient@example.com")
+        self.assertIsNotNone(data['user'].get('mrn'))
 
         # Verify linked PatientProfile was automatically created
         new_user = User.objects.get(email="newpatient@example.com")
         self.assertTrue(hasattr(new_user, 'patient_profile'))
         self.assertEqual(new_user.patient_profile.first_name, "Charlie")
+        self.assertEqual(new_user.patient_profile.mrn, data['user']['mrn'])
+
+    def test_patient_registration_with_empty_dob_and_lowercase_gender(self):
+        payload = {
+            "email": "empty_dob_patient@example.com",
+            "password": "SecurePassword123!",
+            "password_confirm": "SecurePassword123!",
+            "first_name": "Diana",
+            "last_name": "Prince",
+            "date_of_birth": "",
+            "gender": "female",
+        }
+        res = self.client.post('/api/auth/register/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        data = res.json()
+        self.assertEqual(data['user']['role'], User.Role.PATIENT)
+        new_user = User.objects.get(email="empty_dob_patient@example.com")
+        self.assertIsNone(new_user.patient_profile.date_of_birth)
+        self.assertEqual(new_user.patient_profile.gender, "FEMALE")
+
+    def test_case_insensitive_duplicate_email_registration_rejected(self):
+        payload = {
+            "email": "PATIENT1@EXAMPLE.COM",  # Uppercase of existing patient1@example.com
+            "password": "SecurePassword123!",
+            "password_confirm": "SecurePassword123!",
+        }
+        res = self.client.post('/api/auth/register/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', res.json())
 
     # 2. Duplicate email rejection
     def test_duplicate_email_registration_rejected(self):

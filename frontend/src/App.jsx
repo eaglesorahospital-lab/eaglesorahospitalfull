@@ -1,15 +1,18 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
+import { ThemeProvider } from './context/ThemeContext';
 
 /**
- * Hospital Platform — Root Application Component (Phase 1)
+ * Hospital Platform — Root Application Component
  */
 function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

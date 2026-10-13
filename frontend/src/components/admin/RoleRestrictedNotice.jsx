@@ -1,51 +1,80 @@
 import React from 'react';
-import Button from '../common/Button';
+import { ShieldAlert, ArrowRight } from 'lucide-react';
 
 /**
- * Hospital Platform — Role-Restricted View Notice (Phase 8)
+ * Hospital Platform — Role-Restricted View Notice (Neumorphic Redesign)
  * Displayed when the simulated role does not have administrative privileges for the requested section.
- * Clearly notes that this is a frontend demonstration state and not backend security enforcement.
  */
 export function RoleRestrictedNotice({ currentRole, moduleName, onSwitchRole }) {
   return (
-    <div className="hospital-card p-4 p-md-5 my-4 border-warning">
-      <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-        <span className="badge bg-warning text-dark fw-bold">Role Access Restricted</span>
-        <span className="text-muted small">Frontend RBAC Demonstration</span>
+    <div 
+      className="neu-card p-4 p-md-5 my-4" 
+      style={{ borderRadius: '24px', background: 'var(--hospital-surface)' }}
+    >
+      <div 
+        className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom"
+        style={{ borderColor: 'var(--hospital-border)' }}
+      >
+        <div className="d-flex align-items-center gap-2">
+          <span className="neu-badge neu-badge-warning">
+            <span className="neu-badge-dot" />
+            Role Access Restricted
+          </span>
+        </div>
+        <span className="text-muted small">Frontend RBAC Simulation</span>
       </div>
 
-      <h2 className="hospital-section-title mb-2">
-        Access Restricted for {currentRole?.label || 'Current Role'}
-      </h2>
-      <p className="hospital-text-body mb-3">
+      <div className="d-flex align-items-center gap-3 mb-3">
+        <div 
+          className="d-flex align-items-center justify-content-center"
+          style={{ 
+            width: '48px', 
+            height: '48px', 
+            borderRadius: '14px', 
+            background: 'var(--hospital-surface)', 
+            boxShadow: 'var(--neu-inset)', 
+            color: '#B7791F',
+            flexShrink: 0
+          }}
+        >
+          <ShieldAlert size={24} />
+        </div>
+        <h2 className="fs-5 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+          Access Restricted for {currentRole?.label || 'Current Role'}
+        </h2>
+      </div>
+
+      <p className="small text-muted mb-4" style={{ lineHeight: '1.6' }}>
         The active demonstration role <strong>{currentRole?.label}</strong> does not have permissions to access the{' '}
         <strong>{moduleName || 'Administrative'}</strong> module in this simulation.
       </p>
 
-      <div className="p-3 bg-light rounded border mb-4 small text-muted">
-        <strong>Role Policy Note:</strong> In production, role-based authorization will be enforced server-side
+      <div 
+        className="p-3 neu-card-sm mb-4 small text-muted"
+        style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+      >
+        <strong>Role Policy Note:</strong> In production, role-based authorization is enforced server-side
         using signed JWT claims, Django REST Framework permission classes (e.g., <code>IsAdminUser</code>,{' '}
-        <code>IsHospitalStaff</code>), and PostgreSQL database-level constraints. This preview reflects the planned
-        role boundary for {currentRole?.label}.
+        <code>IsHospitalStaff</code>), and PostgreSQL database-level constraints.
       </div>
 
       {onSwitchRole && (
-        <div className="d-flex flex-wrap gap-2 align-items-center">
+        <div className="d-flex flex-wrap gap-2 align-items-center pt-2">
           <span className="small text-muted me-2">Switch demonstration role:</span>
-          <Button
-            variant="primary"
-            size="sm"
+          <button
+            type="button"
+            className="neu-btn neu-btn-primary neu-btn-sm"
             onClick={() => onSwitchRole('SUPER_ADMIN')}
           >
             Switch to Super Administrator
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
+          </button>
+          <button
+            type="button"
+            className="neu-btn neu-btn-outline neu-btn-sm"
             onClick={() => onSwitchRole('HOSPITAL_ADMIN')}
           >
             Switch to Hospital Admin
-          </Button>
+          </button>
         </div>
       )}
     </div>

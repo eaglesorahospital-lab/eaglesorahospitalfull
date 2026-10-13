@@ -184,7 +184,7 @@ class AppointmentBookingComprehensiveTests(TransactionTestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         data = res.json()
         self.assertTrue(data['reference'].startswith('APT-'))
-        self.assertEqual(data['status'], 'CONFIRMED')
+        self.assertEqual(data['status'], 'REQUESTED')
         self.assertEqual(data['patient']['mrn'], self.patient_a.mrn)
         self.assertEqual(data['doctor']['id'], self.doctor.id)
         self.assertEqual(data['department']['id'], self.dept.id)
@@ -546,9 +546,9 @@ class AppointmentBookingComprehensiveTests(TransactionTestCase):
         )
         self.assertEqual(res_fail.status_code, status.HTTP_409_CONFLICT)
 
-        # Original appointment remains CONFIRMED and untouched
+        # Original appointment remains REQUESTED and untouched
         orig_apt = Appointment.objects.get(reference=ref_a)
-        self.assertEqual(orig_apt.status, Appointment.Status.CONFIRMED)
+        self.assertEqual(orig_apt.status, Appointment.Status.REQUESTED)
         self.assertEqual(orig_apt.start_time, time(10, 0))
 
     # 21. Appointment lifecycle transitions validated
@@ -806,6 +806,147 @@ class AppointmentBookingComprehensiveTests(TransactionTestCase):
         morning_slot = next((s for s in slots if s['start_time'] == '10:00:00'), None)
         self.assertIsNotNone(morning_slot)
         self.assertTrue(morning_slot['available'])
+
+    # 32. A newly submitted appointment gets REQUESTED
+    def test_32_newly_submitted_appointment_defaults_to_requested(self):
+        target_date = self.future_date + timedelta(days=2)
+        payload = {
+            "doctor": self.doctor.id,
+            "appointment_date": str(target_date),
+            "start_time": "11:00:00",
+            "end_time": "11:30:00",
+            "appointment_type": "IN_PERSON",
+            "reason_for_visit": "Consultation checkup",
+        }
+        res = self.client_a.post('/api/appointments/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        data = res.json()
+        self.assertEqual(data['status'], 'REQUESTED')
+
+        # Verify database record
+        apt = Appointment.objects.get(reference=data['reference'])
+        self.assertEqual(apt.status, Appointment.Status.REQUESTED)
+
+    # 33. Patient cannot force CONFIRMED status in booking payload
+    def test_33_patient_cannot_force_confirmed_status_in_booking_payload(self):
+        target_date = self.future_date + timedelta(days=3)
+        payload = {
+            "doctor": self.doctor.id,
+            "appointment_date": str(target_date),
+            "start_time": "11:00:00",
+            "end_time": "11:30:00",
+            "appointment_type": "IN_PERSON",
+            "reason_for_visit": "Consultation checkup",
+            "status": "CONFIRMED",  # Malicious attempt to force CONFIRMED status
+        }
+        res = self.client_a.post('/api/appointments/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        data = res.json()
+        self.assertEqual(data['status'], 'REQUESTED')
+
+        # Verify database record remains REQUESTED
+        apt = Appointment.objects.get(reference=data['reference'])
+        self.assertEqual(apt.status, Appointment.Status.REQUESTED)
+
+    # 34. Public booking API enforces REQUESTED status
+    def test_34_public_booking_api_enforces_requested_status(self):
+        target_date = self.future_date + timedelta(days=4)
+        payload = {
+            "doctor": self.doctor.id,
+            "appointment_date": str(target_date),
+            "start_time": "10:00:00",
+            "end_time": "10:30:00",
+            "status": "CONFIRMED",  # Client-supplied status must be ignored
+            "patient": {
+                "fullName": "Public Test Patient",
+                "phone": "+919876543210",
+                "email": "public.patient@example.com",
+                "gender": "FEMALE",
+                "dob": "1995-05-15",
+                "reasonForVisit": "Public booking test",
+            },
+        }
+        res = self.anon_client.post('/api/appointments/book/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        data = res.json()
+        self.assertEqual(data['status'], 'REQUESTED')
+
+        # Verify database record is saved as REQUESTED
+        apt = Appointment.objects.get(reference=data['reference'])
+        self.assertEqual(apt.status, Appointment.Status.REQUESTED)
+
+    # 35. Authorized admin can approve requested appointment
+    def test_35_authorized_admin_can_approve_requested_appointment(self):
+        target_date = self.future_date + timedelta(days=5)
+        apt, _ = AppointmentBookingService.book_appointment(
+            patient=self.patient_a,
+            doctor=self.doctor,
+            appointment_date=target_date,
+            start_time=time(10, 0),
+            end_time=time(10, 30),
+            status=Appointment.Status.REQUESTED,
+        )
+        self.assertEqual(apt.status, Appointment.Status.REQUESTED)
+
+        # Admin approves via dedicated approve endpoint
+        res = self.admin_client.post(f'/api/appointments/{apt.reference}/approve/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.json()
+        self.assertEqual(data['status'], 'CONFIRMED')
+
+        apt.refresh_from_db()
+        self.assertEqual(apt.status, Appointment.Status.CONFIRMED)
+
+        # Admin can also approve via PATCH status
+        apt2, _ = AppointmentBookingService.book_appointment(
+            patient=self.patient_b,
+            doctor=self.doctor,
+            appointment_date=target_date,
+            start_time=time(11, 0),
+            end_time=time(11, 30),
+            status=Appointment.Status.REQUESTED,
+        )
+        res_patch = self.admin_client.patch(
+            f'/api/appointments/{apt2.reference}/',
+            {"status": "CONFIRMED"},
+            format='json',
+        )
+        self.assertEqual(res_patch.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_patch.json()['status'], 'CONFIRMED')
+        apt2.refresh_from_db()
+        self.assertEqual(apt2.status, Appointment.Status.CONFIRMED)
+
+    # 36. Unauthorized user cannot approve an appointment
+    def test_36_unauthorized_user_cannot_approve_appointment(self):
+        target_date = self.future_date + timedelta(days=6)
+        apt, _ = AppointmentBookingService.book_appointment(
+            patient=self.patient_a,
+            doctor=self.doctor,
+            appointment_date=target_date,
+            start_time=time(10, 0),
+            end_time=time(10, 30),
+            status=Appointment.Status.REQUESTED,
+        )
+
+        # Patient attempts to approve via dedicated approve endpoint -> 403 Forbidden
+        res_patient_approve = self.client_a.post(f'/api/appointments/{apt.reference}/approve/')
+        self.assertEqual(res_patient_approve.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Patient attempts to force CONFIRMED status via PATCH -> 403 Forbidden
+        res_patient_patch = self.client_a.patch(
+            f'/api/appointments/{apt.reference}/',
+            {"status": "CONFIRMED"},
+            format='json',
+        )
+        self.assertEqual(res_patient_patch.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Anonymous user attempts approve -> 401 Unauthorized
+        res_anon = self.anon_client.post(f'/api/appointments/{apt.reference}/approve/')
+        self.assertEqual(res_anon.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # In DB, appointment remains REQUESTED
+        apt.refresh_from_db()
+        self.assertEqual(apt.status, Appointment.Status.REQUESTED)
 
 
 if __name__ == '__main__':

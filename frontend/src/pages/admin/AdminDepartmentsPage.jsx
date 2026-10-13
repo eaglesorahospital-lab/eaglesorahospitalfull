@@ -1,7 +1,22 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { 
+  Building2, 
+  Plus, 
+  RotateCw, 
+  AlertCircle, 
+  CheckCircle2, 
+  X, 
+  Eye, 
+  Edit3, 
+  Power, 
+  Clock, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Users 
+} from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
-import Button from '../../components/common/Button';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import RoleRestrictedNotice from '../../components/admin/RoleRestrictedNotice';
@@ -9,7 +24,7 @@ import departmentService from '../../services/departmentService';
 import { DEMO_DEPARTMENTS } from '../../data/hospitalData';
 
 /**
- * Hospital Platform — Admin Departments Management Page (Phase 8)
+ * Hospital Platform — Admin Departments Management Page (Neumorphic Redesign)
  * Departmental roster, clinical service suites, OPD timings, and facility contacts.
  */
 export function AdminDepartmentsPage() {
@@ -210,7 +225,7 @@ export function AdminDepartmentsPage() {
   };
 
   return (
-    <div>
+    <div className="admin-departments-view">
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
         <PageHeader
           title="Clinical Department Directory"
@@ -218,19 +233,38 @@ export function AdminDepartmentsPage() {
           breadcrumbs={breadcrumbs}
           className="mb-0"
         />
-        <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
-          + Add New Department
-        </Button>
+        <button 
+          type="button" 
+          className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-2"
+          onClick={() => setShowAddModal(true)}
+        >
+          <Plus size={16} />
+          Add New Department
+        </button>
       </div>
 
+      {/* Action Notice */}
       {actionNotice && (
-        <div className="alert alert-success py-2 px-3 mb-3 small d-flex justify-content-between align-items-center">
-          <span>{actionNotice}</span>
+        <div 
+          className="neu-card p-3 mb-4 d-flex justify-content-between align-items-center"
+          style={{ 
+            borderRadius: '14px', 
+            background: 'var(--hospital-surface)',
+            borderLeft: '4px solid var(--neu-success)'
+          }}
+        >
+          <div className="d-flex align-items-center gap-2 small">
+            <CheckCircle2 size={16} color="var(--neu-success)" />
+            <span style={{ color: 'var(--hospital-primary-navy)', fontWeight: 600 }}>{actionNotice}</span>
+          </div>
           <button
             type="button"
-            className="btn-close btn-close-sm"
+            className="neu-btn-icon"
+            style={{ width: '28px', height: '28px', padding: 0 }}
             onClick={() => setActionNotice(null)}
-          />
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -247,7 +281,7 @@ export function AdminDepartmentsPage() {
       >
         <div className="col-12 col-sm-6 col-md-3">
           <select
-            className="hospital-form-control"
+            className="neu-select"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             aria-label="Filter by department status"
@@ -260,75 +294,112 @@ export function AdminDepartmentsPage() {
       </AdminFilterBar>
 
       {/* Departments Table */}
-      <div className="hospital-card p-0 mb-4 overflow-hidden">
-        <div className="admin-table-container">
-          <table className="admin-table">
+      <div 
+        className="neu-card p-0 mb-4 overflow-hidden" 
+        style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
+      >
+        <div className="neu-table-container">
+          <table className="neu-table">
             <thead>
               <tr>
-                <th>Department</th>
-                <th>Specialty Domain</th>
-                <th>OPD Hours</th>
-                <th>Facility Location</th>
-                <th>Doctors Roster</th>
-                <th>Status</th>
-                <th className="text-end">Actions</th>
+                <th className="col-dept-name">Department</th>
+                <th className="col-dept-specialty">Specialty Domain</th>
+                <th className="col-dept-hours">OPD Hours</th>
+                <th className="col-dept-location">Facility Location</th>
+                <th className="col-dept-faculty">Faculty</th>
+                <th className="col-status">Status</th>
+                <th className="col-dept-actions text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredDepartments.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-4 text-muted">
-                    No departments match your search criteria.
+                  <td colSpan="7" className="text-center py-5 text-muted">
+                    <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+                    <div>Loading department directory...</div>
+                  </td>
+                </tr>
+              ) : filteredDepartments.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-5 text-muted">
+                    <AlertCircle size={28} className="mb-2 text-muted" />
+                    <div className="fw-semibold">No departments match your search criteria.</div>
                   </td>
                 </tr>
               ) : (
                 filteredDepartments.map((dept) => (
-                  <tr key={dept.id}>
+                  <tr key={dept.id || dept.slug}>
                     <td>
-                      <div className="fw-bold">{dept.name}</div>
-                      <div className="small text-muted">{dept.contact?.phone || 'Main Switchboard'}</div>
+                      <div className="d-flex align-items-center gap-3">
+                        <div 
+                          className="d-flex align-items-center justify-content-center"
+                          style={{ 
+                            width: '38px', 
+                            height: '38px', 
+                            borderRadius: '12px', 
+                            background: 'var(--hospital-surface)', 
+                            boxShadow: 'var(--neu-inset)', 
+                            color: 'var(--hospital-cyan)',
+                            flexShrink: 0
+                          }}
+                        >
+                          <Building2 size={18} />
+                        </div>
+                        <div>
+                          <div className="fw-bold">{dept.name}</div>
+                          <div className="small text-muted">{dept.contact?.phone || 'Direct line active'}</div>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <span className="fw-semibold text-primary">{dept.specialty}</span>
                     </td>
                     <td>
-                      <span className="small text-muted">{dept.opdHours}</span>
+                      <span className="small text-muted">{dept.opdHours || 'Mon - Sat: 09:00 - 17:00'}</span>
                     </td>
                     <td>
                       <span className="small">{dept.contact?.location || 'Clinical Wing'}</span>
                     </td>
                     <td>
-                      <span className="hospital-badge hospital-badge-scheduled">
+                      <span className="neu-badge neu-badge-info">
                         {dept.doctorIds?.length || 0} Consultants
                       </span>
                     </td>
                     <td>
                       <AdminStatusBadge status={dept.status} />
                     </td>
-                    <td className="text-end text-nowrap">
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => setViewDepartment(dept)}
-                      >
-                        Details
-                      </button>
-                      <button
-                        type="button"
-                        className="hospital-btn hospital-btn-outline hospital-btn-sm me-1"
-                        onClick={() => setEditDepartment(dept)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className={`hospital-btn hospital-btn-sm ${
-                          dept.status === 'Active' ? 'btn-outline-danger' : 'btn-outline-success'
-                        }`}
-                        onClick={() => handleToggleStatus(dept.id)}
-                      >
-                        {dept.status === 'Active' ? 'Deactivate' : 'Activate'}
-                      </button>
+                    <td className="text-end">
+                      <div className="neu-action-btns">
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => setViewDepartment(dept)}
+                          title="View clinical scope & services"
+                        >
+                          <Eye size={13} className="me-1" />
+                          Details
+                        </button>
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => setEditDepartment(dept)}
+                          title="Edit department info"
+                        >
+                          <Edit3 size={13} className="me-1" />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className={`neu-btn neu-btn-sm ${
+                            dept.status === 'Active' ? 'neu-btn-danger' : 'neu-btn-primary'
+                          }`}
+                          onClick={() => handleToggleStatus(dept.id || dept.slug)}
+                          title={dept.status === 'Active' ? 'Deactivate wing' : 'Activate wing'}
+                        >
+                          <Power size={13} className="me-1" />
+                          {dept.status === 'Active' ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -343,54 +414,77 @@ export function AdminDepartmentsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <div 
+                className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <div>
-                  <h5 className="modal-title fs-6 fw-bold mb-0">{viewDepartment.name}</h5>
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    {viewDepartment.name}
+                  </h5>
                   <span className="small text-muted">{viewDepartment.specialty}</span>
                 </div>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="neu-btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0 }}
                   onClick={() => setViewDepartment(null)}
-                />
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <div className="modal-body">
-                <div className="p-3 bg-light rounded border mb-3">
-                  <div className="small text-muted fw-bold mb-1">Clinical Overview</div>
-                  <p className="small mb-0 text-muted">{viewDepartment.fullDescription || viewDepartment.shortDescription}</p>
+              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                <div 
+                  className="p-3 neu-card-sm mb-3"
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  <div className="small text-muted fw-bold mb-1 text-uppercase">Clinical Overview</div>
+                  <p className="small mb-0 text-muted">{viewDepartment.fullDescription || viewDepartment.shortDescription || 'Specialized clinical hospital department offering state-of-the-art diagnostics and inpatient/outpatient treatment.'}</p>
                 </div>
 
-                <div className="row g-3 mb-3">
+                <div className="row g-3">
                   <div className="col-12 col-md-6">
-                    <div className="p-3 bg-light rounded border h-100">
-                      <div className="small text-muted fw-bold mb-2">Location & Contact</div>
-                      <div className="small"><strong>Location:</strong> {viewDepartment.contact?.location}</div>
-                      <div className="small"><strong>Phone:</strong> {viewDepartment.contact?.phone}</div>
-                      <div className="small"><strong>Email:</strong> {viewDepartment.contact?.email}</div>
-                      <div className="small"><strong>OPD Hours:</strong> {viewDepartment.opdHours}</div>
+                    <div 
+                      className="p-3 neu-card-sm h-100" 
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="small text-muted fw-bold mb-2 text-uppercase">Location & Contact</div>
+                      <div className="small mb-1"><strong>Location:</strong> {viewDepartment.contact?.location || 'Clinical Wing'}</div>
+                      <div className="small mb-1"><strong>Phone:</strong> {viewDepartment.contact?.phone || '+91 (0) 22 0000 2200'}</div>
+                      <div className="small mb-1"><strong>Email:</strong> {viewDepartment.contact?.email || 'department@eglesorahospital.org'}</div>
+                      <div className="small"><strong>OPD Hours:</strong> {viewDepartment.opdHours || 'Mon - Sat: 09:00 - 17:00'}</div>
                     </div>
                   </div>
                   <div className="col-12 col-md-6">
-                    <div className="p-3 bg-light rounded border h-100">
-                      <div className="small text-muted fw-bold mb-2">Clinical Services</div>
+                    <div 
+                      className="p-3 neu-card-sm h-100" 
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="small text-muted fw-bold mb-2 text-uppercase">Clinical Services</div>
                       <ul className="small mb-0 ps-3">
-                        {viewDepartment.services?.map((svc, idx) => (
-                          <li key={idx}>{svc}</li>
+                        {(viewDepartment.services || ['Outpatient Clinical Consultation', 'Diagnostic Evaluations', 'Preventive Screenings']).map((svc, idx) => (
+                          <li key={idx} className="mb-1">{svc}</li>
                         ))}
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div 
+                className="modal-footer px-4 py-3 border-top"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
                 <button
                   type="button"
-                  className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                  className="neu-btn neu-btn-outline neu-btn-sm"
                   onClick={() => setViewDepartment(null)}
                 >
                   Close
@@ -406,26 +500,37 @@ export function AdminDepartmentsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
               <form onSubmit={handleSaveEdit}>
-                <div className="modal-header">
-                  <h5 className="modal-title fs-6 fw-bold">Edit Department Details</h5>
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    Edit Department Details
+                  </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => setEditDepartment(null)}
-                  />
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Department Name</label>
+                    <label className="neu-form-label">Department Name</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={editDepartment.name}
                       onChange={(e) =>
                         setEditDepartment({ ...editDepartment, name: e.target.value })
@@ -434,10 +539,10 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Specialty</label>
+                    <label className="neu-form-label">Specialty Domain</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={editDepartment.specialty}
                       onChange={(e) =>
                         setEditDepartment({ ...editDepartment, specialty: e.target.value })
@@ -446,10 +551,10 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">OPD Hours</label>
+                    <label className="neu-form-label">OPD Hours</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={editDepartment.opdHours}
                       onChange={(e) =>
                         setEditDepartment({ ...editDepartment, opdHours: e.target.value })
@@ -457,10 +562,10 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Location</label>
+                    <label className="neu-form-label">Location / Wing</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={editDepartment.contact?.location || ''}
                       onChange={(e) =>
                         setEditDepartment({
@@ -471,15 +576,18 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
                   <button
                     type="button"
-                    className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => setEditDepartment(null)}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="hospital-btn hospital-btn-primary hospital-btn-sm">
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm">
                     Save Changes
                   </button>
                 </div>
@@ -494,28 +602,39 @@ export function AdminDepartmentsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
               <form onSubmit={handleAddDepartment}>
-                <div className="modal-header">
-                  <h5 className="modal-title fs-6 fw-bold">Register New Department</h5>
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    Register New Department
+                  </h5>
                   <button
                     type="button"
-                    className="btn-close"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
-                  />
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
                   <div className="mb-3">
-                    <label className="hospital-form-label">
+                    <label className="neu-form-label">
                       Department Name <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       placeholder="e.g. Ophthalmology & Vision Care"
                       value={newDeptForm.name}
                       onChange={(e) =>
@@ -525,12 +644,12 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">
+                    <label className="neu-form-label">
                       Specialty Domain <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       placeholder="e.g. Ophthalmology"
                       value={newDeptForm.specialty}
                       onChange={(e) =>
@@ -540,10 +659,10 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Location / Wing</label>
+                    <label className="neu-form-label">Location / Wing</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       placeholder="e.g. Wing D, 2nd Floor, Suite 210"
                       value={newDeptForm.location}
                       onChange={(e) =>
@@ -552,10 +671,10 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">OPD Hours</label>
+                    <label className="neu-form-label">OPD Hours</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={newDeptForm.opdHours}
                       onChange={(e) =>
                         setNewDeptForm({ ...newDeptForm, opdHours: e.target.value })
@@ -563,10 +682,10 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="hospital-form-label">Direct Phone</label>
+                    <label className="neu-form-label">Direct Phone</label>
                     <input
                       type="text"
-                      className="hospital-form-control"
+                      className="neu-input"
                       value={newDeptForm.phone}
                       onChange={(e) =>
                         setNewDeptForm({ ...newDeptForm, phone: e.target.value })
@@ -574,15 +693,18 @@ export function AdminDepartmentsPage() {
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
                   <button
                     type="button"
-                    className="hospital-btn hospital-btn-outline hospital-btn-sm"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => setShowAddModal(false)}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="hospital-btn hospital-btn-primary hospital-btn-sm">
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm">
                     Add Department
                   </button>
                 </div>
