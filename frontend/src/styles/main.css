@@ -149,6 +149,63 @@ html, body {
 }
 
 /* ------------------------------------------------------------------------------
+   3.1. Page Header & Breadcrumb Styling
+   ------------------------------------------------------------------------------ */
+.hospital-page-header {
+  margin-bottom: var(--space-6, 1.5rem);
+}
+
+.hospital-page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--hospital-text);
+  line-height: 1.25;
+}
+
+.hospital-text-supporting {
+  color: var(--hospital-text-muted);
+  font-size: 0.95rem;
+}
+
+/* Breadcrumbs: Ensure breadcrumb <ol> never renders as an unstyled numbered list */
+.hospital-breadcrumb,
+ol.hospital-breadcrumb {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  list-style: none !important;
+  list-style-type: none !important;
+  padding: 0 !important;
+  margin: 0 0 var(--space-2, 0.5rem) 0 !important;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.hospital-breadcrumb-item,
+li.hospital-breadcrumb-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  list-style: none !important;
+  list-style-type: none !important;
+  color: var(--hospital-text-muted);
+}
+
+.hospital-breadcrumb-item a {
+  color: var(--hospital-medical-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.hospital-breadcrumb-item a:hover {
+  text-decoration: underline;
+}
+
+.hospital-breadcrumb-item.active {
+  color: var(--hospital-text);
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------------------------
    4. Header, TopBar & Navigation
    ------------------------------------------------------------------------------ */
 .hospital-topbar {
