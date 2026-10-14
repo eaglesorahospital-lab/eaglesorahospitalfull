@@ -29,7 +29,7 @@ export function DoctorCard({ doctor }) {
   return (
     <article className="doctor-directory-card neu-card p-4 rounded-4 h-100 d-flex flex-column" aria-label={`Doctor profile for ${doctor.name}`}>
       {/* Header: Avatar, Identity & Status */}
-      <div className="d-flex align-items-start gap-3 mb-3">
+      <div className="doctor-card-header d-flex align-items-start gap-3 mb-3">
         <div className="doctor-avatar-box neu-inset flex-shrink-0" aria-hidden="true">
           {photoUrl ? (
             <img src={photoUrl} alt={doctor.name} />
@@ -38,7 +38,7 @@ export function DoctorCard({ doctor }) {
           )}
         </div>
 
-        <div className="flex-grow-1 min-w-0">
+        <div className="doctor-identity flex-grow-1 min-w-0">
           <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
             <span
               className={`neu-badge ${
@@ -49,7 +49,7 @@ export function DoctorCard({ doctor }) {
             </span>
           </div>
 
-          <h3 className="h6 fw-bold mb-1 text-truncate">
+          <h3 className="h6 fw-bold mb-1 doctor-name">
             <Link
               to={`/doctors/${slug}`}
               className="text-decoration-none text-body hover-text-primary"
@@ -58,13 +58,13 @@ export function DoctorCard({ doctor }) {
             </Link>
           </h3>
 
-          <div className="small fw-semibold text-primary mb-1 d-flex align-items-center gap-1">
+          <div className="small fw-semibold text-primary mb-1 d-flex align-items-center gap-1 doctor-specialty">
             <Stethoscope size={13} className="flex-shrink-0" />
-            <span className="text-truncate">{doctor.specialty}</span>
+            <span className="doctor-specialty-text">{doctor.specialty}</span>
           </div>
 
           {qualifications && (
-            <div className="small text-muted text-truncate" title={qualifications}>
+            <div className="doctor-qualifications" title={qualifications}>
               {qualifications}
             </div>
           )}
@@ -72,39 +72,39 @@ export function DoctorCard({ doctor }) {
       </div>
 
       {/* Affiliation & Experience Metadata */}
-      <div className="pt-2 border-top mb-3 small flex-grow-1">
-        <div className="mb-1 text-secondary d-flex align-items-center gap-1">
-          <span className="fw-semibold text-body">Department: </span>
+      <div className="doctor-meta pt-2 border-top mb-3 small flex-grow-1 min-w-0">
+        <div className="mb-1 text-secondary d-flex flex-wrap align-items-baseline gap-1 doctor-department">
+          <span className="fw-semibold text-body flex-shrink-0">Department: </span>
           {deptId ? (
             <Link
               to={`/departments/${deptId}`}
-              className="text-decoration-none text-primary fw-medium text-truncate"
+              className="text-decoration-none text-primary fw-medium doctor-department-link"
             >
               {deptName}
             </Link>
           ) : (
-            <span className="text-truncate">{deptName}</span>
+            <span className="doctor-department-text">{deptName}</span>
           )}
         </div>
 
         {experienceYears !== undefined && (
-          <div className="text-muted d-flex align-items-center gap-1 mb-1">
+          <div className="text-muted d-flex align-items-center gap-1 mb-1 doctor-experience">
             <Award size={13} className="text-primary flex-shrink-0" />
             <span><strong className="text-body">{experienceYears}</strong> years clinical exp.</span>
           </div>
         )}
 
         {doctor.consultation && (
-          <div className="text-muted d-flex align-items-center gap-1 mb-1">
+          <div className="text-muted d-flex align-items-start gap-1 mb-1 doctor-consultation-info">
             <Clock size={13} className="text-muted flex-shrink-0" />
             <span>{doctor.consultation.type} ({doctor.consultation.duration})</span>
           </div>
         )}
 
         {doctor.consultation?.location && (
-          <div className="text-muted d-flex align-items-center gap-1 text-truncate" title={doctor.consultation.location}>
+          <div className="text-muted d-flex align-items-start gap-1 mb-1 doctor-location" title={doctor.consultation.location}>
             <MapPin size={13} className="text-muted flex-shrink-0" />
-            <span className="text-truncate">{doctor.consultation.location}</span>
+            <span className="doctor-location-text">{doctor.consultation.location}</span>
           </div>
         )}
 
@@ -113,7 +113,7 @@ export function DoctorCard({ doctor }) {
           <div className="mt-2 pt-2 border-top">
             <div className="d-flex flex-wrap gap-1">
               {topExpertise.map((item, idx) => (
-                <span key={idx} className="neu-badge neu-badge-neutral text-truncate" style={{ maxWidth: '140px' }}>
+                <span key={idx} className="neu-badge neu-badge-neutral" style={{ maxWidth: '100%', whiteSpace: 'normal', textAlign: 'left' }}>
                   {item}
                 </span>
               ))}
