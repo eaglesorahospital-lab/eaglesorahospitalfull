@@ -273,8 +273,27 @@ class DoctorPortalAndManagementTests(TransactionTestCase):
         creds = res_create.data["credentials"]
         uid = creds["setup_uid"]
         token = creds["setup_token"]
+        temp_pass = creds["temporary_password"]
 
-        # Doctor completes one-time setup
+        # 1. Confirm temporary password is secure and hashed in DB (never stored plaintext)
+        initial_user = User.objects.get(email="dr.sarah@eglesora.com")
+        self.assertTrue(initial_user.check_password(temp_pass))
+        self.assertNotEqual(initial_user.password, temp_pass)
+        self.assertTrue(initial_user.password.startswith("pbkdf2_") or initial_user.password.startswith("argon2"))
+
+        # 2. Confirm temporary password is NEVER in AuditLog text or details
+        self.assertEqual(AuditLog.objects.filter(details__icontains=temp_pass).count(), 0)
+
+        # 3. Invalid setup token rejected
+        res_invalid = self.client.post('/api/auth/setup-password/', {
+            "uid": uid,
+            "token": "tampered-token-xyz",
+            "new_password": "NewDoctorSecretPass2026!",
+            "confirm_password": "NewDoctorSecretPass2026!",
+        }, format='json')
+        self.assertEqual(res_invalid.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 4. Doctor completes one-time setup
         self.client.credentials()  # Unauthenticated
         setup_payload = {
             "uid": uid,
@@ -285,13 +304,18 @@ class DoctorPortalAndManagementTests(TransactionTestCase):
         res_setup = self.client.post('/api/auth/setup-password/', setup_payload, format='json')
         self.assertEqual(res_setup.status_code, status.HTTP_200_OK)
         self.assertIn("access", res_setup.data)
+        self.assertNotIn(temp_pass, str(res_setup.data))
+        self.assertNotIn("NewDoctorSecretPass2026!", str(res_setup.data))
+        self.assertNotIn("password_hash", str(res_setup.data))
 
-        # Verify must_change_password is now False
+
+        # 5. Verify must_change_password is now False, new password works, old temporary password FAILS
         doctor_user = User.objects.get(email="dr.sarah@eglesora.com")
         self.assertFalse(doctor_user.must_change_password)
         self.assertTrue(doctor_user.check_password("NewDoctorSecretPass2026!"))
+        self.assertFalse(doctor_user.check_password(temp_pass))
 
-        # Setup token cannot be reused
+        # 6. Setup token cannot be reused
         res_reuse = self.client.post('/api/auth/setup-password/', setup_payload, format='json')
         self.assertEqual(res_reuse.status_code, status.HTTP_400_BAD_REQUEST)
 
