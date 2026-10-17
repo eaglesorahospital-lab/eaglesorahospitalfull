@@ -16,7 +16,8 @@ import {
   User,
   Phone,
   Mail,
-  FileText
+  FileText,
+  UserCheck
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
@@ -119,6 +120,11 @@ export function AdminAppointmentsPage() {
   const [statusModalAppointment, setStatusModalAppointment] = useState(null);
   const [cancelModalAppointment, setCancelModalAppointment] = useState(null);
   const [rescheduleModalAppointment, setRescheduleModalAppointment] = useState(null);
+  const [assignModalAppointment, setAssignModalAppointment] = useState(null);
+  const [selectedAssignDoctor, setSelectedAssignDoctor] = useState('');
+  const [assignReason, setAssignReason] = useState('');
+  const [assignError, setAssignError] = useState(null);
+  const [isAssignSubmitting, setIsAssignSubmitting] = useState(false);
   const [actionNotice, setActionNotice] = useState(null);
   const [processingReference, setProcessingReference] = useState(null);
   const [isStatusSubmitting, setIsStatusSubmitting] = useState(false);
@@ -398,6 +404,32 @@ export function AdminAppointmentsPage() {
     setRescheduleModalAppointment(null);
   };
 
+  // Handle Doctor Assignment / Reassignment with availability & conflict checks
+  const handleAssignDoctor = async (e) => {
+    e.preventDefault();
+    if (!assignModalAppointment || !selectedAssignDoctor) return;
+    setAssignError(null);
+    setIsAssignSubmitting(true);
+    try {
+      const updated = await appointmentService.assignDoctor(
+        assignModalAppointment.reference,
+        Number(selectedAssignDoctor),
+        assignReason
+      );
+      setAppointmentsList((prev) =>
+        prev.map((apt) => (apt.reference === assignModalAppointment.reference ? { ...apt, ...updated } : apt))
+      );
+      setActionNotice(
+        `Appointment ${assignModalAppointment.reference} successfully assigned to ${updated.doctorName || 'consultant'}.`
+      );
+      setAssignModalAppointment(null);
+    } catch (err) {
+      setAssignError(err.message || 'Failed to assign appointment to selected doctor.');
+    } finally {
+      setIsAssignSubmitting(false);
+    }
+  };
+
   return (
     <div className="admin-appointments-view">
       <PageHeader
@@ -510,12 +542,8 @@ export function AdminAppointmentsPage() {
       </AdminFilterBar>
 
       {/* Appointments Table */}
-      <div 
-        className="neu-card p-0 mb-4 overflow-hidden" 
-        style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
-      >
-        <div className="neu-table-container">
-          <table className="neu-table">
+      <div className="neu-table-container">
+        <table className="neu-table">
             <thead>
               <tr>
                 <th className="col-apt-ref">Reference</th>
@@ -634,6 +662,22 @@ export function AdminAppointmentsPage() {
                           <CalendarClock size={13} className="me-1" />
                           Reschedule
                         </button>
+                        {apt.status !== 'CANCELLED' && apt.status !== 'COMPLETED' && (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-outline neu-btn-sm"
+                            onClick={() => {
+                              setAssignModalAppointment(apt);
+                              setSelectedAssignDoctor(apt.doctorId ? String(apt.doctorId) : '');
+                              setAssignReason('');
+                              setAssignError(null);
+                            }}
+                            title="Assign or reassign consultant"
+                          >
+                            <UserCheck size={13} className="me-1" />
+                            Assign
+                          </button>
+                        )}
                         {apt.status !== 'CANCELLED' && (
                           <button
                             type="button"
@@ -653,7 +697,6 @@ export function AdminAppointmentsPage() {
             </tbody>
           </table>
         </div>
-      </div>
 
       {/* View Appointment Details Modal */}
       {viewAppointment && (
@@ -988,6 +1031,145 @@ export function AdminAppointmentsPage() {
                   </button>
                   <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm">
                     Confirm Reschedule
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign / Reassign Consultant Modal */}
+      {assignModalAppointment && (
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <form onSubmit={handleAssignDoctor}>
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      className="d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '8px',
+                        background: 'var(--hospital-surface)',
+                        boxShadow: 'var(--neu-inset)',
+                        color: 'var(--hospital-medical-blue)',
+                      }}
+                    >
+                      <UserCheck size={16} />
+                    </div>
+                    <div>
+                      <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                        Assign Consultant: {assignModalAppointment.reference}
+                      </h5>
+                      <span className="small text-muted">{assignModalAppointment.patientName} • {assignModalAppointment.date}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    onClick={() => setAssignModalAppointment(null)}
+                    disabled={isAssignSubmitting}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                  {assignError && (
+                    <div 
+                      className="p-3 mb-3 d-flex align-items-center gap-2 small text-danger neu-card-sm"
+                      style={{ borderRadius: '12px', background: 'rgba(229, 62, 62, 0.1)', border: '1px solid rgba(229, 62, 62, 0.2)' }}
+                    >
+                      <AlertCircle size={16} className="flex-shrink-0" />
+                      <span>{assignError}</span>
+                    </div>
+                  )}
+
+                  <div className="mb-3">
+                    <label className="neu-form-label">Currently Assigned Doctor</label>
+                    <div className="fw-semibold text-muted small p-2 rounded" style={{ background: 'var(--hospital-surface)' }}>
+                      {assignModalAppointment.doctorName || 'Unassigned'} ({assignModalAppointment.department || 'General'})
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="neu-form-label">
+                      Select Target Consultant <span className="text-danger">*</span>
+                    </label>
+                    <select
+                      className="neu-select"
+                      value={selectedAssignDoctor}
+                      onChange={(e) => setSelectedAssignDoctor(e.target.value)}
+                      required
+                    >
+                      <option value="">-- Choose Consultant --</option>
+                      {doctorsList.map((doc) => (
+                        <option key={doc.id} value={doc.id}>
+                          {doc.name} — {doc.specialty} ({doc.departmentName || 'Clinical Care'})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="small text-muted mt-1">
+                      Doctor availability, schedule compatibility, and active leaves are verified by backend.
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="neu-form-label">Assignment Reason (Optional / Audit Log)</label>
+                    <input
+                      type="text"
+                      className="neu-input"
+                      placeholder="e.g. Clinical reassignment, patient specialty match"
+                      value={assignReason}
+                      onChange={(e) => setAssignReason(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => setAssignModalAppointment(null)}
+                    disabled={isAssignSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center gap-1"
+                    disabled={isAssignSubmitting || !selectedAssignDoctor}
+                  >
+                    {isAssignSubmitting ? (
+                      <>
+                        <RotateCw size={13} className="spin-anim" />
+                        Validating & Assigning...
+                      </>
+                    ) : (
+                      <>
+                        <Check size={13} />
+                        Confirm Assignment
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

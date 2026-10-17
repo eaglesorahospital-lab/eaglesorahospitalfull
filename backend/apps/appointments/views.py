@@ -22,7 +22,11 @@ from .services import (
 )
 from apps.accounts.models import User, PatientProfile
 from apps.doctors.models import Doctor
-from apps.accounts.permissions import IsPatientOwnerOrStaff
+from apps.accounts.permissions import (
+    IsPatientOwnerOrStaff,
+    EnforcePasswordChange,
+    IsAdminOrHospitalAdmin,
+)
 from apps.notifications.services import safe_dispatch_confirmation
 from config.pagination import StandardResultsSetPagination
 from config.throttling import AppointmentBookingRateThrottle
@@ -38,7 +42,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     - Anonymous requests are rejected (401).
     - Booking uses PostgreSQL row-locking and atomic transaction protection.
     """
-    permission_classes = [permissions.IsAuthenticated, IsPatientOwnerOrStaff]
+    permission_classes = [permissions.IsAuthenticated, EnforcePasswordChange, IsPatientOwnerOrStaff]
     lookup_field = 'reference'
     lookup_value_regex = r'[^/]+'
     pagination_class = StandardResultsSetPagination
@@ -83,18 +87,18 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             'department',
         )
 
+        # Doctor staff view ONLY appointments assigned to their doctor profile
+        if user.role == User.Role.DOCTOR_STAFF:
+            if hasattr(user, 'doctor_profile') and user.doctor_profile:
+                return base_qs.filter(doctor=user.doctor_profile)
+            return Appointment.objects.none()
+
         # Platform and hospital administrators view all consultations
         if (
             user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN]
             or user.is_superuser
             or user.is_staff
         ):
-            return base_qs
-
-        # Doctor staff view appointments assigned to their doctor profile
-        if user.role == User.Role.DOCTOR_STAFF:
-            if hasattr(user, 'doctor_profile') and user.doctor_profile:
-                return base_qs.filter(doctor=user.doctor_profile)
             return base_qs
 
         # Patients are strictly isolated to their own bookings
@@ -243,6 +247,113 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         safe_dispatch_confirmation(apt.id)
 
         return Response(AppointmentDetailSerializer(apt).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsAdminOrHospitalAdmin], url_path='assign')
+    def assign_doctor(self, request, reference=None):
+        """
+        Assigns or reassigns an appointment to a specific doctor.
+        Restricted to Super Admins and Hospital Admins.
+        Validates:
+        - Target doctor exists and is active.
+        - Target doctor availability at appointment slot (no conflicting active bookings, not on leave).
+        - Compatible department.
+        Records change in AuditLog.
+        """
+        from apps.notifications.models import AuditLog
+        from apps.scheduling.models import DoctorLeave
+        from django.db import transaction
+
+        appointment = self.get_object()
+        doctor_val = request.data.get('doctor') or request.data.get('doctorId') or request.data.get('doctor_id')
+        reason = request.data.get('reason') or request.data.get('note') or 'Administrative doctor reassignment'
+
+        if not doctor_val:
+            return Response(
+                {"detail": "Target doctor ('doctor' ID or slug) is required for assignment."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        new_doctor = None
+        if isinstance(doctor_val, int) or (isinstance(doctor_val, str) and doctor_val.isdigit()):
+            new_doctor = Doctor.objects.filter(id=int(doctor_val)).first()
+        elif doctor_val:
+            new_doctor = Doctor.objects.filter(slug=str(doctor_val)).first()
+
+        if not new_doctor or not new_doctor.is_active:
+            return Response(
+                {"detail": "Specified doctor was not found or is inactive."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if already assigned to this doctor
+        if appointment.doctor_id == new_doctor.id:
+            return Response(
+                {"detail": f"Appointment is already assigned to {new_doctor.name}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate conflicting appointments for the new doctor on that date & slot
+        conflicts = Appointment.objects.filter(
+            doctor=new_doctor,
+            appointment_date=appointment.appointment_date,
+            start_time=appointment.start_time,
+            end_time=appointment.end_time,
+        ).exclude(
+            status__in=[
+                Appointment.Status.CANCELLED,
+                Appointment.Status.RESCHEDULED,
+                Appointment.Status.NO_SHOW,
+            ]
+        ).exclude(id=appointment.id)
+
+        if conflicts.exists():
+            return Response(
+                {"detail": f"Dr. {new_doctor.name} already has an active appointment in this time slot ({appointment.start_time.strftime('%H:%M')} - {appointment.end_time.strftime('%H:%M')})."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        # Validate leave on that date
+        on_leave = DoctorLeave.objects.filter(
+            doctor=new_doctor,
+            is_active=True,
+            start_date__lte=appointment.appointment_date,
+            end_date__gte=appointment.appointment_date,
+        ).exists()
+        if on_leave:
+            return Response(
+                {"detail": f"Dr. {new_doctor.name} is on scheduled leave on {appointment.appointment_date}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        old_doctor = appointment.doctor
+        previous_doc_name = old_doctor.name if old_doctor else "Unassigned"
+
+        with transaction.atomic():
+            appointment.doctor = new_doctor
+            appointment.department = new_doctor.department
+            appointment.consultation_location = new_doctor.consultation_location
+            appointment.notes = f"{appointment.notes}\n[Reassigned from {previous_doc_name} to {new_doctor.name}: {reason}]".strip()
+            appointment.save(update_fields=['doctor', 'department', 'consultation_location', 'notes', 'updated_at'])
+
+            AuditLog.objects.create(
+                actor=request.user,
+                actor_name=request.user.get_full_name() or request.user.email,
+                role=request.user.role,
+                action="APPOINTMENT_REASSIGNED",
+                resource_type="Appointment",
+                resource_id=appointment.reference,
+                result=AuditLog.Result.SUCCESS,
+                details=f"Admin {request.user.email} reassigned appointment {appointment.reference} from {previous_doc_name} to {new_doctor.name}.",
+                metadata={
+                    "appointment_reference": appointment.reference,
+                    "previous_doctor_id": old_doctor.id if old_doctor else None,
+                    "new_doctor_id": new_doctor.id,
+                    "reason": reason,
+                },
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+
+        return Response(AppointmentDetailSerializer(appointment).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='cancel')
     def cancel(self, request, reference=None):

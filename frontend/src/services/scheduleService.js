@@ -157,6 +157,26 @@ export const scheduleService = {
 
     return await apiClient.get('/api/schedules/availability/', { params, skipAuth: true });
   },
+  /**
+   * Save doctor leave in PostgreSQL via POST /api/schedules/leaves/
+   */
+  async saveLeave(leaveData) {
+    const payload = {
+      doctor: leaveData.doctor,
+      start_date: leaveData.start_date,
+      end_date: leaveData.end_date,
+      reason: leaveData.reason || 'Medical / Personal Leave',
+      is_active: leaveData.is_active !== undefined ? Boolean(leaveData.is_active) : true,
+    };
+    return await apiClient.post('/api/schedules/leaves/', payload, { requiresAuth: true });
+  },
+
+  /**
+   * Delete doctor leave via DELETE /api/schedules/leaves/<id>/
+   */
+  async deleteLeave(leaveId) {
+    return await apiClient.delete(`/api/schedules/leaves/${leaveId}/`, { requiresAuth: true });
+  },
 };
 
 export default scheduleService;

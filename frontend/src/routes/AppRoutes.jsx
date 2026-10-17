@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 // Layouts
 import PublicLayout from '../layouts/PublicLayout';
 import AdminLayout from '../layouts/AdminLayout';
+import DoctorLayout from '../layouts/DoctorLayout';
 
 // Route Guards
 import ProtectedRoute from './ProtectedRoute';
@@ -33,6 +34,7 @@ import PatientLoginPage from '../pages/patient/PatientLoginPage';
 
 // Staff & Administration Authentication
 import StaffLoginPage from '../pages/staff/StaffLoginPage';
+import StaffSetPasswordPage from '../pages/staff/StaffSetPasswordPage';
 
 // Admin Pages
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
@@ -46,10 +48,18 @@ import AdminNotificationsPage from '../pages/admin/AdminNotificationsPage';
 import AdminAdministratorsPage from '../pages/admin/AdminAdministratorsPage';
 import AdminAuditPage from '../pages/admin/AdminAuditPage';
 
+// Doctor Portal Pages
+import DoctorDashboardPage from '../pages/doctor/DoctorDashboardPage';
+import DoctorSchedulePage from '../pages/doctor/DoctorSchedulePage';
+import DoctorAppointmentsPage from '../pages/doctor/DoctorAppointmentsPage';
+import DoctorPatientsPage from '../pages/doctor/DoctorPatientsPage';
+import DoctorProfilePage from '../pages/doctor/DoctorProfilePage';
+
 /**
  * Hospital Platform — Application Route Tree
  * - Public & patient-facing healthcare routes (English, Hindi, Marathi)
  * - Dedicated staff portal route (/staff/login) unlinked from public navigation
+ * - Dedicated doctor portal routes (/doctor/*)
  * - Role-protected administration routes with SimpleJWT session guards
  */
 export function AppRoutes() {
@@ -77,6 +87,19 @@ export function AppRoutes() {
 
       {/* Dedicated Unlinked Staff & Doctor Portal Gateway */}
       <Route path="/staff/login" element={<StaffLoginPage />} />
+      <Route path="/staff/set-password" element={<StaffSetPasswordPage />} />
+      <Route path="/doctor/set-password" element={<StaffSetPasswordPage />} />
+
+      {/* Role-Protected Dedicated Doctor Portal */}
+      <Route element={<ProtectedRoute allowedRoles={['DOCTOR_STAFF', 'SUPER_ADMIN', 'HOSPITAL_ADMIN']} />}>
+        <Route path="/doctor" element={<DoctorLayout />}>
+          <Route index element={<DoctorDashboardPage />} />
+          <Route path="schedule" element={<DoctorSchedulePage />} />
+          <Route path="appointments" element={<DoctorAppointmentsPage />} />
+          <Route path="patients" element={<DoctorPatientsPage />} />
+          <Route path="profile" element={<DoctorProfilePage />} />
+        </Route>
+      </Route>
 
       {/* Role-Protected Hospital Staff & Administration Workspace */}
       <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR_STAFF']} />}>

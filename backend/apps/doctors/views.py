@@ -1,7 +1,14 @@
+import secrets
+from django.db import transaction
+from django.utils.http import urlsafe_base64_encode
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.conf import settings
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Specialty, Doctor
@@ -9,12 +16,20 @@ from .serializers import (
     SpecialtySerializer,
     DoctorListSerializer,
     DoctorDetailSerializer,
+    DoctorCreateSerializer,
 )
 from config.pagination import StandardResultsSetPagination
 from config.media_service import MediaService, CLOUDINARY_FOLDERS
 from config.throttling import MediaUploadRateThrottle
-from apps.accounts.permissions import IsAdminUserOrReadOnly, CanManageDoctorMedia
+from apps.accounts.models import User
+from apps.accounts.permissions import (
+    IsAdminUserOrReadOnly,
+    CanManageDoctorMedia,
+    IsAdminOrHospitalAdmin,
+    EnforcePasswordChange,
+)
 from apps.scheduling.services import AvailabilityEngine
+from apps.notifications.models import AuditLog
 
 
 class SpecialtyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -36,12 +51,13 @@ class SpecialtyViewSet(viewsets.ReadOnlyModelViewSet):
 
 class DoctorViewSet(viewsets.ModelViewSet):
     """
-    Consultant doctor directory API.
+    Consultant doctor directory and credentialing API.
     Supports filtering by department, specialty, consultation type, and full-text search.
     Public read-only; administrative mutations and media upload actions protected by RBAC.
     """
-    queryset = Doctor.objects.all().select_related('department', 'specialty')
+    queryset = Doctor.objects.all().select_related('department', 'specialty', 'user')
     permission_classes = [IsAdminUserOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     lookup_field = 'slug'
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -53,31 +69,41 @@ class DoctorViewSet(viewsets.ModelViewSet):
         'consultation_type',
         'is_active',
     ]
-    search_fields = ['name', 'qualification', 'expertise', 'specialty_name', 'department__name']
+    search_fields = ['name', 'qualification', 'expertise', 'specialty_name', 'department__name', 'user__email']
     ordering_fields = ['name', 'experience_years', 'created_at']
     ordering = ['name']
 
     def get_queryset(self):
         user = self.request.user
-        qs = Doctor.objects.all().select_related('department', 'specialty')
+        qs = Doctor.objects.all().select_related('department', 'specialty', 'user')
         # Public anonymous users and non-staff patients should only see active doctors
         if not (user and user.is_authenticated and (user.is_staff or getattr(user, 'role', None) in ['SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR_STAFF'])):
             qs = qs.filter(is_active=True)
         return qs
 
     def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.IsAuthenticated(), IsAdminOrHospitalAdmin()]
         if self.action in ['upload_photo', 'delete_photo']:
-            return [CanManageDoctorMedia()]
+            return [permissions.IsAuthenticated(), CanManageDoctorMedia()]
         if self.action in ['update', 'partial_update']:
-            return [CanManageDoctorMedia()]
+            return [permissions.IsAuthenticated(), CanManageDoctorMedia()]
+        if self.action == 'me':
+            return [permissions.IsAuthenticated(), EnforcePasswordChange()]
         return super().get_permissions()
 
     def get_object(self):
         """
-        Supports lookup both by string slug and by integer ID.
+        Supports lookup by string slug, integer ID, or 'me' keyword for authenticated doctor.
         """
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         lookup_val = self.kwargs.get(lookup_url_kwarg)
+
+        if lookup_val == 'me':
+            user = self.request.user
+            if user and user.is_authenticated and hasattr(user, 'doctor_profile') and user.doctor_profile:
+                return user.doctor_profile
+
         qs = self.get_queryset()
         if lookup_val and str(lookup_val).isdigit():
             obj = qs.filter(id=int(lookup_val)).first()
@@ -87,12 +113,135 @@ class DoctorViewSet(viewsets.ModelViewSet):
         return super().get_object()
 
     def get_serializer_class(self):
-        if self.action in ['retrieve', 'update', 'partial_update', 'create']:
+        if self.action == 'create':
+            return DoctorCreateSerializer
+        if self.action in ['retrieve', 'update', 'partial_update', 'me']:
             return DoctorDetailSerializer
         return DoctorListSerializer
 
+    def create(self, request, *args, **kwargs):
+        """
+        Authorized hospital administrators provision a new consultant and secure Doctor account.
+        Creates linked User with DOCTOR_STAFF role, random temporary password, and expiring setup link.
+        """
+        serializer = DoctorCreateSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        validated_data = serializer.validated_data
+        email = validated_data.pop('email').strip().lower()
+        phone = validated_data.pop('phone').strip()
+        image_file = request.FILES.get('image') or request.FILES.get('photo') or validated_data.get('image') or validated_data.get('photo')
+        validated_data.pop('image', None)
+        validated_data.pop('photo', None)
+        reg_number = validated_data.pop('registration_number', '').strip()
+        if reg_number:
+            current_qual = validated_data.get('qualification', '')
+            if reg_number not in current_qual:
+                validated_data['qualification'] = f"{current_qual} (Reg. No: {reg_number})".strip()
+
+        # Generate secure random temporary password (minimum 12 chars, upper, lower, digits, symbol)
+        temp_password = secrets.token_urlsafe(10) + "A1!"
+
+        with transaction.atomic():
+            # Parse first and last name from full name
+            name = validated_data.get('name', '').strip()
+            parts = name.split()
+            first_name = parts[0] if parts else "Dr."
+            last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+            # 1. Create User account with DOCTOR_STAFF role
+            user = User.objects.create_user(
+                email=email,
+                password=temp_password,
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                role=User.Role.DOCTOR_STAFF,
+                is_staff=True,
+                must_change_password=True,
+            )
+
+            # 2. Upload image via MediaService if provided
+            image_url = None
+            image_public_id = None
+            if image_file:
+                upload_res = MediaService.upload_image(
+                    file_obj=image_file,
+                    folder=CLOUDINARY_FOLDERS['doctors'],
+                )
+                image_url = upload_res.get('url')
+                image_public_id = upload_res.get('public_id')
+
+            # 3. Create Doctor profile linked to user
+            doctor = Doctor.objects.create(
+                user=user,
+                image=image_url,
+                image_public_id=image_public_id,
+                **validated_data
+            )
+
+            # 4. Generate secure expiring setup token
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            setup_url = f"/staff/set-password?uid={uid}&token={token}"
+
+            # 5. Record audit log
+            AuditLog.objects.create(
+                actor=request.user if request.user.is_authenticated else None,
+                actor_name=request.user.get_full_name() or request.user.email if request.user.is_authenticated else "Hospital Admin",
+                role=getattr(request.user, 'role', 'HOSPITAL_ADMIN'),
+                action="DOCTOR_REGISTERED",
+                resource_type="Doctor",
+                resource_id=str(doctor.id),
+                result=AuditLog.Result.SUCCESS,
+                details=f"Admin {request.user.email} registered consultant {doctor.name} and provisioned account {user.email}.",
+                metadata={
+                    "doctor_id": doctor.id,
+                    "doctor_slug": doctor.slug,
+                    "user_id": user.id,
+                    "department_id": doctor.department_id,
+                },
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+
+        # 6. Safely attempt to send invitation email if mail server is configured
+        try:
+            subject = "Welcome to EgleSora Hospital — Set Up Your Consultant Portal Password"
+            message = (
+                f"Hello {doctor.name},\n\n"
+                f"Your consultant staff account has been registered by hospital administration.\n\n"
+                f"Please set up your secure password using the following link:\n"
+                f"{request.build_absolute_uri(setup_url)}\n\n"
+                f"This setup link is valid for 24 hours.\n\n"
+                f"Warm regards,\n"
+                f"EgleSora Hospital Medical Administration"
+            )
+            send_mail(
+                subject,
+                message,
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@hospital.local'),
+                [user.email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+
+        out_serializer = DoctorDetailSerializer(doctor, context={'request': request})
+        return Response({
+            "message": f"Consultant {doctor.name} registered and doctor staff account provisioned successfully.",
+            "doctor": out_serializer.data,
+            "credentials": {
+                "email": user.email,
+                "temporary_password": temp_password,
+                "setup_token": token,
+                "setup_uid": uid,
+                "setup_url": setup_url,
+                "must_change_password": True,
+                "expires_in": "24 hours",
+            }
+        }, status=status.HTTP_201_CREATED)
+
     def perform_update(self, serializer):
-        # If multipart image file uploaded directly via PATCH/PUT
         image_file = self.request.FILES.get('image') or self.request.FILES.get('photo')
         if image_file:
             doctor = serializer.instance
@@ -106,6 +255,37 @@ class DoctorViewSet(viewsets.ModelViewSet):
             serializer.save(image=upload_res['url'], image_public_id=upload_res['public_id'])
         else:
             serializer.save()
+
+    @action(
+        detail=False,
+        methods=['get', 'put', 'patch'],
+        permission_classes=[permissions.IsAuthenticated],
+        url_path='me'
+    )
+    def me(self, request):
+        """
+        Retrieves or updates the authenticated doctor staff member's own profile.
+        """
+        user = request.user
+        if user.role != User.Role.DOCTOR_STAFF:
+            return Response(
+                {"detail": "Authenticated user does not hold the DOCTOR_STAFF role."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        doctor = getattr(user, 'doctor_profile', None)
+        if not doctor:
+            return Response(
+                {"detail": "No doctor profile associated with this account."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if request.method == 'GET':
+            serializer = DoctorDetailSerializer(doctor, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        serializer = DoctorDetailSerializer(doctor, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=True,
@@ -190,4 +370,3 @@ class DoctorViewSet(viewsets.ModelViewSet):
         else:
             data = AvailabilityEngine.get_doctor_availability(doctor, date_str)
         return Response(data, status=status.HTTP_200_OK)
-

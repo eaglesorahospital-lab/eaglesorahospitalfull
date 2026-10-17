@@ -58,6 +58,11 @@ class User(AbstractUser):
         default=Role.PATIENT,
         db_index=True,
     )
+    must_change_password = models.BooleanField(
+        _('must change password'),
+        default=False,
+        help_text=_('Requires user to set a new password before normal portal access.'),
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()

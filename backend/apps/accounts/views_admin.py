@@ -13,7 +13,7 @@ from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import User
-from .permissions import IsSuperAdmin
+from .permissions import IsSuperAdmin, EnforcePasswordChange
 from .serializers import AdministratorSerializer, AdministratorCreateSerializer
 from config.pagination import StandardResultsSetPagination
 
@@ -29,7 +29,7 @@ class AdministratorViewSet(viewsets.ModelViewSet):
     - Anonymous requests receive 401 Unauthorized.
     - Enforces rules against self-deactivation and deactivating Super Administrators.
     """
-    permission_classes = [permissions.IsAuthenticated, IsSuperAdmin]
+    permission_classes = [permissions.IsAuthenticated, EnforcePasswordChange, IsSuperAdmin]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['role', 'is_active']

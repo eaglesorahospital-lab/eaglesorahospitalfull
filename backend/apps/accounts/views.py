@@ -5,7 +5,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import PatientProfile, User
 from .serializers import PatientProfileSerializer, PatientProfileCreateUpdateSerializer
-from .permissions import IsPatientOwnerOrStaff
+from .permissions import IsPatientOwnerOrStaff, EnforcePasswordChange
 from config.pagination import StandardResultsSetPagination
 
 
@@ -14,10 +14,11 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
     Outpatient demographics API.
     Protected by RBAC:
     - Patients can only view and update their own demographic record.
-    - Medical staff and administrators can access all patient records.
+    - Super Admins and Hospital Admins can access all patient records.
+    - Doctor staff access only authorized patients who have appointments with them.
     - Anonymous requests are rejected (401).
     """
-    permission_classes = [permissions.IsAuthenticated, IsPatientOwnerOrStaff]
+    permission_classes = [permissions.IsAuthenticated, EnforcePasswordChange, IsPatientOwnerOrStaff]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['gender', 'blood_group', 'is_active']
@@ -30,13 +31,18 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
         if not (user and user.is_authenticated):
             return PatientProfile.objects.none()
 
-        # Admins and medical staff have organization-wide visibility
+        # Super Admins and Hospital Admins have organization-wide visibility
         if (
-            user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
-            or user.is_staff
+            user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN]
             or user.is_superuser
         ):
             return PatientProfile.objects.all().select_related('user')
+
+        # Doctor staff view only patients who have consultations with them
+        if user.role == User.Role.DOCTOR_STAFF:
+            if hasattr(user, 'doctor_profile') and user.doctor_profile:
+                return PatientProfile.objects.filter(appointments__doctor=user.doctor_profile).distinct().select_related('user')
+            return PatientProfile.objects.none()
 
         # Patients are restricted strictly to their own demographic record
         return PatientProfile.objects.filter(user=user).select_related('user')

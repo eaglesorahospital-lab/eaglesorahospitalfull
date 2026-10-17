@@ -14,7 +14,16 @@ import {
   Clock, 
   MapPin, 
   Award, 
-  Briefcase 
+  Briefcase,
+  Upload,
+  Copy,
+  Check,
+  Key,
+  Mail,
+  Phone,
+  ShieldCheck,
+  ShieldAlert,
+  Image as ImageIcon
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
@@ -62,16 +71,30 @@ export function AdminDoctorsPage() {
   const [actionNotice, setActionNotice] = useState(null);
   const [actionError, setActionError] = useState(null);
 
-  // New Doctor form state
-  const [newDoctorForm, setNewDoctorForm] = useState({
+  // Initial form state
+  const initialNewDoctorState = {
     name: '',
-    specialty: '',
+    email: '',
+    phone: '',
     departmentId: '',
+    specialty: '',
     qualification: '',
-    experience: 10,
+    registrationNumber: '',
+    experience: 5,
     consultationDuration: '30 minutes',
     location: '',
-  });
+    bio: '',
+    expertise: '',
+    isActive: true,
+  };
+
+  // New Doctor form state
+  const [newDoctorForm, setNewDoctorForm] = useState(initialNewDoctorState);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [createdCredentials, setCreatedCredentials] = useState(null);
+  const [copiedKey, setCopiedKey] = useState(null);
 
   const breadcrumbs = [
     { label: 'Admin', to: '/admin' },
@@ -181,10 +204,98 @@ export function AdminDoctorsPage() {
     }
   };
 
-  // Handle Add Doctor with PostgreSQL persistence
+  // Handle profile photo selection and client-side validation
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        photo: 'Unsupported file type. Please upload a JPEG, PNG, or WebP image.',
+      }));
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        photo: 'Photo size exceeds limit. Please upload an image under 5MB.',
+      }));
+      return;
+    }
+
+    setFieldErrors((prev) => {
+      const updated = { ...prev };
+      delete updated.photo;
+      return updated;
+    });
+
+    setPhotoFile(file);
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+    }
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleClearPhoto = () => {
+    setPhotoFile(null);
+    if (photoPreview) {
+      URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(null);
+    }
+    setFieldErrors((prev) => {
+      const updated = { ...prev };
+      delete updated.photo;
+      return updated;
+    });
+  };
+
+  const handleCopy = (key, text) => {
+    if (!text) return;
+    navigator.clipboard?.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!newDoctorForm.name.trim()) errors.name = 'Full name is required.';
+    if (!photoFile) errors.photo = 'Profile photo upload is required.';
+
+    if (!newDoctorForm.email.trim()) {
+      errors.email = 'Email address is required for consultant account.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newDoctorForm.email.trim())) {
+      errors.email = 'Please provide a valid email address.';
+    }
+
+    if (!newDoctorForm.phone.trim()) {
+      errors.phone = 'Mobile contact number is required.';
+    } else if (!/^[0-9+() -]{7,20}$/.test(newDoctorForm.phone.trim())) {
+      errors.phone = 'Please provide a valid mobile number (at least 7 digits).';
+    }
+
+    if (!newDoctorForm.departmentId) errors.departmentId = 'Department selection is required.';
+    if (!newDoctorForm.specialty.trim()) errors.specialty = 'Specialty is required.';
+    if (!newDoctorForm.qualification.trim()) errors.qualification = 'Qualifications are required.';
+
+    if (newDoctorForm.experience === '' || isNaN(newDoctorForm.experience) || Number(newDoctorForm.experience) < 0) {
+      errors.experience = 'Experience must be 0 years or greater.';
+    }
+
+    if (!newDoctorForm.consultationDuration) errors.consultationDuration = 'Consultation duration is required.';
+    if (!newDoctorForm.location.trim()) errors.location = 'OPD suite / clinical location is required.';
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle Add Doctor with atomic user creation & PostgreSQL persistence
   const handleAddDoctor = async (e) => {
     e.preventDefault();
-    if (!newDoctorForm.name || !newDoctorForm.specialty) return;
+    if (!validateForm()) return;
+
     setActionError(null);
     setActionNotice(null);
     setIsSubmitting(true);
@@ -196,31 +307,70 @@ export function AdminDoctorsPage() {
 
       const durationMinutes = parseInt(newDoctorForm.consultationDuration, 10) || 30;
 
-      const created = await doctorService.createDoctor({
-        name: newDoctorForm.name,
-        specialty_name: newDoctorForm.specialty,
-        department: selectedDept ? (selectedDept.dbId || selectedDept.id) : 1,
-        qualification: newDoctorForm.qualification,
-        experience_years: Number(newDoctorForm.experience) || 5,
-        consultation_duration_minutes: durationMinutes,
-        consultation_location: newDoctorForm.location || 'Consultation Suite, Wing A',
-        is_active: true,
-      });
+      const formData = new FormData();
+      formData.append('name', newDoctorForm.name.trim());
+      formData.append('email', newDoctorForm.email.trim());
+      formData.append('phone', newDoctorForm.phone.trim());
+      formData.append('department', selectedDept ? (selectedDept.dbId || selectedDept.id) : 1);
+      formData.append('specialty_name', newDoctorForm.specialty.trim());
+      formData.append('qualification', newDoctorForm.qualification.trim());
+      if (newDoctorForm.registrationNumber?.trim()) {
+        formData.append('registration_number', newDoctorForm.registrationNumber.trim());
+      }
+      formData.append('experience_years', Number(newDoctorForm.experience) || 0);
+      formData.append('consultation_duration_minutes', durationMinutes);
+      formData.append('consultation_location', newDoctorForm.location.trim());
+      formData.append('bio', newDoctorForm.bio.trim() || `Consultant ${newDoctorForm.specialty.trim()} specialist at EgleSora Hospital.`);
+      if (newDoctorForm.expertise.trim()) {
+        formData.append('expertise', newDoctorForm.expertise.trim());
+      }
+      formData.append('is_active', String(newDoctorForm.isActive !== false));
+      if (photoFile) {
+        formData.append('image', photoFile);
+      }
 
-      setDoctorsList((prev) => [created, ...prev]);
-      setActionNotice(`Added consultant ${created.name} into database.`);
+      const res = await doctorService.createDoctor(formData);
+      const createdDoctor = res.doctor || res;
+      const creds = res.credentials;
+
+      setDoctorsList((prev) => [createdDoctor, ...prev]);
+      setActionNotice(`Successfully registered consultant ${createdDoctor.name} and provisioned account.`);
       setShowAddModal(false);
+
+      // Reset form state
       setNewDoctorForm({
-        name: '',
-        specialty: '',
+        ...initialNewDoctorState,
         departmentId: departments[0]?.dbId || departments[0]?.id || '',
-        qualification: '',
-        experience: 10,
-        consultationDuration: '30 minutes',
-        location: '',
       });
+      handleClearPhoto();
+      setFieldErrors({});
+
+      // Open credentials modal
+      if (creds) {
+        setCreatedCredentials({
+          doctor: createdDoctor,
+          ...creds,
+        });
+      }
     } catch (err) {
-      setActionError(`Failed to register doctor in database: ${err.message}`);
+      if (err.data && typeof err.data === 'object') {
+        const serverErrors = {};
+        let generalMsg = '';
+        Object.entries(err.data).forEach(([k, v]) => {
+          const msg = Array.isArray(v) ? v.join(' ') : String(v);
+          if (k === 'email') serverErrors.email = msg;
+          else if (k === 'phone') serverErrors.phone = msg;
+          else if (k === 'name') serverErrors.name = msg;
+          else if (k === 'image' || k === 'photo') serverErrors.photo = msg;
+          else generalMsg += `${k}: ${msg} `;
+        });
+        if (Object.keys(serverErrors).length > 0) {
+          setFieldErrors((prev) => ({ ...prev, ...serverErrors }));
+        }
+        setActionError(generalMsg || err.message || 'Failed to register consultant.');
+      } else {
+        setActionError(`Failed to register consultant in database: ${err.message}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -369,12 +519,8 @@ export function AdminDoctorsPage() {
           </AdminFilterBar>
 
           {/* Doctors Table */}
-          <div 
-            className="neu-card p-0 mb-4 overflow-hidden" 
-            style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
-          >
-            <div className="neu-table-container">
-              <table className="neu-table">
+          <div className="neu-table-container">
+            <table className="neu-table">
                 <thead>
                   <tr>
                     <th className="col-doctor">Doctor</th>
@@ -406,20 +552,35 @@ export function AdminDoctorsPage() {
                       <tr key={doc.id}>
                         <td className="col-doctor">
                           <div className="d-flex align-items-center gap-3">
-                            <div 
-                              className="d-flex align-items-center justify-content-center"
-                              style={{ 
-                                width: '42px', 
-                                height: '42px', 
-                                borderRadius: '12px', 
-                                background: 'var(--hospital-surface)', 
-                                boxShadow: 'var(--neu-inset)', 
-                                color: 'var(--hospital-medical-blue)',
-                                flexShrink: 0
-                              }}
-                            >
-                              <Stethoscope size={20} />
-                            </div>
+                            {doc.photo || doc.photo_url || doc.image_url ? (
+                              <img 
+                                src={doc.photo || doc.photo_url || doc.image_url} 
+                                alt={doc.name}
+                                style={{ 
+                                  width: '42px', 
+                                  height: '42px', 
+                                  borderRadius: '12px', 
+                                  objectFit: 'cover',
+                                  flexShrink: 0,
+                                  boxShadow: 'var(--neu-shadow-sm)'
+                                }} 
+                              />
+                            ) : (
+                              <div 
+                                className="d-flex align-items-center justify-content-center"
+                                style={{ 
+                                  width: '42px', 
+                                  height: '42px', 
+                                  borderRadius: '12px', 
+                                  background: 'var(--hospital-surface)', 
+                                  boxShadow: 'var(--neu-inset)', 
+                                  color: 'var(--hospital-medical-blue)',
+                                  flexShrink: 0
+                                }}
+                              >
+                                <Stethoscope size={20} />
+                              </div>
+                            )}
                             <div className="min-w-0">
                               <div className="fw-bold fs-6 text-truncate" style={{ color: 'var(--hospital-primary-navy)' }}>
                                 {doc.name}
@@ -497,7 +658,6 @@ export function AdminDoctorsPage() {
                 </tbody>
               </table>
             </div>
-          </div>
         </>
       )}
 
@@ -711,104 +871,296 @@ export function AdminDoctorsPage() {
           tabIndex="-1"
           style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
               className="modal-content neu-card p-0" 
               style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
             >
-              <form onSubmit={handleAddDoctor}>
+              <form onSubmit={handleAddDoctor} noValidate>
                 <div 
                   className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
                   style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
                 >
-                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
-                    Register New Consultant
-                  </h5>
+                  <div className="d-flex align-items-center gap-2">
+                    <div
+                      className="d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
+                        background: 'var(--hospital-surface)',
+                        boxShadow: 'var(--neu-inset)',
+                        color: 'var(--hospital-medical-blue)',
+                      }}
+                    >
+                      <Stethoscope size={18} />
+                    </div>
+                    <div>
+                      <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                        Register New Consultant
+                      </h5>
+                      <span className="small text-muted">Provisions staff profile and auto-creates doctor user account</span>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     className="neu-btn-icon"
                     style={{ width: '32px', height: '32px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
+                    disabled={isSubmitting}
                   >
                     <X size={16} />
                   </button>
                 </div>
-                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
-                  <div className="mb-3">
-                    <label className="neu-form-label">
-                      Full Name <span className="text-danger">*</span>
+
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)', maxHeight: '75vh', overflowY: 'auto' }}>
+                  {/* Photo Upload Section */}
+                  <div className="mb-4">
+                    <label className="neu-form-label mb-2 d-flex justify-content-between align-items-center">
+                      <span>Profile Photo <span className="text-danger">*</span></span>
+                      <span className="small text-muted font-monospace">JPEG, PNG, WebP (Max 5MB)</span>
                     </label>
-                    <input
-                      type="text"
-                      className="neu-input"
-                      placeholder="e.g. Dr. Priya Raman"
-                      value={newDoctorForm.name}
-                      onChange={(e) =>
-                        setNewDoctorForm({ ...newDoctorForm, name: e.target.value })
-                      }
-                      required
-                    />
+
+                    {photoPreview ? (
+                      <div 
+                        className="d-flex align-items-center justify-content-between p-3 neu-card-sm"
+                        style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                      >
+                        <div className="d-flex align-items-center gap-3">
+                          <img
+                            src={photoPreview}
+                            alt="Preview"
+                            style={{
+                              width: '64px',
+                              height: '64px',
+                              borderRadius: '16px',
+                              objectFit: 'cover',
+                              boxShadow: 'var(--neu-shadow-sm)',
+                            }}
+                          />
+                          <div>
+                            <div className="fw-semibold small text-truncate" style={{ maxWidth: '280px' }}>
+                              {photoFile?.name}
+                            </div>
+                            <div className="small text-muted">
+                              {photoFile ? `${(photoFile.size / 1024).toFixed(1)} KB` : ''}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm text-danger"
+                          onClick={handleClearPhoto}
+                        >
+                          <X size={14} className="me-1" />
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <label
+                          htmlFor="doctor-photo-upload"
+                          className="d-flex flex-column align-items-center justify-content-center p-4 w-100 text-center"
+                          style={{
+                            border: `2px dashed ${fieldErrors.photo ? 'var(--neu-error)' : 'var(--hospital-border)'}`,
+                            borderRadius: '16px',
+                            cursor: 'pointer',
+                            background: 'var(--hospital-surface)',
+                            transition: 'border-color 0.2s',
+                          }}
+                        >
+                          <div 
+                            className="d-flex align-items-center justify-content-center mb-2"
+                            style={{
+                              width: '42px',
+                              height: '42px',
+                              borderRadius: '12px',
+                              background: 'var(--hospital-surface)',
+                              boxShadow: 'var(--neu-inset)',
+                              color: 'var(--hospital-medical-blue)',
+                            }}
+                          >
+                            <Upload size={20} />
+                          </div>
+                          <span className="fw-semibold small" style={{ color: 'var(--hospital-primary-navy)' }}>
+                            Click to select consultant headshot
+                          </span>
+                          <span className="small text-muted mt-1">
+                            High resolution photo for public directory & portal
+                          </span>
+                        </label>
+                        <input
+                          id="doctor-photo-upload"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handlePhotoChange}
+                          className="d-none"
+                        />
+                      </div>
+                    )}
+                    {fieldErrors.photo && (
+                      <div className="text-danger small mt-1 d-flex align-items-center gap-1">
+                        <AlertCircle size={13} />
+                        <span>{fieldErrors.photo}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="mb-3">
-                    <label className="neu-form-label">
-                      Department <span className="text-danger">*</span>
-                    </label>
-                    <select
-                      className="neu-select"
-                      value={newDoctorForm.departmentId}
-                      onChange={(e) =>
-                        setNewDoctorForm({ ...newDoctorForm, departmentId: e.target.value })
-                      }
-                    >
-                      {(departments.length > 0 ? departments : DEMO_DEPARTMENTS).map((dept) => (
-                        <option key={dept.dbId || dept.id} value={dept.dbId || dept.id}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="mb-3">
-                    <label className="neu-form-label">
-                      Specialty <span className="text-danger">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="neu-input"
-                      placeholder="e.g. Pediatric Cardiology"
-                      value={newDoctorForm.specialty}
-                      onChange={(e) =>
-                        setNewDoctorForm({ ...newDoctorForm, specialty: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="neu-form-label">Qualifications (Comma separated)</label>
-                    <input
-                      type="text"
-                      className="neu-input"
-                      placeholder="MBBS, MD, DM"
-                      value={newDoctorForm.qualification}
-                      onChange={(e) =>
-                        setNewDoctorForm({ ...newDoctorForm, qualification: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="row g-2 mb-3">
-                    <div className="col-6">
-                      <label className="neu-form-label">Experience (Years)</label>
+
+                  {/* Form Grid */}
+                  <div className="row g-3">
+                    {/* Full Name */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Full Name <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        placeholder="e.g. Dr. Sunita Deshmukh"
+                        value={newDoctorForm.name}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, name: e.target.value })
+                        }
+                        style={fieldErrors.name ? { borderColor: 'var(--neu-error)' } : {}}
+                      />
+                      {fieldErrors.name && (
+                        <div className="text-danger small mt-1">{fieldErrors.name}</div>
+                      )}
+                    </div>
+
+                    {/* Email */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Email Address <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        className="neu-input"
+                        placeholder="e.g. s.deshmukh@eglesora.com"
+                        value={newDoctorForm.email}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, email: e.target.value })
+                        }
+                        style={fieldErrors.email ? { borderColor: 'var(--neu-error)' } : {}}
+                      />
+                      {fieldErrors.email ? (
+                        <div className="text-danger small mt-1">{fieldErrors.email}</div>
+                      ) : (
+                        <div className="small text-muted mt-1">Used for portal login and password setup</div>
+                      )}
+                    </div>
+
+                    {/* Mobile Phone */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Mobile Number <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        className="neu-input"
+                        placeholder="e.g. +91 98234 56789"
+                        value={newDoctorForm.phone}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, phone: e.target.value })
+                        }
+                        style={fieldErrors.phone ? { borderColor: 'var(--neu-error)' } : {}}
+                      />
+                      {fieldErrors.phone && (
+                        <div className="text-danger small mt-1">{fieldErrors.phone}</div>
+                      )}
+                    </div>
+
+                    {/* Department */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Department <span className="text-danger">*</span>
+                      </label>
+                      <select
+                        className="neu-select"
+                        value={newDoctorForm.departmentId}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, departmentId: e.target.value })
+                        }
+                        style={fieldErrors.departmentId ? { borderColor: 'var(--neu-error)' } : {}}
+                      >
+                        {(departments.length > 0 ? departments : DEMO_DEPARTMENTS).map((dept) => (
+                          <option key={dept.dbId || dept.id} value={dept.dbId || dept.id}>
+                            {dept.name}
+                          </option>
+                        ))}
+                      </select>
+                      {fieldErrors.departmentId && (
+                        <div className="text-danger small mt-1">{fieldErrors.departmentId}</div>
+                      )}
+                    </div>
+
+                    {/* Specialty */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Specialty <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        placeholder="e.g. Interventional Cardiology"
+                        value={newDoctorForm.specialty}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, specialty: e.target.value })
+                        }
+                        style={fieldErrors.specialty ? { borderColor: 'var(--neu-error)' } : {}}
+                      />
+                      {fieldErrors.specialty && (
+                        <div className="text-danger small mt-1">{fieldErrors.specialty}</div>
+                      )}
+                    </div>
+
+                    {/* Qualifications */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Qualifications <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        placeholder="MBBS, MD (Medicine), DM (Cardiology)"
+                        value={newDoctorForm.qualification}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, qualification: e.target.value })
+                        }
+                        style={fieldErrors.qualification ? { borderColor: 'var(--neu-error)' } : {}}
+                      />
+                      {fieldErrors.qualification && (
+                        <div className="text-danger small mt-1">{fieldErrors.qualification}</div>
+                      )}
+                    </div>
+
+                    {/* Years of Experience */}
+                    <div className="col-12 col-md-4">
+                      <label className="neu-form-label">
+                        Experience (Years) <span className="text-danger">*</span>
+                      </label>
                       <input
                         type="number"
+                        min="0"
                         className="neu-input"
                         value={newDoctorForm.experience}
                         onChange={(e) =>
                           setNewDoctorForm({ ...newDoctorForm, experience: e.target.value })
                         }
+                        style={fieldErrors.experience ? { borderColor: 'var(--neu-error)' } : {}}
                       />
+                      {fieldErrors.experience && (
+                        <div className="text-danger small mt-1">{fieldErrors.experience}</div>
+                      )}
                     </div>
-                    <div className="col-6">
-                      <label className="neu-form-label">Consultation Duration</label>
+
+                    {/* Consultation Duration */}
+                    <div className="col-12 col-md-4">
+                      <label className="neu-form-label">
+                        Slot Duration <span className="text-danger">*</span>
+                      </label>
                       <select
                         className="neu-select"
                         value={newDoctorForm.consultationDuration}
@@ -822,22 +1174,100 @@ export function AdminDoctorsPage() {
                         <option value="15 minutes">15 minutes</option>
                         <option value="30 minutes">30 minutes</option>
                         <option value="45 minutes">45 minutes</option>
+                        <option value="60 minutes">60 minutes</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="mb-3">
-                    <label className="neu-form-label">OPD Suite Location</label>
-                    <input
-                      type="text"
-                      className="neu-input"
-                      placeholder="Wing B, Suite 205"
-                      value={newDoctorForm.location}
-                      onChange={(e) =>
-                        setNewDoctorForm({ ...newDoctorForm, location: e.target.value })
-                      }
-                    />
+
+                    {/* OPD Suite / Location */}
+                    <div className="col-12 col-md-4">
+                      <label className="neu-form-label">
+                        OPD Suite Location <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        placeholder="Suite 302, Wing B"
+                        value={newDoctorForm.location}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, location: e.target.value })
+                        }
+                        style={fieldErrors.location ? { borderColor: 'var(--neu-error)' } : {}}
+                      />
+                      {fieldErrors.location && (
+                        <div className="text-danger small mt-1">{fieldErrors.location}</div>
+                      )}
+                    </div>
+
+                    {/* Account Status */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Account Status <span className="text-danger">*</span>
+                      </label>
+                      <select
+                        className="neu-select"
+                        value={newDoctorForm.isActive ? 'ACTIVE' : 'INACTIVE'}
+                        onChange={(e) =>
+                          setNewDoctorForm({
+                            ...newDoctorForm,
+                            isActive: e.target.value === 'ACTIVE',
+                          })
+                        }
+                      >
+                        <option value="ACTIVE">Active (Clinical Privileges Granted)</option>
+                        <option value="INACTIVE">Inactive (Account Pending / On Hold)</option>
+                      </select>
+                      <div className="small text-muted mt-1">Controls immediate public booking visibility</div>
+                    </div>
+
+                    {/* Professional Registration Number (Optional) */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Medical Council Reg. Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        placeholder="e.g. MCI-2018-987654 / MMC-43210"
+                        value={newDoctorForm.registrationNumber}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, registrationNumber: e.target.value })
+                        }
+                      />
+                      <div className="small text-muted mt-1">Medical license or council credential ID</div>
+                    </div>
+
+                    {/* Clinical Expertise */}
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">
+                        Clinical Expertise (Optional, Comma separated)
+                      </label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        placeholder="e.g. Coronary Angioplasty, Pacemaker Implantation"
+                        value={newDoctorForm.expertise}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, expertise: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    {/* Professional Bio */}
+                    <div className="col-12">
+                      <label className="neu-form-label">Professional Background & Biography (Optional)</label>
+                      <textarea
+                        className="neu-input"
+                        rows="3"
+                        placeholder="Consultant background, training, fellowship, and academic honors..."
+                        value={newDoctorForm.bio}
+                        onChange={(e) =>
+                          setNewDoctorForm({ ...newDoctorForm, bio: e.target.value })
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
+
                 <div 
                   className="modal-footer px-4 py-3 border-top"
                   style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
@@ -846,14 +1276,272 @@ export function AdminDoctorsPage() {
                     type="button"
                     className="neu-btn neu-btn-outline neu-btn-sm"
                     onClick={() => setShowAddModal(false)}
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSubmitting}>
-                    {isSubmitting ? 'Registering...' : 'Add Consultant'}
+                  <button 
+                    type="submit" 
+                    className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center gap-2" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <RotateCw size={14} className="spin-anim" />
+                        Provisioning Doctor Account...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={14} />
+                        Register Consultant
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Generated Credentials & One-Time Password Setup Modal */}
+      {createdCredentials && (
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.75)', backdropFilter: 'blur(5px)' }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <div 
+                className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
+                <div className="d-flex align-items-center gap-2">
+                  <div
+                    className="d-flex align-items-center justify-content-center"
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      background: 'rgba(56, 161, 105, 0.1)',
+                      color: 'var(--neu-success)',
+                    }}
+                  >
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                      Consultant Account Provisioned & Credentials Generated
+                    </h5>
+                    <span className="small text-muted">Secure one-time staff credential delivery</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="neu-btn-icon"
+                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  onClick={() => setCreatedCredentials(null)}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                {/* Profile info notice */}
+                <div 
+                  className="p-3 neu-card-sm mb-4 d-flex align-items-center gap-3"
+                  style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                >
+                  {createdCredentials.doctor?.photo || createdCredentials.doctor?.photo_url ? (
+                    <img
+                      src={createdCredentials.doctor?.photo || createdCredentials.doctor?.photo_url}
+                      alt={createdCredentials.doctor?.name}
+                      style={{ width: '52px', height: '52px', borderRadius: '14px', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div
+                      className="d-flex align-items-center justify-content-center"
+                      style={{
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '14px',
+                        background: 'var(--hospital-surface)',
+                        boxShadow: 'var(--neu-inset)',
+                        color: 'var(--hospital-medical-blue)',
+                      }}
+                    >
+                      <Stethoscope size={24} />
+                    </div>
+                  )}
+                  <div>
+                    <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                      {createdCredentials.doctor?.name}
+                    </div>
+                    <div className="small text-muted">
+                      {createdCredentials.doctor?.specialty} • {createdCredentials.doctor?.departmentName}
+                    </div>
+                    <div className="small text-success fw-semibold mt-1">
+                      Role Assigned: DOCTOR_STAFF (Active Clinical Privileges)
+                    </div>
+                  </div>
+                </div>
+
+                {/* Password change security warning */}
+                <div 
+                  className="p-3 mb-4 d-flex align-items-start gap-2"
+                  style={{ 
+                    borderRadius: '14px', 
+                    background: 'rgba(221, 107, 32, 0.08)',
+                    border: '1px solid rgba(221, 107, 32, 0.25)',
+                    color: '#C05621'
+                  }}
+                >
+                  <ShieldAlert size={18} className="flex-shrink-0 mt-1" />
+                  <div className="small">
+                    <strong>Mandatory First-Login Password Change Active:</strong> The consultant's account has been flagged with an enforced password change requirement. The doctor cannot access protected clinical appointments or scheduling until they set a permanent password.
+                  </div>
+                </div>
+
+                {/* Credential Cards */}
+                <div className="row g-3 mb-3">
+                  {/* Login Username / Email */}
+                  <div className="col-12 col-md-6">
+                    <div 
+                      className="p-3 neu-card-sm h-100"
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="small text-muted fw-bold text-uppercase mb-1">Doctor Portal Username</div>
+                      <div className="d-flex align-items-center justify-content-between mt-2">
+                        <span className="font-monospace fw-semibold small text-truncate">
+                          {createdCredentials.email || createdCredentials.username}
+                        </span>
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => handleCopy('username', createdCredentials.email || createdCredentials.username)}
+                          title="Copy username"
+                        >
+                          {copiedKey === 'username' ? <Check size={14} className="text-success" /> : <Copy size={14} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Temporary Password */}
+                  <div className="col-12 col-md-6">
+                    <div 
+                      className="p-3 neu-card-sm h-100"
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="small text-muted fw-bold text-uppercase mb-1">Temporary Initial Password</div>
+                      <div className="d-flex align-items-center justify-content-between mt-2">
+                        <span className="font-monospace fw-bold small text-primary">
+                          {createdCredentials.temporary_password}
+                        </span>
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => handleCopy('tempPassword', createdCredentials.temporary_password)}
+                          title="Copy temporary password"
+                        >
+                          {copiedKey === 'tempPassword' ? <Check size={14} className="text-success" /> : <Copy size={14} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expiring Setup URL */}
+                  <div className="col-12">
+                    <div 
+                      className="p-3 neu-card-sm"
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <div className="small text-muted fw-bold text-uppercase">
+                          One-Time Password Setup Link (Expiring)
+                        </div>
+                        <span className="neu-badge neu-badge-neutral small">Expiring Token</span>
+                      </div>
+                      <div className="d-flex align-items-center gap-2 mt-2">
+                        <input
+                          type="text"
+                          readOnly
+                          className="neu-input font-monospace small"
+                          value={createdCredentials.setup_url || `${window.location.origin}/staff/set-password`}
+                          style={{ background: 'var(--hospital-bg)' }}
+                        />
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-primary neu-btn-sm flex-shrink-0"
+                          onClick={() => handleCopy('setupUrl', createdCredentials.setup_url || `${window.location.origin}/staff/set-password`)}
+                        >
+                          {copiedKey === 'setupUrl' ? (
+                            <>
+                              <Check size={14} className="me-1" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={14} className="me-1" />
+                              Copy Link
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="small text-muted text-center">
+                  Never log or transmit temporary credentials over unencrypted channels. This credential will expire once set.
+                </div>
+              </div>
+
+              <div 
+                className="modal-footer px-4 py-3 border-top d-flex justify-content-between"
+                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+              >
+                <button
+                  type="button"
+                  className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1"
+                  onClick={() => {
+                    const fullText = `EgleSora Hospital Consultant Account Details:
+Doctor: ${createdCredentials.doctor?.name}
+Department: ${createdCredentials.doctor?.departmentName}
+Email/Username: ${createdCredentials.email || createdCredentials.username}
+Temporary Password: ${createdCredentials.temporary_password}
+Password Setup Link: ${createdCredentials.setup_url || `${window.location.origin}/staff/set-password`}
+Note: You will be required to choose a new password upon first login.`;
+                    handleCopy('allCreds', fullText);
+                  }}
+                >
+                  {copiedKey === 'allCreds' ? (
+                    <>
+                      <Check size={14} className="text-success" />
+                      All Details Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} />
+                      Copy All Details
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className="neu-btn neu-btn-primary neu-btn-sm"
+                  onClick={() => setCreatedCredentials(null)}
+                >
+                  Dismiss & Return to Directory
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -363,6 +363,93 @@ export const authService = {
   },
 
   /**
+   * Updates password for authenticated user via POST /api/auth/change-password/
+   */
+  async changePassword(currentPassword, newPassword, confirmPassword) {
+    const token = await this.getValidAccessToken();
+    if (!token) {
+      throw new Error('Authentication required to change password.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/change-password/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      }),
+    });
+
+    const data = await safeParseJsonResponse(response);
+    if (!response.ok) {
+      const errorMsg = formatAuthErrorMessage(response, data, 'Failed to update password.');
+      throw new Error(errorMsg);
+    }
+
+    if (data.access && data.refresh) {
+      sessionStorage.setItem(ACCESS_TOKEN_KEY, data.access);
+      sessionStorage.setItem(REFRESH_TOKEN_KEY, data.refresh);
+      const user = this.getCurrentUser();
+      if (user) {
+        user.must_change_password = false;
+        user.requires_new_credentials = false;
+        sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('eglesora-session-updated', { detail: { user } }));
+        }
+      }
+    }
+
+    return data;
+  },
+
+  /**
+   * One-time password setup via secure expiring link (token + uid) via POST /api/auth/setup-password/
+   */
+  async setupPassword(uid, token, newPassword, confirmPassword) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/setup-password/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        uid,
+        token,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      }),
+    });
+
+    const data = await safeParseJsonResponse(response);
+    if (!response.ok) {
+      const errorMsg = formatAuthErrorMessage(response, data, 'Failed to set password. Link may be invalid or expired.');
+      throw new Error(errorMsg);
+    }
+
+    const { access, refresh, user } = data || {};
+    if (access && refresh) {
+      sessionStorage.setItem(ACCESS_TOKEN_KEY, access);
+      sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+      if (user) {
+        user.must_change_password = false;
+        user.requires_new_credentials = false;
+        sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('eglesora-session-updated', { detail: { user } }));
+      }
+    }
+
+    return data;
+  },
+
+  /**
    * Verify if current user possesses one of the authorized roles
    */
   hasRole(allowedRoles = []) {

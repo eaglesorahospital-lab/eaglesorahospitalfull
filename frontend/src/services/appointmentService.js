@@ -358,6 +358,43 @@ export const appointmentService = {
     return normalized;
   },
 
+  /**
+   * Assign or reassign an appointment to a specific doctor via POST /api/appointments/<reference>/assign/
+   */
+  async assignDoctor(reference, doctorId, reason = '') {
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
+    if (!token) {
+      throw new Error('Authentication required for appointment reassignment.');
+    }
+
+    const res = await fetch(`${API_BASE_URL}/api/appointments/${encodeURIComponent(reference)}/assign/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        doctor_id: doctorId,
+        reason: reason || 'Administrative reassignment',
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const errMsg = data.detail || 'Appointment assignment failed.';
+      throw new Error(errMsg);
+    }
+
+    const normalized = normalizeAppointment(data);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('eglesora-appointment-updated', {
+          detail: { reference, appointment: normalized },
+        })
+      );
+    }
+    return normalized;
+  },
 };
 
 export default appointmentService;

@@ -112,26 +112,80 @@ export const doctorService = {
    * Create a new doctor in PostgreSQL via POST /api/doctors/
    */
   async createDoctor(doctorPayload) {
-    const payload = {
-      name: doctorPayload.name,
-      department: doctorPayload.department,
-      specialty: doctorPayload.specialty || null,
-      specialty_name: doctorPayload.specialty_name || doctorPayload.specialty || '',
-      qualification: Array.isArray(doctorPayload.qualification)
-        ? doctorPayload.qualification.join(', ')
-        : (doctorPayload.qualification || 'MBBS'),
-      experience_years: Number(doctorPayload.experience_years || doctorPayload.experience) || 5,
-      bio: doctorPayload.bio || `Consultant physician at EgleSora Hospital.`,
-      expertise: Array.isArray(doctorPayload.expertise)
-        ? doctorPayload.expertise.join(', ')
-        : (doctorPayload.expertise || ''),
-      consultation_type: doctorPayload.consultation_type || 'In-person Consultation',
-      consultation_duration_minutes: Number(doctorPayload.consultation_duration_minutes) || 30,
-      consultation_location: doctorPayload.consultation_location || 'Consultation Suite, Wing A',
-      is_active: doctorPayload.is_active !== undefined ? Boolean(doctorPayload.is_active) : true,
-    };
+    let body;
+    if (doctorPayload instanceof FormData) {
+      body = doctorPayload;
+    } else if (doctorPayload.photoFile || doctorPayload.photo || doctorPayload.image) {
+      const formData = new FormData();
+      Object.entries(doctorPayload).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') {
+          if (k === 'photoFile' || k === 'photo' || k === 'image') {
+            if (v instanceof File || v instanceof Blob) {
+              formData.append('image', v);
+            }
+          } else {
+            formData.append(k, v);
+          }
+        }
+      });
+      body = formData;
+    } else {
+      body = {
+        name: doctorPayload.name,
+        email: doctorPayload.email,
+        phone: doctorPayload.phone || doctorPayload.mobile,
+        department: doctorPayload.department,
+        specialty: doctorPayload.specialty || null,
+        specialty_name: doctorPayload.specialty_name || doctorPayload.specialty || '',
+        qualification: Array.isArray(doctorPayload.qualification)
+          ? doctorPayload.qualification.join(', ')
+          : (doctorPayload.qualification || 'MBBS'),
+        experience_years: Number(doctorPayload.experience_years || doctorPayload.experience) || 5,
+        bio: doctorPayload.bio || `Consultant physician at EgleSora Hospital.`,
+        expertise: Array.isArray(doctorPayload.expertise)
+          ? doctorPayload.expertise.join(', ')
+          : (doctorPayload.expertise || ''),
+        consultation_type: doctorPayload.consultation_type || 'In-person Consultation',
+        consultation_duration_minutes: Number(doctorPayload.consultation_duration_minutes) || 30,
+        consultation_location: doctorPayload.consultation_location || 'Consultation Suite, Wing A',
+        is_active: doctorPayload.is_active !== undefined ? Boolean(doctorPayload.is_active) : true,
+      };
+    }
 
-    const data = await apiClient.post('/api/doctors/', payload, { requiresAuth: true });
+    const data = await apiClient.post('/api/doctors/', body, { requiresAuth: true });
+    return {
+      doctor: normalizeDoctor(data),
+      credentials: data.credentials || null,
+    };
+  },
+
+  /**
+   * Get authenticated doctor's profile via GET /api/doctors/me/
+   */
+  async getMyDoctorProfile() {
+    const data = await apiClient.get('/api/doctors/me/', { requiresAuth: true });
+    return normalizeDoctor(data);
+  },
+
+  /**
+   * Update authenticated doctor's profile via PATCH /api/doctors/me/
+   */
+  async updateMyDoctorProfile(updatePayload) {
+    let body = updatePayload;
+    if (updatePayload && (updatePayload.photoFile || updatePayload.photo instanceof File || updatePayload.image instanceof File)) {
+      const formData = new FormData();
+      Object.entries(updatePayload).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) {
+          if ((k === 'photoFile' || k === 'photo' || k === 'image') && (v instanceof File || v instanceof Blob)) {
+            formData.append('image', v);
+          } else {
+            formData.append(k, v);
+          }
+        }
+      });
+      body = formData;
+    }
+    const data = await apiClient.patch('/api/doctors/me/', body, { requiresAuth: true });
     return normalizeDoctor(data);
   },
 

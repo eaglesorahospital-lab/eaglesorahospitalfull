@@ -40,13 +40,18 @@ export function StaffLoginPage() {
         return;
       }
 
+      if (user.must_change_password || user.requires_new_credentials) {
+        navigate('/staff/set-password', { replace: true });
+        return;
+      }
+
       const searchParams = new URLSearchParams(location.search);
       const redirectPath = searchParams.get('redirect');
 
-      if (redirectPath && redirectPath.startsWith('/admin')) {
+      if (redirectPath && (redirectPath.startsWith('/admin') || redirectPath.startsWith('/doctor'))) {
         navigate(redirectPath, { replace: true });
       } else if (user.role === 'DOCTOR_STAFF') {
-        navigate('/admin/schedules', { replace: true });
+        navigate('/doctor', { replace: true });
       } else {
         navigate('/admin', { replace: true });
       }

@@ -463,6 +463,7 @@ li.hospital-breadcrumb-item {
 
 /* Soft / Raised Neutral Button */
 .hospital-btn-outline,
+.neu-btn-outline,
 .hospital-btn-soft,
 .neu-btn-soft {
   background-color: var(--hospital-surface);
@@ -472,6 +473,7 @@ li.hospital-breadcrumb-item {
 }
 
 .hospital-btn-outline:hover:not(:disabled),
+.neu-btn-outline:hover:not(:disabled),
 .hospital-btn-soft:hover:not(:disabled),
 .neu-btn-soft:hover:not(:disabled) {
   background-color: var(--hospital-surface-subtle);
@@ -885,21 +887,49 @@ select.form-select option {
   -webkit-overflow-scrolling: touch;
   margin-bottom: var(--space-6, 1.5rem);
   width: 100%;
+  max-width: 100%;
+  display: block;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(40, 120, 200, 0.4) var(--hospital-surface-subtle);
 }
 
 /* Custom Soft Scrollbar for wide tables */
 .neu-table-container::-webkit-scrollbar,
 .hospital-table-container::-webkit-scrollbar,
 .admin-table-container::-webkit-scrollbar {
-  height: 8px;
+  height: 9px;
   background-color: var(--hospital-surface-subtle);
+}
+
+.neu-table-container::-webkit-scrollbar-track,
+.hospital-table-container::-webkit-scrollbar-track,
+.admin-table-container::-webkit-scrollbar-track {
+  background: var(--hospital-surface-subtle);
+  border-radius: var(--radius-pill);
 }
 
 .neu-table-container::-webkit-scrollbar-thumb,
 .hospital-table-container::-webkit-scrollbar-thumb,
 .admin-table-container::-webkit-scrollbar-thumb {
-  background-color: var(--hospital-border);
+  background-color: rgba(40, 120, 200, 0.35);
   border-radius: var(--radius-pill);
+  border: 2px solid var(--hospital-surface-subtle);
+}
+
+.neu-table-container::-webkit-scrollbar-thumb:hover,
+.hospital-table-container::-webkit-scrollbar-thumb:hover,
+.admin-table-container::-webkit-scrollbar-thumb:hover {
+  background-color: var(--hospital-medical-blue);
+}
+
+/* Card Integration for Nested Table Containers */
+.neu-card > .neu-table-container {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  width: 100%;
+  max-width: 100%;
 }
 
 .neu-table,
@@ -923,7 +953,7 @@ select.form-select option {
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 1.05rem 1.25rem;
+  padding: 0.95rem 0.85rem;
   border-bottom: 1px solid var(--hospital-border);
   white-space: nowrap;
   vertical-align: middle;
@@ -932,7 +962,7 @@ select.form-select option {
 .neu-table td,
 .hospital-table td,
 .admin-table td {
-  padding: var(--table-cell-padding-y, 1.15rem) var(--table-cell-padding-x, 1.25rem);
+  padding: var(--table-cell-padding-y, 1.05rem) var(--table-cell-padding-x, 0.85rem);
   border-bottom: 1px solid var(--hospital-border-light);
   vertical-align: middle;
   transition: background-color var(--transition-fast);
@@ -974,13 +1004,13 @@ select.form-select option {
 .col-related-ref { min-width: 150px; }
 .col-dispatch-time { min-width: 165px; }
 
-.col-apt-ref { min-width: 160px; }
-.col-apt-patient { min-width: 210px; }
-.col-apt-doctor { min-width: 210px; }
-.col-apt-slot { min-width: 170px; }
-.col-apt-type { min-width: 120px; }
-.col-apt-status { min-width: 130px; }
-.col-apt-actions { min-width: 260px; text-align: right; }
+.col-apt-ref { min-width: 125px; }
+.col-apt-patient { min-width: 155px; }
+.col-apt-doctor { min-width: 165px; }
+.col-apt-slot { min-width: 135px; }
+.col-apt-type { min-width: 90px; }
+.col-apt-status { min-width: 100px; }
+.col-apt-actions { min-width: 310px; text-align: right; white-space: nowrap; }
 
 .col-dept-name { min-width: 240px; }
 .col-dept-specialty { min-width: 180px; }
@@ -1016,33 +1046,269 @@ select.form-select option {
 .neu-action-btns {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   justify-content: flex-end;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .neu-action-btns .neu-btn {
   margin: 0 !important;
   white-space: nowrap;
+  font-size: 0.775rem;
+  padding: 0.28rem 0.55rem;
+  line-height: 1.25;
+}
+
+/* Optional Desktop Sticky Action Column */
+@media (min-width: 1200px) {
+  .neu-table th.col-apt-actions,
+  .neu-table td.col-apt-actions {
+    position: sticky;
+    right: 0;
+    background-color: var(--hospital-surface);
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
+    z-index: 2;
+  }
+  .neu-table th.col-apt-actions {
+    background-color: var(--hospital-surface-subtle);
+    z-index: 3;
+  }
+  .neu-table tr:hover td.col-apt-actions {
+    background-color: var(--hospital-surface-subtle);
+  }
 }
 
 /* ------------------------------------------------------------------------------
-   10. Admin Workspace & Sidebar (Navy + Neumorphic Light Workspace)
+   10. Admin Workspace & Header Navigation (Navy + Neumorphic Light Workspace)
    ------------------------------------------------------------------------------ */
 .admin-root-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: var(--hospital-bg);
+  overflow-x: hidden;
 }
 
 .hospital-admin-header {
   background-color: var(--hospital-primary-dark);
   color: #ffffff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
   z-index: 1040;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.admin-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.admin-header-role {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-header-role-label {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.admin-header-select {
+  height: 36px;
+  min-width: 135px;
+  max-width: 180px;
+  padding: 0 2rem 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: var(--font-stack);
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-sm, 8px);
+  outline: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 14px 14px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.admin-header-select:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-header-select:focus {
+  border-color: var(--hospital-accent-cyan, #00C0F0);
+  box-shadow: 0 0 0 2px rgba(0, 192, 240, 0.3);
+}
+
+.admin-header-select option {
+  background-color: #122842;
+  color: #FFFFFF;
+  padding: 8px;
+}
+
+/* Admin Header Action Buttons */
+.admin-header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 36px;
+  padding: 0 0.8rem;
+  font-family: var(--font-stack);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.admin-header-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.38);
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-header-btn:focus-visible {
+  outline: 2px solid var(--hospital-accent-cyan, #00C0F0);
+  outline-offset: 2px;
+}
+
+.admin-header-btn:disabled,
+.admin-header-btn[disabled],
+.admin-header-btn[aria-disabled="true"] {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
+
+/* Dedicated High-Contrast Sign Out Button */
+.admin-header-btn-logout {
+  background-color: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.40);
+  color: #FFFFFF !important;
+}
+
+.admin-header-btn-logout svg {
+  color: #FCA5A5;
+  transition: color var(--transition-fast);
+}
+
+.admin-header-btn-logout:hover:not(:disabled) {
+  background-color: rgba(239, 68, 68, 0.30);
+  border-color: rgba(239, 68, 68, 0.65);
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 10px rgba(220, 53, 69, 0.32);
+}
+
+.admin-header-btn-logout:hover:not(:disabled) svg {
+  color: #FFFFFF;
+}
+
+.admin-header-btn-logout:focus-visible {
+  outline: 2px solid #EF4444;
+  outline-offset: 2px;
+}
+
+.admin-header-btn-logout:disabled,
+.admin-header-btn-logout[disabled],
+.admin-header-btn-logout[aria-disabled="true"] {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
+
+/* Mobile Icon Toggle in Header */
+.admin-header-btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Responsive Breakpoints for Admin Header */
+@media (max-width: 991.98px) {
+  .hospital-admin-header {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .admin-header-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .admin-header-brand {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .admin-header-controls {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.4rem;
+  }
+  .admin-header-select {
+    min-width: 120px;
+    max-width: 155px;
+    font-size: 0.775rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header-btn span {
+    display: none !important;
+  }
+  .admin-header-btn {
+    padding: 0 0.55rem;
+    width: 36px;
+  }
+  .admin-header-select {
+    min-width: 110px;
+    max-width: 140px;
+  }
 }
 
 .admin-body-wrapper {
@@ -1050,6 +1316,15 @@ select.form-select option {
   flex: 1 0 auto;
   position: relative;
   min-height: calc(100vh - 65px);
+  min-width: 0;
+  max-width: 100vw;
+}
+
+.admin-main-content {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .admin-sidebar {

@@ -29,6 +29,14 @@ export function ProtectedRoute({ allowedRoles = ['SUPER_ADMIN', 'HOSPITAL_ADMIN'
     return <Navigate to={`/staff/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
+  if (
+    (currentUser?.must_change_password || currentUser?.requires_new_credentials) &&
+    location.pathname !== '/staff/set-password' &&
+    location.pathname !== '/doctor/set-password'
+  ) {
+    return <Navigate to="/staff/set-password" replace />;
+  }
+
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentUser?.role)) {
     return (
       <div className="container py-5 text-center" style={{ maxWidth: '600px' }}>

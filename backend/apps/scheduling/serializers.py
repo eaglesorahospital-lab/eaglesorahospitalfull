@@ -40,6 +40,25 @@ class DoctorScheduleSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'doctor': {'required': False},
+        }
+
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        request = self.context.get('request')
+        if not data.get('doctor') and request and hasattr(request.user, 'doctor_profile') and request.user.doctor_profile:
+            data['doctor'] = request.user.doctor_profile.id
+        return super().to_internal_value(data)
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        if not attrs.get('doctor'):
+            if request and hasattr(request.user, 'doctor_profile') and request.user.doctor_profile:
+                attrs['doctor'] = request.user.doctor_profile
+            elif not self.instance:
+                raise serializers.ValidationError({"doctor": "Doctor is required."})
+        return super().validate(attrs)
 
 
 class DoctorLeaveSerializer(serializers.ModelSerializer):
@@ -63,6 +82,25 @@ class DoctorLeaveSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = ['id', 'created_at']
+        extra_kwargs = {
+            'doctor': {'required': False},
+        }
+
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        request = self.context.get('request')
+        if not data.get('doctor') and request and hasattr(request.user, 'doctor_profile') and request.user.doctor_profile:
+            data['doctor'] = request.user.doctor_profile.id
+        return super().to_internal_value(data)
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        if not attrs.get('doctor'):
+            if request and hasattr(request.user, 'doctor_profile') and request.user.doctor_profile:
+                attrs['doctor'] = request.user.doctor_profile
+            elif not self.instance:
+                raise serializers.ValidationError({"doctor": "Doctor is required."})
+        return super().validate(attrs)
 
 
 class ScheduleOverrideSerializer(serializers.ModelSerializer):

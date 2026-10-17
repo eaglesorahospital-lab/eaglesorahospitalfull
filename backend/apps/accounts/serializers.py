@@ -52,6 +52,8 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     """
     name = serializers.CharField(source='get_full_name', read_only=True)
     patient_profile = PatientProfileSummarySerializer(read_only=True)
+    doctor_profile = serializers.SerializerMethodField()
+    requires_new_credentials = serializers.BooleanField(source='must_change_password', read_only=True)
 
     class Meta:
         model = User
@@ -63,11 +65,116 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'last_name',
             'phone',
             'role',
+            'requires_new_credentials',
             'is_active',
             'date_joined',
             'patient_profile',
+            'doctor_profile',
         ]
         read_only_fields = fields
+
+    def get_doctor_profile(self, obj):
+        doc = getattr(obj, 'doctor_profile', None)
+        if not doc:
+            return None
+        return {
+            'id': doc.id,
+            'slug': doc.slug,
+            'name': doc.name,
+            'specialty_name': doc.specialty_name,
+            'department_id': doc.department_id,
+            'department_name': doc.department.name if doc.department else '',
+            'consultation_location': doc.consultation_location,
+            'photo_url': doc.photo_url,
+        }
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """
+    Validates password update request for authenticated users.
+    Enforces validation of current password unless user has must_change_password=True.
+    """
+    old_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    current_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    new_password = serializers.CharField(write_only=True, required=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        user = request.user if request else None
+        if not user or not user.is_authenticated:
+            raise serializers.ValidationError({"detail": "Authentication required."})
+
+        new_password = attrs.get('new_password')
+        new_password_confirm = attrs.get('new_password_confirm') or attrs.get('confirm_password')
+        old_password = attrs.get('old_password') or attrs.get('current_password')
+
+        if not new_password_confirm:
+            raise serializers.ValidationError({"confirm_password": "Password confirmation is required."})
+
+        if new_password != new_password_confirm:
+            raise serializers.ValidationError({"confirm_password": "New passwords do not match."})
+
+        # If user does not have must_change_password=True, enforce old_password check
+        if not getattr(user, 'must_change_password', False):
+            if not old_password:
+                raise serializers.ValidationError({"current_password": "Current password is required."})
+            if not user.check_password(old_password):
+                raise serializers.ValidationError({"current_password": "Current password is incorrect."})
+
+        try:
+            password_validation.validate_password(new_password, user=user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"new_password": list(exc.messages)})
+
+        attrs['new_password'] = new_password
+        return attrs
+
+
+class SetupPasswordSerializer(serializers.Serializer):
+    """
+    Validates password setup request via one-time secure link.
+    """
+    uid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(write_only=True, required=True, min_length=8)
+    new_password_confirm = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    confirm_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        from django.utils.http import urlsafe_base64_decode
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_str
+
+        uid = attrs.get('uid')
+        token = attrs.get('token')
+        new_password = attrs.get('new_password')
+        new_password_confirm = attrs.get('new_password_confirm') or attrs.get('confirm_password')
+
+        if not new_password_confirm:
+            raise serializers.ValidationError({"confirm_password": "Password confirmation is required."})
+
+        if new_password != new_password_confirm:
+            raise serializers.ValidationError({"confirm_password": "New passwords do not match."})
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_id)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError({"token": "Invalid password setup link."})
+
+        if not default_token_generator.check_token(user, token):
+            raise serializers.ValidationError({"token": "Password setup link has expired or has already been used."})
+
+        try:
+            password_validation.validate_password(new_password, user=user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"new_password": list(exc.messages)})
+
+        attrs['user'] = user
+        attrs['new_password'] = new_password
+        return attrs
 
 
 class LoginSerializer(serializers.Serializer):
