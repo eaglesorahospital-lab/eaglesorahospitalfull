@@ -56,6 +56,7 @@ pnpm-debug.log*
 lerna-debug.log*
 frontend/dist/
 frontend/build/
+frontend/.vite/
 .pnp
 .pnp.js
 
@@ -73,6 +74,12 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+
+# Visual verification & screenshots
+frontend/screenshots/
+frontend/screenshots_fix/
+frontend/screenshots_header/
+frontend/screenshots_verify/
 
 # IDE & Editor specific
 .idea/
@@ -100,4 +107,8 @@ scratch/
 *.dump
 *.tmp
 *.bak
+
+# Local recovery backups and snapshots (narrow patterns)
+frontend_backup_20261014/
+redis-backup/
 
