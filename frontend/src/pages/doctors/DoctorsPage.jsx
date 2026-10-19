@@ -3,6 +3,7 @@ import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import DoctorCard from '../../components/doctors/DoctorCard';
 import EmptyState from '../../components/common/EmptyState';
+import SEO from '../../components/common/SEO';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
 import { Search, X, Users, Filter, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -126,6 +127,11 @@ export function DoctorsPage() {
 
   return (
     <div className="doctors-directory-page py-4">
+      <SEO
+        title="Medical Consultants Directory | EgleSora Hospital"
+        description="Search and discover attending medical consultants, surgeons, and healthcare specialists across all departments at EgleSora Hospital."
+        canonicalUrl="/doctors"
+      />
       <Container>
         <PageHeader
           title="Find a Medical Specialist"

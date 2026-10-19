@@ -108,3 +108,30 @@ urlpatterns = [
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/audit/', include(audit_router.urls)),
 ]
+
+from django.http import JsonResponse
+
+def custom_404_handler(request, exception=None):
+    """
+    Standardized JSON 404 for unmapped API endpoints.
+    Ensures missing API requests return a structured JSON response instead of HTML.
+    """
+    return JsonResponse({
+        "status": 404,
+        "error": "Not Found",
+        "detail": "The requested API endpoint does not exist on this server.",
+        "path": request.path
+    }, status=404)
+
+def custom_500_handler(request):
+    """
+    Sanitized JSON 500 handler to prevent leakages on unhandled top-level errors.
+    """
+    return JsonResponse({
+        "status": 500,
+        "error": "Internal Server Error",
+        "detail": "An internal error occurred. Please contact hospital technical support."
+    }, status=500)
+
+handler404 = 'config.urls.custom_404_handler'
+handler500 = 'config.urls.custom_500_handler'

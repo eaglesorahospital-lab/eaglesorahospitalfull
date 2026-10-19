@@ -1,3 +1,32 @@
+# ==============================================================================
+# Robots.txt — EgleSora Hospital Platform
+# Allows search indexation of public healthcare services and directories
+# Disallows private clinical records, staff login gateways, and internal APIs
+# ==============================================================================
+
 User-agent: *
+
+# Public Informational Pages
+Allow: /
+Allow: /about
+Allow: /departments
+Allow: /departments/
+Allow: /doctors
+Allow: /doctors/
+Allow: /contact
+Allow: /appointments/book
+Allow: /privacy
+Allow: /terms
+
+# Disallow Private Administrative, Staff, and Patient Portals
 Disallow: /admin/
+Disallow: /doctor/
+Disallow: /staff/
+Disallow: /patient/
+Disallow: /my-appointments/
+Disallow: /profile
+Disallow: /login
 Disallow: /api/
+
+# Canonical Sitemap Declaration
+Sitemap: https://eglesorahospital.netlify.app/sitemap.xml

@@ -32,12 +32,23 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
 
         base_qs = Notification.objects.select_related('appointment', 'recipient_user')
 
+        # Platform and hospital administrators view all notifications
         if (
-            user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
-            or user.is_staff
+            user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN]
             or user.is_superuser
         ):
             return base_qs
+
+        # Doctor staff view ONLY notifications for their appointments or addressed to them
+        if user.role == User.Role.DOCTOR_STAFF:
+            if hasattr(user, 'doctor_profile') and user.doctor_profile:
+                from django.db.models import Q
+                return base_qs.filter(
+                    Q(appointment__doctor=user.doctor_profile) |
+                    Q(recipient_user=user) |
+                    Q(recipient__iexact=user.email)
+                ).distinct()
+            return Notification.objects.none()
 
         # Patients only see notifications addressed to them
         return base_qs.filter(recipient_user=user)

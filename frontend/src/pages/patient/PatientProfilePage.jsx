@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '../../components/common/PageHeader';
 import PatientNav from '../../components/patient/PatientNav';
+import SEO from '../../components/common/SEO';
 import usePatientSession from '../../hooks/usePatientSession';
 import { User, Phone, Mail, MapPin, CheckCircle2, AlertTriangle, ShieldCheck, Edit3, X } from 'lucide-react';
 
@@ -100,6 +101,11 @@ export function PatientProfilePage() {
 
   return (
     <div className="patient-profile-page py-4">
+      <SEO
+        title="Patient Profile & Details | EgleSora Hospital"
+        description="Patient demographic details and registration profile."
+        noIndex={true}
+      />
       <div className="patient-portal-container">
         {/* Page Header */}
         <PageHeader

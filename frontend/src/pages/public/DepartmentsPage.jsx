@@ -3,6 +3,7 @@ import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import DepartmentCard from '../../components/departments/DepartmentCard';
 import EmptyState from '../../components/common/EmptyState';
+import SEO from '../../components/common/SEO';
 import { DEMO_DEPARTMENTS } from '../../data/hospitalData';
 import { Search, X, Building2, Filter } from 'lucide-react';
 
@@ -52,6 +53,11 @@ export function DepartmentsPage() {
 
   return (
     <div className="departments-page py-4">
+      <SEO
+        title="Hospital Departments | EgleSora Hospital"
+        description="Explore clinical departments at EgleSora Hospital, including Cardiology, Neurology, Orthopaedics, Oncology, Paediatrics, and 24/7 Emergency Care."
+        canonicalUrl="/departments"
+      />
       <Container>
         <PageHeader
           title="Clinical Departments & Specialties"

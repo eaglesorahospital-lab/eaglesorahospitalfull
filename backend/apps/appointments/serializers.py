@@ -56,6 +56,8 @@ class AppointmentListSerializer(serializers.ModelSerializer):
             'appointment_type',
             'consultation_location',
             'status',
+            'reason_for_visit',
+            'notes',
             'created_at',
         ]
         read_only_fields = ['id', 'reference', 'created_at']

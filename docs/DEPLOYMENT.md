@@ -595,3 +595,61 @@ curl -f http://localhost/api/health/?detailed=1
 | CORS / CSRF verification failed | Domain not registered in origins | Add client domain to `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` in `.env`. |
 
 ---
+
+## 21. Phase 24 Approved Demo Deployment Architecture (Netlify + Render + Neon + Upstash)
+
+> [!NOTE]
+> For the complete step-by-step manual operator runbook covering account creation, environment configuration, and synthetic smoke tests, see [docs/MANUAL_STAGING_GUIDE.md](file:///c:/paid%20project%20home%20loan/EgleSora%20Hospital%20Project%20bu%20Harsh/docs/MANUAL_STAGING_GUIDE.md).
+
+This section documents the zero-cost hosted demonstration setup approved in Phase 23 and configured in Phase 24.
+
+### 1. Architecture Overview
+
+```text
+       Netlify (Free Tier)                     Render (Free Web Service)
+  ┌───────────────────────────┐          ┌───────────────────────────────────┐
+  │ React 18 + Vite SPA       │  HTTPS   │ Gunicorn WSGI + Django 5.1 REST   │
+  │ *.netlify.app             ├─────────►│ *.onrender.com                    │
+  │ Timeout: 60s (Cold Start) │  REST    │ WhiteNoise Static Files           │
+  └───────────────────────────┘          └───────┬───────────────────┬───────┘
+                                                 │                   │
+                                          TLS    ▼            TLS    ▼
+                                 ┌───────────────────┐   ┌───────────────────┐
+                                 │ Neon PostgreSQL   │   │ Upstash Redis     │
+                                 │ (Serverless Free) │   │ (Serverless Free) │
+                                 │ SSL Required      │   │ DRF Rate Limiting │
+                                 └───────────────────┘   └───────────────────┘
+```
+
+### 2. Provider Specifications & Free-Tier Operational Limits
+
+| Component / Provider | Approved Plan | Key Limits & Operational Behavior |
+|---|---|---|
+| **Frontend: Netlify** | Free | 100 GB monthly bandwidth, 300 build minutes/month. Single-page app routing handled via `_redirects`. |
+| **Backend: Render Web Service** | Free | 512 MB RAM, shared CPU. Spins down after 15 min idle. Cold-start latency (30–60s) absorbed by frontend `VITE_API_TIMEOUT_MS=60000`. |
+| **Database: Neon PostgreSQL** | Free | 1 GB storage, 100 CU-hours/month. Scales to zero when idle; wakes in ~1s. SSL enforced (`sslmode=require`). PgBouncer pooling supported on port 5432 via `-pooler` endpoint (`DJANGO_DB_CONN_MAX_AGE=0`). No 30-day deletion. |
+| **Cache: Upstash Redis** | Free | 256 MB RAM, 500,000 commands/month, TLS enforced (`rediss://...`). Used exclusively for Django cache & DRF distributed rate limiting. |
+| **Media: Cloudinary** | Free | 25 shared monthly credits for storage, transformations, and bandwidth. Server-side only; credentials never exposed to client. |
+| **Background Processing** | Synchronous Demo Mode | `CELERY_TASK_ALWAYS_EAGER=True` executes confirmation/cancellation notifications in-process. Broker defaults to `memory://` to preserve Upstash command limits. |
+
+### 3. Notification & Reminder Behavior in Demo Mode
+
+* **Immediate Notifications:** Appointment confirmation, cancellation, and rescheduling notifications are executed synchronously inside the HTTP transaction commitment lifecycle (`transaction.on_commit`).
+* **SMTP Resilience:** If SMTP delivery encounters a network error or connection timeout, the error is recorded in the `Notification` model with status `FAILED` and error details. The core appointment booking transaction is never rolled back or duplicated.
+* **Scheduled Reminders Inactive:** Automated 24-hour advance appointment reminders (`process_appointment_reminders_task`) **remain inactive** in this demo configuration because no Celery Beat periodic scheduler or continuous background worker is deployed. Reminders require a separately approved worker and scheduler service.
+
+### 4. Operator Diagnostics Runbook
+
+* **Diagnosing Neon Database Connectivity:**
+  * Check connection strings without printing passwords. Verify host ends in `.neon.tech` and query string includes `sslmode=require`.
+  * If receiving connection pool timeouts, ensure `DJANGO_DB_CONN_MAX_AGE=0` is set when connecting through Neon's PgBouncer pooled endpoint.
+* **Diagnosing Upstash Redis Connectivity:**
+  * Verify `REDIS_URL` begins with `rediss://` (TLS protocol).
+  * Check Upstash web console for monthly command consumption against the 500k free quota.
+  * If Redis latency spikes, verify `REDIS_CONNECT_TIMEOUT=5` and `REDIS_SOCKET_TIMEOUT=5` are active.
+* **Diagnosing Notification Delivery:**
+  * Query the `Notification` table: `Notification.objects.filter(appointment_id=...)` to inspect `status` (`SENT`, `FAILED`, `PENDING`) and `error_message`.
+
+> [!CAUTION]
+> ### Data Classification Policy
+> This deployment configuration is approved strictly for **demonstration with synthetic data**. It is NOT certified for Protected Health Information (PHI) or live hospital operations. Do NOT upload real patient records or personal health information until Tier 3 regulatory compliance infrastructure is commissioned.

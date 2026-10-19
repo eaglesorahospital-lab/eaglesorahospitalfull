@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import { ADMIN_ROLES } from '../../data/adminData';
 import ThemeToggle from '../common/ThemeToggle';
-import { Activity, LogOut, ExternalLink, Menu, X } from 'lucide-react';
+import { Activity, LogOut, ExternalLink, Menu, X, ShieldCheck } from 'lucide-react';
 
 /**
  * Hospital Platform — Admin Header Component
- * Top administrative navigation bar with role selector, ThemeToggle,
+ * Top administrative navigation bar with verified role indicator, ThemeToggle,
  * accessible logout button, and link to public portal.
  */
 export function AdminHeader({
@@ -48,24 +48,22 @@ export function AdminHeader({
           {/* Theme Toggle */}
           <ThemeToggle compact />
 
-          {/* Role Selector */}
-          <div className="admin-header-role">
-            <label htmlFor="admin-role-select" className="admin-header-role-label d-none d-lg-inline">
-              Role:
-            </label>
-            <select
-              id="admin-role-select"
-              className="admin-header-select"
-              value={currentRoleId}
-              onChange={(e) => onRoleChange(e.target.value)}
-              aria-label="Select administrative role"
+          {/* Verified Role Indicator (Read-Only) */}
+          <div className="admin-header-role d-flex align-items-center">
+            <span
+              className="badge d-inline-flex align-items-center gap-1 px-2.5 py-1.5 rounded-pill"
+              style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                color: '#60a5fa',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+              }}
+              title="Authenticated Administrative Role"
             >
-              {Object.values(ADMIN_ROLES).map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.label}
-                </option>
-              ))}
-            </select>
+              <ShieldCheck size={13} className="text-primary flex-shrink-0" />
+              <span>{ADMIN_ROLES[currentRoleId]?.label || 'Hospital Administrator'}</span>
+            </span>
           </div>
 
           {/* Accessible High-Contrast Sign Out Button */}

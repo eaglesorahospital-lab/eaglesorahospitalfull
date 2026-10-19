@@ -96,6 +96,13 @@ export function AdminDoctorsPage() {
   const [createdCredentials, setCreatedCredentials] = useState(null);
   const [copiedKey, setCopiedKey] = useState(null);
 
+  // Edit Doctor photo state
+  const [editPhotoFile, setEditPhotoFile] = useState(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState(null);
+  const [editPhotoError, setEditPhotoError] = useState(null);
+  const [isUploadingEditPhoto, setIsUploadingEditPhoto] = useState(false);
+  const [isDeletingEditPhoto, setIsDeletingEditPhoto] = useState(false);
+
   const breadcrumbs = [
     { label: 'Admin', to: '/admin' },
     { label: 'Doctor Directory & Credentialing' },
@@ -177,26 +184,133 @@ export function AdminDoctorsPage() {
     }
   };
 
+  const handleClearEditPhoto = () => {
+    setEditPhotoFile(null);
+    if (editPhotoPreview) {
+      URL.revokeObjectURL(editPhotoPreview);
+      setEditPhotoPreview(null);
+    }
+    setEditPhotoError(null);
+    const input = document.getElementById('edit-doctor-photo-upload');
+    if (input) input.value = '';
+  };
+
+  const handleCloseEditModal = () => {
+    handleClearEditPhoto();
+    setEditDoctor(null);
+  };
+
+  const handleEditPhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setEditPhotoError('Unsupported file type. Please upload a JPEG, PNG, or WebP image.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setEditPhotoError('Photo size exceeds limit. Please upload an image under 5MB.');
+      return;
+    }
+
+    setEditPhotoError(null);
+    setEditPhotoFile(file);
+    if (editPhotoPreview) {
+      URL.revokeObjectURL(editPhotoPreview);
+    }
+    setEditPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleUploadEditPhoto = async () => {
+    if (!editDoctor || !editPhotoFile) return;
+    setIsUploadingEditPhoto(true);
+    setEditPhotoError(null);
+    try {
+      const res = await doctorService.uploadDoctorPhoto(editDoctor.slug || editDoctor.id, editPhotoFile);
+      const newPhotoUrl = res.photo_url || res.doctor?.photo || res.doctor?.photo_url;
+      const updatedDoc = {
+        ...editDoctor,
+        photo: newPhotoUrl,
+        photo_url: newPhotoUrl,
+        image_url: newPhotoUrl,
+      };
+      setEditDoctor(updatedDoc);
+      setDoctorsList((prev) =>
+        prev.map((d) => (d.id === editDoctor.id ? { ...d, photo: newPhotoUrl, photo_url: newPhotoUrl, image_url: newPhotoUrl } : d))
+      );
+      handleClearEditPhoto();
+      setActionNotice(`Doctor photo for ${editDoctor.name} uploaded successfully.`);
+    } catch (err) {
+      setEditPhotoError(`Upload failed: ${err.message}`);
+    } finally {
+      setIsUploadingEditPhoto(false);
+    }
+  };
+
+  const handleDeleteEditPhoto = async () => {
+    if (!editDoctor) return;
+    setIsDeletingEditPhoto(true);
+    setEditPhotoError(null);
+    try {
+      await doctorService.deleteDoctorPhoto(editDoctor.slug || editDoctor.id);
+      const updatedDoc = {
+        ...editDoctor,
+        photo: null,
+        photo_url: null,
+        image_url: null,
+      };
+      setEditDoctor(updatedDoc);
+      setDoctorsList((prev) =>
+        prev.map((d) => (d.id === editDoctor.id ? { ...d, photo: null, photo_url: null, image_url: null } : d))
+      );
+      handleClearEditPhoto();
+      setActionNotice(`Doctor photo for ${editDoctor.name} removed successfully.`);
+    } catch (err) {
+      setEditPhotoError(`Failed to remove photo: ${err.message}`);
+    } finally {
+      setIsDeletingEditPhoto(false);
+    }
+  };
+
   // Handle Save Edit with PostgreSQL persistence
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!editDoctor) return;
     setActionError(null);
     setActionNotice(null);
+    setEditPhotoError(null);
     setIsSubmitting(true);
 
     try {
-      const updated = await doctorService.updateDoctor(editDoctor.slug || editDoctor.id, {
+      let updated = await doctorService.updateDoctor(editDoctor.slug || editDoctor.id, {
         name: editDoctor.name,
         specialty_name: editDoctor.specialty,
         consultation_location: editDoctor.consultation?.location,
         experience_years: editDoctor.experience,
       });
+
+      // If user selected an image file, upload it as part of save
+      if (editPhotoFile) {
+        try {
+          const photoRes = await doctorService.uploadDoctorPhoto(editDoctor.slug || editDoctor.id, editPhotoFile);
+          const newPhotoUrl = photoRes.photo_url || photoRes.doctor?.photo || photoRes.doctor?.photo_url;
+          if (newPhotoUrl) {
+            updated = { ...updated, photo: newPhotoUrl, photo_url: newPhotoUrl, image_url: newPhotoUrl };
+          }
+        } catch (photoErr) {
+          setActionNotice(`Doctor profile saved, but photo upload encountered an issue: ${photoErr.message}`);
+        }
+      }
+
       setDoctorsList((prev) =>
         prev.map((d) => (d.id === editDoctor.id ? updated : d))
       );
-      setActionNotice(`Doctor profile for ${updated.name} updated in database.`);
-      setEditDoctor(null);
+      if (!actionNotice) {
+        setActionNotice(`Doctor profile for ${updated.name} updated in database.`);
+      }
+      handleCloseEditModal();
     } catch (err) {
       setActionError(`Failed to save doctor changes: ${err.message}`);
     } finally {
@@ -555,7 +669,10 @@ export function AdminDoctorsPage() {
                             {doc.photo || doc.photo_url || doc.image_url ? (
                               <img 
                                 src={doc.photo || doc.photo_url || doc.image_url} 
-                                alt={doc.name}
+                                alt={`Portrait of ${doc.name}`}
+                                width="42"
+                                height="42"
+                                loading="lazy"
                                 style={{ 
                                   width: '42px', 
                                   height: '42px', 
@@ -781,12 +898,164 @@ export function AdminDoctorsPage() {
                     type="button"
                     className="neu-btn-icon"
                     style={{ width: '32px', height: '32px', padding: 0 }}
-                    onClick={() => setEditDoctor(null)}
+                    onClick={handleCloseEditModal}
                   >
                     <X size={16} />
                   </button>
                 </div>
                 <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                  {/* Doctor Profile Photo Management Section */}
+                  <div className="mb-4 p-3 neu-card-sm" style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}>
+                    <label className="neu-form-label mb-2 d-flex justify-content-between align-items-center">
+                      <span>Profile Photograph</span>
+                      <span className="small text-muted font-monospace">JPEG, PNG, WebP (Max 5MB)</span>
+                    </label>
+
+                    <div className="d-flex align-items-center gap-3 mb-3">
+                      {editPhotoPreview ? (
+                        <img
+                          src={editPhotoPreview}
+                          alt="New profile preview"
+                          width="56"
+                          height="56"
+                          style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '14px',
+                            objectFit: 'cover',
+                            boxShadow: 'var(--neu-shadow-sm)',
+                            border: '2px solid var(--hospital-medical-blue)',
+                            flexShrink: 0,
+                          }}
+                        />
+                      ) : (editDoctor.photo || editDoctor.photo_url || editDoctor.image_url) ? (
+                        <img
+                          src={editDoctor.photo || editDoctor.photo_url || editDoctor.image_url}
+                          alt={`Portrait of ${editDoctor.name}`}
+                          width="56"
+                          height="56"
+                          style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '14px',
+                            objectFit: 'cover',
+                            boxShadow: 'var(--neu-shadow-sm)',
+                            flexShrink: 0,
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="d-flex align-items-center justify-content-center"
+                          style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '14px',
+                            background: 'var(--hospital-bg)',
+                            boxShadow: 'var(--neu-inset)',
+                            color: 'var(--hospital-medical-blue)',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Stethoscope size={24} />
+                        </div>
+                      )}
+
+                      <div className="flex-grow-1 min-w-0">
+                        {editPhotoFile ? (
+                          <div>
+                            <div className="fw-semibold small text-truncate">{editPhotoFile.name}</div>
+                            <div className="small text-muted">{(editPhotoFile.size / 1024).toFixed(1)} KB (Ready to upload)</div>
+                          </div>
+                        ) : (editDoctor.photo || editDoctor.photo_url || editDoctor.image_url) ? (
+                          <div>
+                            <div className="fw-semibold small text-success d-flex align-items-center gap-1">
+                              <CheckCircle2 size={13} />
+                              <span>Active Photo Set</span>
+                            </div>
+                            <div className="small text-muted text-truncate">Saved to persistent storage</div>
+                          </div>
+                        ) : (
+                          <div className="small text-muted">No profile photograph uploaded yet.</div>
+                        )}
+                      </div>
+
+                      {/* Photo Actions */}
+                      <div className="d-flex gap-2 flex-shrink-0">
+                        {editPhotoFile ? (
+                          <>
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-primary neu-btn-sm"
+                              onClick={handleUploadEditPhoto}
+                              disabled={isUploadingEditPhoto}
+                              title="Upload selected photo immediately"
+                            >
+                              {isUploadingEditPhoto ? (
+                                <>
+                                  <RotateCw size={13} className="spin-anim me-1" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload size={13} className="me-1" />
+                                  Upload
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-outline neu-btn-sm text-danger"
+                              onClick={handleClearEditPhoto}
+                              disabled={isUploadingEditPhoto}
+                              title="Cancel photo selection"
+                            >
+                              <X size={13} />
+                            </button>
+                          </>
+                        ) : (editDoctor.photo || editDoctor.photo_url || editDoctor.image_url) ? (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-outline neu-btn-sm text-danger"
+                            onClick={handleDeleteEditPhoto}
+                            disabled={isDeletingEditPhoto}
+                            title="Remove profile photograph"
+                          >
+                            {isDeletingEditPhoto ? (
+                              <RotateCw size={13} className="spin-anim" />
+                            ) : (
+                              'Remove'
+                            )}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    {/* File Selection Input */}
+                    <div>
+                      <input
+                        id="edit-doctor-photo-upload"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleEditPhotoChange}
+                        disabled={isUploadingEditPhoto || isSubmitting}
+                        className="form-control form-control-sm"
+                        style={{
+                          borderRadius: '10px',
+                          border: `1px solid ${editPhotoError ? 'var(--neu-error)' : 'var(--hospital-border)'}`,
+                          background: 'var(--hospital-bg)',
+                          fontSize: '0.85rem',
+                        }}
+                      />
+                    </div>
+
+                    {editPhotoError && (
+                      <div className="text-danger small mt-2 d-flex align-items-center gap-1">
+                        <AlertCircle size={13} className="flex-shrink-0" />
+                        <span>{editPhotoError}</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="mb-3">
                     <label className="neu-form-label">Full Name</label>
                     <input
@@ -850,11 +1119,11 @@ export function AdminDoctorsPage() {
                   <button
                     type="button"
                     className="neu-btn neu-btn-outline neu-btn-sm"
-                    onClick={() => setEditDoctor(null)}
+                    onClick={handleCloseEditModal}
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSubmitting}>
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSubmitting || isUploadingEditPhoto}>
                     {isSubmitting ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
@@ -931,7 +1200,9 @@ export function AdminDoctorsPage() {
                         <div className="d-flex align-items-center gap-3">
                           <img
                             src={photoPreview}
-                            alt="Preview"
+                            alt="Doctor profile photo preview"
+                            width="64"
+                            height="64"
                             style={{
                               width: '64px',
                               height: '64px',
@@ -1361,7 +1632,9 @@ export function AdminDoctorsPage() {
                   {createdCredentials.doctor?.photo || createdCredentials.doctor?.photo_url ? (
                     <img
                       src={createdCredentials.doctor?.photo || createdCredentials.doctor?.photo_url}
-                      alt={createdCredentials.doctor?.name}
+                      alt={`Portrait of ${createdCredentials.doctor?.name || 'Doctor'}`}
+                      width="52"
+                      height="52"
                       style={{ width: '52px', height: '52px', borderRadius: '14px', objectFit: 'cover' }}
                     />
                   ) : (

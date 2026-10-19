@@ -771,6 +771,85 @@ class SecretsAndPrivacyTests(SecurityHardeningBaseTestCase):
         self.assertEqual(res.headers.get('X-Content-Type-Options'), 'nosniff')
         self.assertEqual(res.headers.get('Referrer-Policy'), 'same-origin')
 
+    def test_production_secret_key_validation_missing_raises_improperly_configured(self):
+        """Verify when DEBUG=False, missing DJANGO_SECRET_KEY raises ImproperlyConfigured (SEC-01)."""
+        import importlib
+        from django.core.exceptions import ImproperlyConfigured
+        with patch.dict(os.environ, {'DJANGO_DEBUG': 'False'}, clear=False):
+            if 'DJANGO_SECRET_KEY' in os.environ:
+                del os.environ['DJANGO_SECRET_KEY']
+            with self.assertRaises(ImproperlyConfigured):
+                import config.settings as s
+                importlib.reload(s)
+
+    def test_production_secret_key_validation_empty_raises_improperly_configured(self):
+        """Verify when DEBUG=False, empty DJANGO_SECRET_KEY raises ImproperlyConfigured (SEC-01)."""
+        import importlib
+        from django.core.exceptions import ImproperlyConfigured
+        with patch.dict(os.environ, {'DJANGO_DEBUG': 'False', 'DJANGO_SECRET_KEY': '   '}, clear=False):
+            with self.assertRaises(ImproperlyConfigured):
+                import config.settings as s
+                importlib.reload(s)
+
+    def test_production_secret_key_validation_placeholder_raises_improperly_configured(self):
+        """Verify when DEBUG=False, known development placeholders raise ImproperlyConfigured (SEC-01)."""
+        import importlib
+        from django.core.exceptions import ImproperlyConfigured
+        placeholders = [
+            'django-insecure-hospital-platform-phase0-foundation-key-must-change-in-prod',
+            'phase0-foundation-secret-key-replace-in-env',
+            'django-insecure-placeholder',
+        ]
+        for ph in placeholders:
+            with patch.dict(os.environ, {'DJANGO_DEBUG': 'False', 'DJANGO_SECRET_KEY': ph}, clear=False):
+                with self.assertRaises(ImproperlyConfigured):
+                    import config.settings as s
+                    importlib.reload(s)
+
+    def test_production_secret_key_validation_valid_succeeds(self):
+        """Verify when DEBUG=False, a strong custom secret key is accepted without error (SEC-01)."""
+        import importlib
+        with patch.dict(os.environ, {'DJANGO_DEBUG': 'False', 'DJANGO_SECRET_KEY': 'strong-cryptographic-prod-secret-9847129841'}, clear=False):
+            import config.settings as s
+            importlib.reload(s)
+            self.assertEqual(s.SECRET_KEY, 'strong-cryptographic-prod-secret-9847129841')
+            self.assertFalse(s.DEBUG)
+
+    def test_development_secret_key_fallback_works_when_debug_true(self):
+        """Verify when DEBUG=True, development fallback secret key is allowed without error (SEC-01)."""
+        import importlib
+        with patch.dict(os.environ, {'DJANGO_DEBUG': 'True'}, clear=False):
+            if 'DJANGO_SECRET_KEY' in os.environ:
+                del os.environ['DJANGO_SECRET_KEY']
+            import config.settings as s
+            importlib.reload(s)
+            self.assertEqual(s.SECRET_KEY, s.DEV_INSECURE_SECRET)
+            self.assertTrue(s.DEBUG)
+
+    def test_jwt_access_token_default_lifetime_is_fifteen_minutes(self):
+        """Verify SimpleJWT access token lifetime defaults to 15 minutes in production configuration (SEC-03)."""
+        import config.settings as s
+        self.assertEqual(s.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'], timedelta(minutes=15))
+        self.assertTrue(s.SIMPLE_JWT['ROTATE_REFRESH_TOKENS'])
+        self.assertTrue(s.SIMPLE_JWT['BLACKLIST_AFTER_ROTATION'])
+
+    def test_refresh_token_rotation_and_old_token_blacklisting(self):
+        """Verify refresh endpoint rotates refresh token and blacklists the previous one (SEC-03)."""
+        refresh = RefreshToken.for_user(self.patient_user_1)
+        old_refresh_str = str(refresh)
+
+        # Exchange old refresh token for new access and rotated refresh token
+        res = self.anon_client.post('/api/auth/refresh/', {'refresh': old_refresh_str})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('access', res.data)
+        self.assertIn('refresh', res.data)
+        new_refresh_str = res.data['refresh']
+        self.assertNotEqual(old_refresh_str, new_refresh_str)
+
+        # Attempting to re-use the old refresh token must fail (401 Blacklisted)
+        reuse_res = self.anon_client.post('/api/auth/refresh/', {'refresh': old_refresh_str})
+        self.assertEqual(reuse_res.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 if __name__ == '__main__':
     from django.test.runner import DiscoverRunner

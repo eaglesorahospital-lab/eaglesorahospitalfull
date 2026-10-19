@@ -5,6 +5,7 @@ import PageHeader from '../../components/common/PageHeader';
 import EmptyState from '../../components/common/EmptyState';
 import StatusBadge from '../../components/common/StatusBadge';
 import PatientNav from '../../components/patient/PatientNav';
+import SEO from '../../components/common/SEO';
 import usePatientSession from '../../hooks/usePatientSession';
 import {
   Calendar,
@@ -105,6 +106,11 @@ export function MyAppointmentsPage() {
 
   return (
     <div className="patient-dashboard-page py-4">
+      <SEO
+        title="My Consultations & Appointments | EgleSora Hospital"
+        description="Patient appointment management portal."
+        noIndex={true}
+      />
       <div className="patient-portal-container">
         {/* Page Header */}
         <PageHeader

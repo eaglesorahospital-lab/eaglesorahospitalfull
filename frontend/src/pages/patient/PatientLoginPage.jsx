@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import authService from '../../services/authService';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import ThemeToggle from '../../components/common/ThemeToggle';
+import SEO from '../../components/common/SEO';
 import { Activity, ShieldCheck, Mail, Lock, User, Phone, MapPin, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { sanitizeRedirectUrl } from '../../utils/urlSecurity';
 
 /**
  * Hospital Platform — Patient Portal Authentication
@@ -33,7 +35,7 @@ export function PatientLoginPage() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  const redirectPath = searchParams.get('redirect') || '/my-appointments';
+  const redirectPath = sanitizeRedirectUrl(searchParams.get('redirect'), '/my-appointments');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,19 +49,20 @@ export function PatientLoginPage() {
     setIsLoading(true);
 
     try {
-      const { user } = await authService.login(email, password);
+      // Clear any prior stale session before initiating login
+      authService.clearSession();
 
-      if (user.role !== 'PATIENT') {
-        if (user.role === 'DOCTOR_STAFF') {
-          navigate('/admin/schedules', { replace: true });
-        } else {
-          navigate('/admin', { replace: true });
-        }
+      const { user } = await authService.login(email, password, 'patient');
+
+      if (!user || user.role !== 'PATIENT') {
+        authService.clearSession();
+        setErrorMessage('Access denied: Patient portal is restricted to patient accounts. Medical staff and administrators must use the Staff Portal.');
         return;
       }
 
       navigate(redirectPath, { replace: true });
     } catch (err) {
+      authService.clearSession();
       setErrorMessage(err.message || 'Invalid email or password.');
     } finally {
       setIsLoading(false);
@@ -114,6 +117,11 @@ export function PatientLoginPage() {
 
   return (
     <div className="patient-login-page py-5 min-vh-100 d-flex flex-column justify-content-center">
+      <SEO
+        title="Patient Portal Login | EgleSora Hospital"
+        description="Securely access your patient appointment history, consultation slips, and medical profile at EgleSora Hospital."
+        canonicalUrl="/patient/login"
+      />
       <div className="container" style={{ maxWidth: '540px' }}>
         {/* Top actions: Brand + ThemeToggle */}
         <div className="d-flex justify-content-between align-items-center mb-4">

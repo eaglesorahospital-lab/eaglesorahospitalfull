@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Container from '../../components/common/Container';
 import DoctorCard from '../../components/doctors/DoctorCard';
+import SEO from '../../components/common/SEO';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
 import {
@@ -100,6 +101,11 @@ export function HomePage() {
 
   return (
     <div className="hospital-homepage">
+      <SEO
+        title="EgleSora Hospital | Quality Healthcare"
+        description="EgleSora Hospital provides patient-first clinical excellence, multi-specialty outpatient and inpatient care, and 24/7 emergency response."
+        canonicalUrl="/"
+      />
       {/* ======================================================================
           1. Hero Section: Soft Neumorphic Healthcare Layout
           ====================================================================== */}
@@ -220,12 +226,19 @@ export function HomePage() {
             <div className="col-12 col-lg-5">
               <div className="neu-raised neu-surface rounded-4 overflow-hidden p-2">
                 <div className="rounded-3 overflow-hidden position-relative">
-                  <img
-                    src="/hospital-facade.jpg"
-                    alt="Eagle Sora Multi-Specialty Hospital Modern Medical Campus"
-                    className="img-fluid w-100 object-fit-cover"
-                    style={{ maxHeight: '280px', objectFit: 'cover' }}
-                  />
+                  <picture>
+                    <source srcSet="/hospital-facade.webp" type="image/webp" />
+                    <img
+                      src="/hospital-facade.jpg"
+                      alt="EgleSora Hospital Modern Multi-Specialty Medical Campus"
+                      width="600"
+                      height="280"
+                      loading="eager"
+                      fetchpriority="high"
+                      className="img-fluid w-100 object-fit-cover"
+                      style={{ maxHeight: '280px', objectFit: 'cover' }}
+                    />
+                  </picture>
                   <div className="position-absolute top-0 end-0 m-3">
                     <span className="neu-badge neu-badge-success d-inline-flex align-items-center gap-1">
                       <span className="pulse-dot"></span>

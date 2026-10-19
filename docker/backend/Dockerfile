@@ -19,11 +19,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create dedicated non-root runtime user and group
+RUN groupadd -g 1000 appgroup && \
+    useradd -u 1000 -g appgroup -m -s /bin/bash appuser
+
 # Copy backend codebase
 COPY . /app/
 
-# Ensure static and media directories exist
-RUN mkdir -p /app/staticfiles /app/media
+# Ensure static and media directories exist with proper non-root ownership
+RUN mkdir -p /app/staticfiles /app/media && \
+    chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 8000
 

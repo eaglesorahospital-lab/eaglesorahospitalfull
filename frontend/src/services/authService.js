@@ -102,18 +102,28 @@ export const authService = {
   _refreshPromise: null,
 
   /**
-   * Authenticate staff user against Django backend
+   * Authenticate user against Django backend with optional portal enforcement
    */
-  async login(email, password) {
+  async login(email, password, portal = null) {
     let response;
+    const endpoint = portal === 'patient'
+      ? `${API_BASE_URL}/api/auth/patient-login/`
+      : `${API_BASE_URL}/api/auth/login/`;
+
+    const requestBody = {
+      email: email.trim().toLowerCase(),
+      password,
+      ...(portal ? { portal } : {}),
+    };
+
     try {
-      response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+      response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        body: JSON.stringify(requestBody),
       });
     } catch {
       throw new Error('Unable to connect to the authentication server. Please check your network.');
@@ -122,22 +132,47 @@ export const authService = {
     const data = await safeParseJsonResponse(response);
 
     if (!response.ok) {
+      this.clearSession();
       const errorMsg = formatAuthErrorMessage(response, data, 'Invalid email address or password.');
       throw new Error(errorMsg);
     }
 
-    // Role verification
+    // Role verification against signed JWT claims
     const { access, refresh, user } = data || {};
-    if (!user || !user.role) {
-      throw new Error('User profile or role not returned by authentication service.');
+    if (!access || !user) {
+      this.clearSession();
+      throw new Error('User profile or authentication tokens not returned by authentication service.');
     }
+
+    const payload = decodeJwtPayload(access);
+    const verifiedRole = payload?.role || user.role;
+
+    if (!verifiedRole) {
+      this.clearSession();
+      throw new Error('Authentication token is missing authoritative role claim.');
+    }
+
+    // Enforce strict portal-role boundaries
+    if (portal === 'patient' && verifiedRole !== 'PATIENT') {
+      this.clearSession();
+      throw new Error('Access denied: Patient portal is restricted to patient accounts.');
+    }
+
+    if (portal === 'staff' && verifiedRole === 'PATIENT') {
+      this.clearSession();
+      throw new Error('Access denied: Patient accounts cannot log in to the staff portal.');
+    }
+
+    // Bind trusted role to user profile
+    user.role = verifiedRole;
 
     // Wipe any previously cached patient records to guarantee total session isolation
     sessionStorage.removeItem('eglesora_patient_profile');
     sessionStorage.removeItem('eglesora_mock_appointments');
     sessionStorage.removeItem('eglesora_latest_appointment');
+    sessionStorage.removeItem('eglesora_admin_role');
 
-    // Store tokens in sessionStorage (short-lived session, not localStorage)
+    // Store tokens strictly in sessionStorage (short-lived session, not localStorage)
     sessionStorage.setItem(ACCESS_TOKEN_KEY, access);
     sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh);
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -147,6 +182,13 @@ export const authService = {
     }
 
     return { access, refresh, user };
+  },
+
+  /**
+   * Dedicated patient portal login method
+   */
+  async patientLogin(email, password) {
+    return this.login(email, password, 'patient');
   },
 
   /**
@@ -289,27 +331,63 @@ export const authService = {
     sessionStorage.removeItem(ACCESS_TOKEN_KEY);
     sessionStorage.removeItem(REFRESH_TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem('eglesora_admin_role');
     sessionStorage.removeItem('eglesora_patient_profile');
     sessionStorage.removeItem('eglesora_mock_appointments');
     sessionStorage.removeItem('eglesora_latest_appointment');
+
+    try {
+      localStorage.removeItem('eglesora_admin_role');
+      localStorage.removeItem('eglesora_staff_user');
+      localStorage.removeItem('eglesora_staff_access');
+      localStorage.removeItem('eglesora_role');
+    } catch {
+      // ignore
+    }
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('eglesora-session-expired'));
     }
   },
 
   /**
-   * Get current authenticated user details from session
+   * Get current authenticated user details from session.
+   * Authoritative role claim is ALWAYS extracted directly from the
+   * cryptographically signed JWT payload, overriding any client-side tampering.
    */
   getCurrentUser() {
+    const access = sessionStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!access) return null;
+
+    const payload = decodeJwtPayload(access);
+    if (!payload || !payload.role) {
+      return null;
+    }
+
+    let user = null;
     try {
       const userStr = sessionStorage.getItem(USER_KEY);
       if (userStr) {
-        return JSON.parse(userStr);
+        user = JSON.parse(userStr);
       }
-    } catch (e) {
-      // JSON parse error
+    } catch {
+      user = null;
     }
-    return null;
+
+    if (!user) {
+      user = {
+        id: payload.user_id,
+        email: payload.email,
+        role: payload.role,
+      };
+    } else {
+      // Authoritative role ALWAYS comes from cryptographically signed JWT payload,
+      // defeating any localStorage, sessionStorage, or client-side tampering.
+      user.role = payload.role;
+      if (payload.email) user.email = payload.email;
+    }
+
+    return user;
   },
 
   /**

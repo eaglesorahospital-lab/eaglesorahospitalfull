@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import authService from '../../services/authService';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import ThemeToggle from '../../components/common/ThemeToggle';
+import SEO from '../../components/common/SEO';
 import { Activity, ShieldCheck, Mail, Lock, AlertTriangle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { sanitizeRedirectUrl } from '../../utils/urlSecurity';
 
 /**
  * Hospital Platform — Staff & Doctor Portal Login
@@ -33,10 +35,13 @@ export function StaffLoginPage() {
     setIsLoading(true);
 
     try {
-      const { user } = await authService.login(email, password);
+      authService.clearSession();
 
-      if (user.role === 'PATIENT') {
-        navigate('/my-appointments', { replace: true });
+      const { user } = await authService.login(email, password, 'staff');
+
+      if (!user || user.role === 'PATIENT') {
+        authService.clearSession();
+        setErrorMessage('Access denied: Patient accounts cannot log in to the staff portal. Please use the Patient Portal.');
         return;
       }
 
@@ -46,16 +51,20 @@ export function StaffLoginPage() {
       }
 
       const searchParams = new URLSearchParams(location.search);
-      const redirectPath = searchParams.get('redirect');
+      const redirectPath = sanitizeRedirectUrl(searchParams.get('redirect'), null);
 
-      if (redirectPath && (redirectPath.startsWith('/admin') || redirectPath.startsWith('/doctor'))) {
-        navigate(redirectPath, { replace: true });
-      } else if (user.role === 'DOCTOR_STAFF') {
-        navigate('/doctor', { replace: true });
+      if (user.role === 'DOCTOR_STAFF') {
+        const dest = (redirectPath && redirectPath.startsWith('/doctor')) ? redirectPath : '/doctor';
+        navigate(dest, { replace: true });
+      } else if (user.role === 'SUPER_ADMIN' || user.role === 'HOSPITAL_ADMIN') {
+        const dest = (redirectPath && (redirectPath.startsWith('/admin') || redirectPath.startsWith('/doctor'))) ? redirectPath : '/admin';
+        navigate(dest, { replace: true });
       } else {
-        navigate('/admin', { replace: true });
+        authService.clearSession();
+        setErrorMessage('Unauthorized account role.');
       }
     } catch (err) {
+      authService.clearSession();
       setErrorMessage(err.message || t('staff.invalidCredentials'));
     } finally {
       setIsLoading(false);
@@ -67,6 +76,11 @@ export function StaffLoginPage() {
       className="d-flex align-items-center justify-content-center min-vh-100 py-5"
       style={{ backgroundColor: 'var(--neu-bg)' }}
     >
+      <SEO
+        title="Staff & Medical Personnel Login | EgleSora Hospital"
+        description="Authorized clinical staff, medical consultants, and hospital administrative gateway."
+        noIndex={true}
+      />
       <div className="container" style={{ maxWidth: '480px' }}>
         {/* Top actions: Brand + ThemeToggle */}
         <div className="d-flex justify-content-between align-items-center mb-4">

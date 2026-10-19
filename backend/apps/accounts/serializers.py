@@ -184,6 +184,7 @@ class LoginSerializer(serializers.Serializer):
     """
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, trim_whitespace=False)
+    portal = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate(self, attrs):
         email = attrs.get('email', '').strip().lower()
@@ -198,6 +199,8 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
 
 
 class RegisterPatientSerializer(serializers.Serializer):

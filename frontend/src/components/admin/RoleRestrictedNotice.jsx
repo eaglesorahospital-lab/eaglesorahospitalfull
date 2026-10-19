@@ -58,25 +58,20 @@ export function RoleRestrictedNotice({ currentRole, moduleName, onSwitchRole }) 
         <code>IsHospitalStaff</code>), and PostgreSQL database-level constraints.
       </div>
 
-      {onSwitchRole && (
-        <div className="d-flex flex-wrap gap-2 align-items-center pt-2">
-          <span className="small text-muted me-2">Switch demonstration role:</span>
-          <button
-            type="button"
-            className="neu-btn neu-btn-primary neu-btn-sm"
-            onClick={() => onSwitchRole('SUPER_ADMIN')}
-          >
-            Switch to Super Administrator
-          </button>
-          <button
-            type="button"
-            className="neu-btn neu-btn-outline neu-btn-sm"
-            onClick={() => onSwitchRole('HOSPITAL_ADMIN')}
-          >
-            Switch to Hospital Admin
-          </button>
-        </div>
-      )}
+      <div className="d-flex flex-wrap gap-2 align-items-center pt-2">
+        <a
+          href="/admin"
+          className="neu-btn neu-btn-primary neu-btn-sm text-decoration-none"
+        >
+          Return to Admin Overview
+        </a>
+        <a
+          href="/"
+          className="neu-btn neu-btn-outline neu-btn-sm text-decoration-none"
+        >
+          Public Portal
+        </a>
+      </div>
     </div>
   );
 }

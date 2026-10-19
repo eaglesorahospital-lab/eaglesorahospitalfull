@@ -1,6 +1,7 @@
 from django.urls import path
 from .views_auth import (
     LoginView,
+    PatientLoginView,
     RegisterView,
     CurrentUserView,
     LogoutView,
@@ -11,6 +12,7 @@ from .views_auth import (
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='auth_login'),
+    path('patient-login/', PatientLoginView.as_view(), name='auth_patient_login'),
     path('register/', RegisterView.as_view(), name='auth_register'),
     path('refresh/', TokenRefreshWithThrottleView.as_view(), name='auth_refresh'),
     path('me/', CurrentUserView.as_view(), name='auth_me'),

@@ -17,7 +17,11 @@ import {
   Phone, 
   Mail, 
   Award,
-  Stethoscope
+  Stethoscope,
+  History,
+  Bell,
+  User,
+  ShieldCheck
 } from 'lucide-react';
 import appointmentService from '../../services/appointmentService';
 import scheduleService from '../../services/scheduleService';
@@ -136,7 +140,9 @@ export function DoctorDashboardPage() {
             {doctorProfile?.photo ? (
               <img
                 src={doctorProfile.photo}
-                alt={doctorProfile.name}
+                alt={`Portrait of ${doctorProfile?.name || 'Doctor'}`}
+                width="64"
+                height="64"
                 className="rounded-circle neu-raised border border-2 border-white"
                 style={{ width: '64px', height: '64px', objectFit: 'cover' }}
               />
@@ -310,18 +316,6 @@ export function DoctorDashboardPage() {
                           <Eye size={12} className="me-1" />
                           Details
                         </button>
-                        {apt.status === 'CONFIRMED' && (
-                          <button
-                            type="button"
-                            className="neu-btn neu-btn-primary neu-btn-sm"
-                            style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
-                            onClick={() => handleUpdateStatus(apt, 'COMPLETED')}
-                            title="Mark consultation completed"
-                          >
-                            <Check size={12} className="me-1" />
-                            Complete
-                          </button>
-                        )}
                         {apt.status === 'REQUESTED' && (
                           <button
                             type="button"
@@ -332,6 +326,29 @@ export function DoctorDashboardPage() {
                           >
                             <Check size={12} className="me-1" />
                             Confirm
+                          </button>
+                        )}
+                        {apt.status === 'CONFIRMED' && (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-outline neu-btn-sm text-primary"
+                            onClick={() => handleUpdateStatus(apt, 'CHECKED_IN')}
+                            title="Mark patient checked in"
+                          >
+                            <Check size={12} className="me-1" />
+                            Check In
+                          </button>
+                        )}
+                        {apt.status === 'CHECKED_IN' && (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-primary neu-btn-sm"
+                            style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
+                            onClick={() => handleUpdateStatus(apt, 'COMPLETED')}
+                            title="Mark consultation completed"
+                          >
+                            <Check size={12} className="me-1" />
+                            Complete
                           </button>
                         )}
                       </div>
@@ -377,6 +394,76 @@ export function DoctorDashboardPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Doctor Workspace Quick Navigation Modules */}
+      <div className="row g-3 mb-4">
+        <div className="col-12 col-sm-6 col-lg-4">
+          <Link to="/doctor/appointments" className="neu-card p-3 rounded-4 d-flex align-items-center gap-3 text-decoration-none text-body neu-hover-raised transition-all h-100">
+            <div className="p-3 rounded-3 neu-inset text-primary">
+              <Clock size={20} />
+            </div>
+            <div>
+              <div className="fw-bold fs-6">My Appointments</div>
+              <div className="small text-muted" style={{ fontSize: '0.78rem' }}>Active queue & status transitions</div>
+            </div>
+          </Link>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-4">
+          <Link to="/doctor/history" className="neu-card p-3 rounded-4 d-flex align-items-center gap-3 text-decoration-none text-body neu-hover-raised transition-all h-100">
+            <div className="p-3 rounded-3 neu-inset" style={{ color: '#7C3AED' }}>
+              <History size={20} />
+            </div>
+            <div>
+              <div className="fw-bold fs-6">Consultation History</div>
+              <div className="small text-muted" style={{ fontSize: '0.78rem' }}>Completed encounters & notes</div>
+            </div>
+          </Link>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-4">
+          <Link to="/doctor/patients" className="neu-card p-3 rounded-4 d-flex align-items-center gap-3 text-decoration-none text-body neu-hover-raised transition-all h-100">
+            <div className="p-3 rounded-3 neu-inset text-success">
+              <Users size={20} />
+            </div>
+            <div>
+              <div className="fw-bold fs-6">Patient Details</div>
+              <div className="small text-muted" style={{ fontSize: '0.78rem' }}>Assigned patient medical records</div>
+            </div>
+          </Link>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-4">
+          <Link to="/doctor/schedule" className="neu-card p-3 rounded-4 d-flex align-items-center gap-3 text-decoration-none text-body neu-hover-raised transition-all h-100">
+            <div className="p-3 rounded-3 neu-inset" style={{ color: '#0284C7' }}>
+              <Calendar size={20} />
+            </div>
+            <div>
+              <div className="fw-bold fs-6">My Schedule</div>
+              <div className="small text-muted" style={{ fontSize: '0.78rem' }}>Weekly shifts & leave requests</div>
+            </div>
+          </Link>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-4">
+          <Link to="/doctor/notifications" className="neu-card p-3 rounded-4 d-flex align-items-center gap-3 text-decoration-none text-body neu-hover-raised transition-all h-100">
+            <div className="p-3 rounded-3 neu-inset text-warning">
+              <Bell size={20} />
+            </div>
+            <div>
+              <div className="fw-bold fs-6">Notifications</div>
+              <div className="small text-muted" style={{ fontSize: '0.78rem' }}>Clinical dispatch alerts & logs</div>
+            </div>
+          </Link>
+        </div>
+        <div className="col-12 col-sm-6 col-lg-4">
+          <Link to="/doctor/profile" className="neu-card p-3 rounded-4 d-flex align-items-center gap-3 text-decoration-none text-body neu-hover-raised transition-all h-100">
+            <div className="p-3 rounded-3 neu-inset text-secondary">
+              <User size={20} />
+            </div>
+            <div>
+              <div className="fw-bold fs-6">My Profile</div>
+              <div className="small text-muted" style={{ fontSize: '0.78rem' }}>Professional credentials & photo</div>
+            </div>
+          </Link>
+        </div>
       </div>
 
       {/* Appointment Details Modal */}

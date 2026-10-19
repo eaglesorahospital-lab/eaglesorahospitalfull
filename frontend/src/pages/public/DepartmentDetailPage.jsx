@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import EmptyState from '../../components/common/EmptyState';
+import SEO from '../../components/common/SEO';
 import DoctorCard from '../../components/doctors/DoctorCard';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
@@ -40,6 +41,11 @@ export function DepartmentDetailPage() {
   if (!department) {
     return (
       <Container className="py-5">
+        <SEO
+          title="Department Not Found | EgleSora Hospital"
+          description="The requested clinical department could not be located in the EgleSora Hospital directory."
+          noIndex={true}
+        />
         <EmptyState
           title="Clinical Department Not Found"
           message={`No clinical department with the identifier "${slug}" was located in the hospital registry.`}
@@ -89,6 +95,11 @@ export function DepartmentDetailPage() {
 
   return (
     <div className="department-detail-page py-4">
+      <SEO
+        title={`${department.name} | EgleSora Hospital`}
+        description={department.shortDescription || `${department.name} clinical services, specialist consultants, and modern diagnostic facilities at EgleSora Hospital.`}
+        canonicalUrl={`/departments/${department.slug}`}
+      />
       <Container>
         {/* 1. Page Header & Breadcrumb */}
         <PageHeader

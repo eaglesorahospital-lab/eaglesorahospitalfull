@@ -162,7 +162,9 @@ export function DoctorProfilePage() {
               {photoPreview ? (
                 <img
                   src={photoPreview}
-                  alt={doctorProfile?.name}
+                  alt={`Portrait of ${doctorProfile?.name || 'Doctor'}`}
+                  width="120"
+                  height="120"
                   className="rounded-circle neu-raised border border-3 border-white"
                   style={{ width: '120px', height: '120px', objectFit: 'cover' }}
                 />

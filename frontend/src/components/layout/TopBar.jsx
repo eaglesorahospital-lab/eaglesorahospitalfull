@@ -39,7 +39,12 @@ export function TopBar() {
             <span className="hospital-topbar-item d-none d-lg-inline-flex align-items-center gap-1 text-nowrap">
               <Headphones size={13} className="text-white-50 flex-shrink-0" />
               <span className="hospital-topbar-label">{t('nav.helpDesk')}:</span>
-              <span className="hospital-topbar-value">{HOSPITAL_METADATA.generalPhone}</span>
+              <a
+                href={`tel:${HOSPITAL_METADATA.generalPhone.replace(/[^0-9+]/g, '')}`}
+                className="hospital-topbar-value text-white text-decoration-none"
+              >
+                {HOSPITAL_METADATA.generalPhone}
+              </a>
             </span>
           </div>
 

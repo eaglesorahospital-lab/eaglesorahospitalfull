@@ -948,6 +948,70 @@ class AppointmentBookingComprehensiveTests(TransactionTestCase):
         apt.refresh_from_db()
         self.assertEqual(apt.status, Appointment.Status.REQUESTED)
 
+    # 37. NO_SHOW lifecycle transition and terminal immutability
+    def test_37_no_show_transition_and_terminal_immutability(self):
+        """
+        Verify that:
+        1. REQUESTED -> NO_SHOW is disallowed (HTTP 400).
+        2. CONFIRMED -> NO_SHOW is allowed (HTTP 200).
+        3. NO_SHOW is a terminal state that cannot transition to CONFIRMED, CHECKED_IN, or COMPLETED (HTTP 400).
+        """
+        target_date = self.future_date + timedelta(days=7)
+        apt, _ = AppointmentBookingService.book_appointment(
+            patient=self.patient_a,
+            doctor=self.doctor,
+            appointment_date=target_date,
+            start_time=time(11, 0),
+            end_time=time(11, 30),
+            status=Appointment.Status.REQUESTED,
+        )
+
+        # 1. Attempt direct REQUESTED -> NO_SHOW (Disallowed -> HTTP 400)
+        res_invalid_noshow = self.admin_client.patch(
+            f'/api/appointments/{apt.reference}/',
+            {"status": "NO_SHOW"},
+            format='json',
+        )
+        self.assertEqual(res_invalid_noshow.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Confirm the appointment first: REQUESTED -> CONFIRMED
+        res_confirm = self.admin_client.patch(
+            f'/api/appointments/{apt.reference}/',
+            {"status": "CONFIRMED"},
+            format='json',
+        )
+        self.assertEqual(res_confirm.status_code, status.HTTP_200_OK)
+
+        # 2. Transition CONFIRMED -> NO_SHOW (Allowed -> HTTP 200)
+        res_noshow = self.admin_client.patch(
+            f'/api/appointments/{apt.reference}/',
+            {"status": "NO_SHOW"},
+            format='json',
+        )
+        self.assertEqual(res_noshow.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_noshow.json()['status'], 'NO_SHOW')
+
+        # 3. Verify terminal immutability: NO_SHOW -> CONFIRMED (Disallowed -> HTTP 400)
+        res_reopen = self.admin_client.patch(
+            f'/api/appointments/{apt.reference}/',
+            {"status": "CONFIRMED"},
+            format='json',
+        )
+        self.assertEqual(res_reopen.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid appointment status transition", str(res_reopen.json()))
+
+        # NO_SHOW -> COMPLETED (Disallowed -> HTTP 400)
+        res_complete = self.admin_client.patch(
+            f'/api/appointments/{apt.reference}/',
+            {"status": "COMPLETED"},
+            format='json',
+        )
+        self.assertEqual(res_complete.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Database state verification
+        apt.refresh_from_db()
+        self.assertEqual(apt.status, Appointment.Status.NO_SHOW)
+
 
 if __name__ == '__main__':
     from django.test.runner import DiscoverRunner

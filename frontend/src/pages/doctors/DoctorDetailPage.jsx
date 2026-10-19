@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import EmptyState from '../../components/common/EmptyState';
+import SEO from '../../components/common/SEO';
 import doctorService from '../../services/doctorService';
 import scheduleService from '../../services/scheduleService';
 import { getDoctorByIdOrSlug } from '../../data/hospitalData';
@@ -100,6 +101,11 @@ export function DoctorDetailPage() {
 
     return (
       <Container className="py-4">
+        <SEO
+          title="Doctor Not Found | EgleSora Hospital"
+          description="The requested medical specialist profile could not be located in our directory."
+          noIndex={true}
+        />
         <PageHeader
           title="Doctor Not Found"
           description="The requested medical specialist profile could not be located in our directory."
@@ -159,6 +165,11 @@ export function DoctorDetailPage() {
 
   return (
     <div className="doctor-detail-page py-4">
+      <SEO
+        title={`${doctor.name} | ${doctor.specialty} | EgleSora Hospital`}
+        description={`Consultation schedule, qualifications, clinical expertise, and OPD suite for ${doctor.name} at EgleSora Hospital.`}
+        canonicalUrl={`/doctors/${doctorIdentifier}`}
+      />
       <Container>
         {/* 1. Page Header & Actions */}
         <PageHeader
@@ -201,7 +212,13 @@ export function DoctorDetailPage() {
               <div className="d-flex align-items-center gap-3 mb-3">
                 <div className="doctor-profile-avatar-lg neu-inset flex-shrink-0" aria-hidden="true">
                   {doctor.photo ? (
-                    <img src={doctor.photo} alt={doctor.name} />
+                    <img
+                      src={doctor.photo}
+                      alt={`Portrait of ${doctor.name}`}
+                      width="80"
+                      height="80"
+                      loading="lazy"
+                    />
                   ) : (
                     <span className="fw-bold text-primary">{doctor.initials || 'DR'}</span>
                   )}

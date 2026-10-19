@@ -1,0 +1,37 @@
+# ==============================================================================
+# Production Docker Compose Override (Phase 20B — Production Hardening)
+# ==============================================================================
+# Usage for production environments:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Hardening Guarantees:
+# 1. SEC-02: Removes public host port exposure for PostgreSQL (5432) and
+#    Redis (6379). Database and cache traffic remain strictly contained
+#    within the isolated internal Docker network (hospital_network).
+# 2. SEC-01: Enforces DJANGO_DEBUG=False across all backend and Celery services.
+# 3. Only the reverse proxy (Nginx) binds host ports (80 / 443).
+# ==============================================================================
+
+services:
+  # Eliminate host port publication for PostgreSQL in production
+  db:
+    ports: !reset []
+
+  # Eliminate host port publication for Redis in production
+  redis:
+    ports: !reset []
+
+  # Production environment enforcement for Backend API
+  backend:
+    environment:
+      DJANGO_DEBUG: "False"
+
+  # Production environment enforcement for Celery Worker
+  celery_worker:
+    environment:
+      DJANGO_DEBUG: "False"
+
+  # Production environment enforcement for Celery Beat Scheduler
+  celery_beat:
+    environment:
+      DJANGO_DEBUG: "False"

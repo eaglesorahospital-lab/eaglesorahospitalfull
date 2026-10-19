@@ -258,8 +258,9 @@ export const appointmentService = {
       'Authorization': `Bearer ${token}`,
     };
 
-    const payload = { status };
-    if (notes) payload.notes = notes;
+    const payload = {};
+    if (status) payload.status = status;
+    if (notes !== undefined && notes !== null) payload.notes = notes;
 
     const res = await fetch(`${API_BASE_URL}/api/appointments/${encodeURIComponent(reference)}/`, {
       method: 'PATCH',

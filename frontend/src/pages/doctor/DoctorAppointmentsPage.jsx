@@ -255,23 +255,33 @@ export function DoctorAppointmentsPage() {
                           </button>
                         )}
                         {apt.status === 'CONFIRMED' && (
-                          <button
-                            type="button"
-                            className="neu-btn neu-btn-outline neu-btn-sm text-primary"
-                            onClick={() => handleUpdateStatus(apt.reference, 'CHECKED_IN')}
-                            title="Mark checked in at desk"
-                          >
-                            <Check size={12} className="me-1" />
-                            Check In
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-outline neu-btn-sm text-primary"
+                              onClick={() => handleUpdateStatus(apt.reference, 'CHECKED_IN')}
+                              title="Mark checked in at desk"
+                            >
+                              <Check size={12} className="me-1" />
+                              Check In
+                            </button>
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-outline neu-btn-sm text-warning"
+                              onClick={() => handleUpdateStatus(apt.reference, 'NO_SHOW')}
+                              title="Mark patient as no-show"
+                            >
+                              No Show
+                            </button>
+                          </>
                         )}
-                        {(apt.status === 'CONFIRMED' || apt.status === 'CHECKED_IN') && (
+                        {apt.status === 'CHECKED_IN' && (
                           <button
                             type="button"
                             className="neu-btn neu-btn-primary neu-btn-sm"
                             style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
                             onClick={() => handleUpdateStatus(apt.reference, 'COMPLETED')}
-                            title="Mark completed"
+                            title="Complete consultation"
                           >
                             <Check size={12} className="me-1" />
                             Complete
@@ -376,16 +386,34 @@ export function DoctorAppointmentsPage() {
                   Close
                 </button>
                 <div className="d-flex gap-2">
-                  {selectedAppointment.status === 'CONFIRMED' && (
+                  {selectedAppointment.status === 'REQUESTED' && (
                     <button
                       type="button"
-                      className="neu-btn neu-btn-outline neu-btn-sm text-primary"
-                      onClick={() => handleUpdateStatus(selectedAppointment.reference, 'CHECKED_IN')}
+                      className="neu-btn neu-btn-primary neu-btn-sm"
+                      onClick={() => handleUpdateStatus(selectedAppointment.reference, 'CONFIRMED')}
                     >
-                      Mark Checked In
+                      Confirm
                     </button>
                   )}
-                  {selectedAppointment.status !== 'COMPLETED' && selectedAppointment.status !== 'CANCELLED' && (
+                  {selectedAppointment.status === 'CONFIRMED' && (
+                    <>
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm text-primary"
+                        onClick={() => handleUpdateStatus(selectedAppointment.reference, 'CHECKED_IN')}
+                      >
+                        Mark Checked In
+                      </button>
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm text-warning"
+                        onClick={() => handleUpdateStatus(selectedAppointment.reference, 'NO_SHOW')}
+                      >
+                        Mark No-Show
+                      </button>
+                    </>
+                  )}
+                  {selectedAppointment.status === 'CHECKED_IN' && (
                     <button
                       type="button"
                       className="neu-btn neu-btn-primary neu-btn-sm"
@@ -395,7 +423,7 @@ export function DoctorAppointmentsPage() {
                       Mark Completed
                     </button>
                   )}
-                  {selectedAppointment.status !== 'CANCELLED' && selectedAppointment.status !== 'COMPLETED' && (
+                  {selectedAppointment.status !== 'CANCELLED' && selectedAppointment.status !== 'COMPLETED' && selectedAppointment.status !== 'NO_SHOW' && (
                     <button
                       type="button"
                       className="neu-btn neu-btn-danger neu-btn-sm"

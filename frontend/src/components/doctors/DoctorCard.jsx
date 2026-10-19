@@ -32,7 +32,13 @@ export function DoctorCard({ doctor }) {
       <div className="doctor-card-header d-flex align-items-start gap-3 mb-3">
         <div className="doctor-avatar-box neu-inset flex-shrink-0" aria-hidden="true">
           {photoUrl ? (
-            <img src={photoUrl} alt={doctor.name} />
+            <img
+              src={photoUrl}
+              alt={`Portrait of ${doctor.name}`}
+              width="60"
+              height="60"
+              loading="lazy"
+            />
           ) : (
             <span className="fw-bold text-primary">{doctor.initials || 'DR'}</span>
           )}

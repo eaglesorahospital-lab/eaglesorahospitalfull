@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
+import SEO from '../../components/common/SEO';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import { DEMO_FACILITIES, HOSPITAL_VALUES } from '../../data/hospitalData';
 import { ShieldCheck, Heart, Award, Building2, PhoneCall, Calendar, ChevronRight } from 'lucide-react';
@@ -19,6 +20,11 @@ export function AboutPage() {
 
   return (
     <div className="py-4">
+      <SEO
+        title="About EgleSora Hospital | Clinical Heritage & Governance"
+        description="Learn about EgleSora Hospital's institutional history, multi-specialty medical governance, patient safety protocols, and healthcare facilities."
+        canonicalUrl="/about"
+      />
       <Container>
         <PageHeader
           title={`About ${HOSPITAL_METADATA.name}`}

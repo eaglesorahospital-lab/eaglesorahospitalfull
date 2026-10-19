@@ -1,0 +1,3 @@
+# Netlify Single Page Application (SPA) routing fallback
+# Redirects all frontend routes to index.html with a 200 status code
+/*    /index.html   200

@@ -12,7 +12,9 @@ import {
   X, 
   Stethoscope, 
   ShieldCheck, 
-  RotateCw 
+  RotateCw,
+  Bell,
+  History
 } from 'lucide-react';
 import authService from '../services/authService';
 import doctorService from '../services/doctorService';
@@ -28,6 +30,15 @@ export function DoctorLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const currentUser = authService.getCurrentUser();
+
+  // Route guard: prevent patients or unauthenticated users from entering Doctor Admin Panel
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/staff/login', { replace: true });
+    } else if (currentUser.role === 'PATIENT') {
+      navigate('/my-appointments', { replace: true });
+    }
+  }, [currentUser, navigate]);
 
   useEffect(() => {
     let isMounted = true;
@@ -57,10 +68,12 @@ export function DoctorLayout() {
   };
 
   const navItems = [
-    { label: 'Dashboard', to: '/doctor', icon: LayoutDashboard, end: true },
-    { label: 'My Schedule', to: '/doctor/schedule', icon: Calendar },
+    { label: 'Doctor Dashboard', to: '/doctor', icon: LayoutDashboard, end: true },
     { label: 'My Appointments', to: '/doctor/appointments', icon: Clock },
-    { label: 'My Patients', to: '/doctor/patients', icon: Users },
+    { label: 'Consultation History', to: '/doctor/history', icon: History },
+    { label: 'Patient Details', to: '/doctor/patients', icon: Users },
+    { label: 'My Schedule', to: '/doctor/schedule', icon: Calendar },
+    { label: 'Notifications', to: '/doctor/notifications', icon: Bell },
     { label: 'My Profile', to: '/doctor/profile', icon: User },
   ];
 
@@ -96,7 +109,7 @@ export function DoctorLayout() {
             <div>
               <span className="fw-bold fs-6 d-block lh-1 text-white">{HOSPITAL_METADATA.name}</span>
               <span className="badge mt-1" style={{ background: '#16845B', fontSize: '0.65rem', letterSpacing: '0.5px' }}>
-                CONSULTANT PORTAL
+                DOCTOR ADMIN PANEL
               </span>
             </div>
           </Link>
@@ -104,6 +117,14 @@ export function DoctorLayout() {
 
         {/* Right Header items */}
         <div className="d-flex align-items-center gap-3">
+          <Link
+            to="/doctor/notifications"
+            className="btn btn-link text-white p-1 text-decoration-none position-relative d-flex align-items-center"
+            title="Clinical Notifications"
+          >
+            <Bell size={18} />
+          </Link>
+
           <ThemeToggle compact />
 
           <div className="d-none d-sm-flex align-items-center gap-2 text-end">
@@ -118,7 +139,9 @@ export function DoctorLayout() {
             {doctorProfile?.photo ? (
               <img
                 src={doctorProfile.photo}
-                alt={doctorProfile.name}
+                alt={`Portrait of ${doctorProfile.name}`}
+                width="38"
+                height="38"
                 className="rounded-circle border border-2 border-white"
                 style={{ width: '38px', height: '38px', objectFit: 'cover' }}
               />

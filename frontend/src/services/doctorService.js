@@ -232,6 +232,37 @@ export const doctorService = {
 
     return this.updateDoctor(idOrSlug, { is_active: nextIsActive });
   },
+
+  /**
+   * Upload or replace doctor profile photo via POST /api/doctors/<idOrSlug>/upload-photo/
+   */
+  async uploadDoctorPhoto(idOrSlug, file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const data = await apiClient.post(`/api/doctors/${idOrSlug}/upload-photo/`, formData, {
+      requiresAuth: true,
+    });
+    return {
+      message: data.message,
+      photo_url: data.photo_url,
+      public_id: data.public_id,
+      doctor: normalizeDoctor(data.doctor),
+    };
+  },
+
+  /**
+   * Remove doctor profile photo via DELETE /api/doctors/<idOrSlug>/delete-photo/
+   */
+  async deleteDoctorPhoto(idOrSlug) {
+    const data = await apiClient.delete(`/api/doctors/${idOrSlug}/delete-photo/`, {
+      requiresAuth: true,
+    });
+    return {
+      message: data.message,
+      photo_url: null,
+      doctor: normalizeDoctor(data.doctor),
+    };
+  },
 };
 
 export default doctorService;

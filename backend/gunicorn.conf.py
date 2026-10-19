@@ -7,7 +7,9 @@ import multiprocessing
 import os
 
 # Server socket binding
-bind = os.environ.get("GUNICORN_BIND", "0.0.0.0:8000")
+# Honors explicit GUNICORN_BIND if configured, else binds to 0.0.0.0:<PORT> (Render sets PORT; defaults to 8000)
+_port = os.environ.get("PORT", "8000")
+bind = os.environ.get("GUNICORN_BIND", f"0.0.0.0:{_port}")
 backlog = 2048
 
 # Worker concurrency

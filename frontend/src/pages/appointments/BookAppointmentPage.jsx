@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
+import SEO from '../../components/common/SEO';
 import useAppointmentBooking from '../../hooks/useAppointmentBooking';
 import BookingStepIndicator from '../../components/appointments/BookingStepIndicator';
 import DoctorBookingSummary from '../../components/appointments/DoctorBookingSummary';
@@ -60,6 +61,11 @@ export function BookAppointmentPage() {
 
   return (
     <div className="book-appointment-page py-4">
+      <SEO
+        title="Book an Appointment | EgleSora Hospital"
+        description="Schedule an outpatient consultation with expert physicians and surgeons across our clinical departments at EgleSora Hospital."
+        canonicalUrl="/appointments/book"
+      />
       <Container>
         <PageHeader
           title="Schedule an Outpatient Consultation"

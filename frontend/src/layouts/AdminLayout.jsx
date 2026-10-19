@@ -26,12 +26,18 @@ export function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const staffUser = authService.getCurrentUser();
 
-  // Sync session hook with authenticated staff role if logged in via JWT
+  // Enforce administrative role verification: kick out patients and doctors immediately
   useEffect(() => {
-    if (staffUser?.role && staffUser.role !== currentRoleId) {
-      setRole(staffUser.role);
+    if (!staffUser || !['SUPER_ADMIN', 'HOSPITAL_ADMIN'].includes(staffUser.role)) {
+      if (staffUser?.role === 'PATIENT') {
+        navigate('/my-appointments', { replace: true });
+      } else if (staffUser?.role === 'DOCTOR_STAFF') {
+        navigate('/doctor', { replace: true });
+      } else {
+        navigate('/staff/login', { replace: true });
+      }
     }
-  }, [staffUser, currentRoleId, setRole]);
+  }, [staffUser, navigate]);
 
   const handleConfirmedLogout = async () => {
     setShowLogoutModal(false);

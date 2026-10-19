@@ -48,14 +48,15 @@ class IsPatient(permissions.BasePermission):
 
 
 class IsAdminOrHospitalAdmin(permissions.BasePermission):
-    """Allows access to Super Admins or Hospital Admins."""
+    """Allows access strictly to Super Admins or Hospital Admins."""
     def has_permission(self, request, view):
         if not (request.user and request.user.is_authenticated):
+            return False
+        if request.user.role in [User.Role.DOCTOR_STAFF, User.Role.PATIENT]:
             return False
         return bool(
             request.user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN]
             or request.user.is_superuser
-            or request.user.is_staff
         )
 
 

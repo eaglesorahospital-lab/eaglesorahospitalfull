@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import FormField from '../../components/common/FormField';
+import SEO from '../../components/common/SEO';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import { PhoneCall, Mail, Clock, MapPin, AlertTriangle, Send, CheckCircle2, Building2 } from 'lucide-react';
 
@@ -74,6 +75,11 @@ export function ContactPage() {
 
   return (
     <div className="py-4">
+      <SEO
+        title="Contact EgleSora Hospital | Emergency & Help Desk"
+        description="Contact EgleSora Hospital reception, emergency trauma services, visiting hours, and campus directions."
+        canonicalUrl="/contact"
+      />
       <Container>
         <PageHeader
           title="Contact & Location"
@@ -96,10 +102,14 @@ export function ContactPage() {
               </p>
               <div className="p-3 neu-inset rounded-3 mb-3">
                 <div className="small text-muted mb-1">Direct Emergency Line:</div>
-                <div className="h5 fw-bold text-danger mb-0 d-flex align-items-center gap-2">
+                <a
+                  href={`tel:${HOSPITAL_METADATA.emergencyPhone.replace(/[^+\d]/g, '')}`}
+                  className="h5 fw-bold text-danger mb-0 d-flex align-items-center gap-2 text-decoration-none"
+                  aria-label={`Call Emergency Desk at ${HOSPITAL_METADATA.emergencyPhone}`}
+                >
                   <PhoneCall size={18} />
                   <span>{HOSPITAL_METADATA.emergencyPhone}</span>
-                </div>
+                </a>
               </div>
               <div className="small text-muted">
                 Trauma bay entrance located on the East Gate of the medical campus.

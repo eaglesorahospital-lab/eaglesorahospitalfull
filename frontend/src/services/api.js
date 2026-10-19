@@ -11,9 +11,14 @@
 
 import authService from './authService';
 
+const configuredTimeout = Number(import.meta.env.VITE_API_TIMEOUT_MS);
+const DEFAULT_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTimeout > 0
+  ? configuredTimeout
+  : 60000;
+
 export const API_CONFIG = {
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
-  timeout: 15000,
+  timeout: DEFAULT_TIMEOUT_MS,
   endpoints: {
     health: '/api/health/',
     auth: {
@@ -52,6 +57,8 @@ export async function request(endpoint, options = {}) {
     params = null,
     requiresAuth = false,
     skipAuth = false,
+    timeout = API_CONFIG.timeout,
+    signal: userSignal = null,
   } = options;
 
   let urlString = endpoint.startsWith('http')
@@ -100,7 +107,35 @@ export async function request(endpoint, options = {}) {
     }
   }
 
-  let response = await fetch(urlString, fetchOptions);
+  // Setup abort controller with timeout handling
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort(new Error('TIMEOUT'));
+  }, timeout);
+
+  if (userSignal) {
+    userSignal.addEventListener('abort', () => controller.abort(userSignal.reason));
+  }
+  fetchOptions.signal = controller.signal;
+
+  let response;
+  try {
+    response = await fetch(urlString, fetchOptions);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (controller.signal.aborted) {
+      throw new ApiError(
+        'The server is taking longer than expected to respond (it may be waking up from sleep). Please wait a moment and try again.',
+        408
+      );
+    }
+    throw new ApiError(
+      'Unable to connect to the healthcare platform servers. Please verify your internet connection or try again shortly.',
+      0
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   // If 401 Unauthorized occurs and we didn't explicitly skip auth, attempt a refresh retry once
   if (response.status === 401 && !skipAuth) {
@@ -108,10 +143,23 @@ export async function request(endpoint, options = {}) {
       const newToken = await authService.refreshToken();
       if (newToken) {
         reqHeaders['Authorization'] = `Bearer ${newToken}`;
-        response = await fetch(urlString, fetchOptions);
+        const retryController = new AbortController();
+        const retryTimeoutId = setTimeout(() => retryController.abort(new Error('TIMEOUT')), timeout);
+        fetchOptions.signal = retryController.signal;
+        try {
+          response = await fetch(urlString, fetchOptions);
+        } catch (retryErr) {
+          clearTimeout(retryTimeoutId);
+          if (retryController.signal.aborted) {
+            throw new ApiError('Request timed out during authenticated retry. Please try again.', 408);
+          }
+          throw retryErr;
+        } finally {
+          clearTimeout(retryTimeoutId);
+        }
       }
     } catch (refreshErr) {
-      // Refresh failed, session was cleared in authService
+      if (refreshErr instanceof ApiError) throw refreshErr;
       throw new ApiError('Session expired. Please sign in again.', 401, null);
     }
   }

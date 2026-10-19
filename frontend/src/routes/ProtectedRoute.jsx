@@ -7,13 +7,15 @@ import authService from '../services/authService';
  * Enforces role-based authentication against staff and administration views.
  * Unauthenticated users are redirected to /staff/login.
  */
-export function ProtectedRoute({ allowedRoles = ['SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR_STAFF'] }) {
+export function ProtectedRoute({ allowedRoles = ['SUPER_ADMIN', 'HOSPITAL_ADMIN'] }) {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(() => authService.isAuthenticated());
+  const [currentUser, setCurrentUser] = useState(() => authService.getCurrentUser());
 
   useEffect(() => {
     const handleAuthChange = () => {
       setIsAuthenticated(authService.isAuthenticated());
+      setCurrentUser(authService.getCurrentUser());
     };
     window.addEventListener('eglesora-session-expired', handleAuthChange);
     window.addEventListener('eglesora-session-updated', handleAuthChange);
@@ -23,10 +25,11 @@ export function ProtectedRoute({ allowedRoles = ['SUPER_ADMIN', 'HOSPITAL_ADMIN'
     };
   }, []);
 
-  const currentUser = authService.getCurrentUser();
+  const isPatientTarget = allowedRoles.length === 1 && allowedRoles[0] === 'PATIENT';
+  const loginTarget = isPatientTarget ? '/patient/login' : '/staff/login';
 
-  if (!isAuthenticated) {
-    return <Navigate to={`/staff/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+  if (!isAuthenticated || !currentUser) {
+    return <Navigate to={`${loginTarget}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   if (
@@ -38,27 +41,36 @@ export function ProtectedRoute({ allowedRoles = ['SUPER_ADMIN', 'HOSPITAL_ADMIN'
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(currentUser?.role)) {
+    const userPortal =
+      currentUser?.role === 'PATIENT'
+        ? '/my-appointments'
+        : currentUser?.role === 'DOCTOR_STAFF'
+        ? '/doctor'
+        : ['SUPER_ADMIN', 'HOSPITAL_ADMIN'].includes(currentUser?.role)
+        ? '/admin'
+        : '/';
+
     return (
       <div className="container py-5 text-center" style={{ maxWidth: '600px' }}>
-        <div className="card shadow-sm border-danger p-4">
+        <div className="card shadow-sm border-danger p-4 rounded-4" style={{ backgroundColor: 'var(--neu-bg, #fff)' }}>
           <h2 className="h4 fw-bold text-danger mb-2">403 — Unauthorized Role Access</h2>
           <p className="text-muted small mb-4">
-            Your authenticated staff role (<strong>{currentUser?.role || 'Unknown'}</strong>) does not have
+            Your authenticated account role (<strong>{currentUser?.role || 'Unknown'}</strong>) does not have
             permission to access this departmental workspace.
           </p>
           <div className="d-flex justify-content-center gap-2">
             <button
               type="button"
-              className="btn btn-outline-secondary btn-sm"
+              className="btn btn-outline-danger btn-sm"
               onClick={async () => {
                 await authService.logout();
-                window.location.href = '/staff/login';
+                window.location.href = loginTarget;
               }}
             >
               Sign Out & Switch Account
             </button>
-            <a href="/" className="btn btn-primary btn-sm">
-              Return to Public Portal
+            <a href={userPortal} className="btn btn-primary btn-sm">
+              Return to Your Portal
             </a>
           </div>
         </div>

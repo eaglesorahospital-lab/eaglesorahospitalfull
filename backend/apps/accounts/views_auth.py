@@ -11,6 +11,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from config.throttling import LoginRateThrottle, RegisterRateThrottle, TokenRefreshRateThrottle
+from .models import User
 from .serializers import (
     LoginSerializer,
     RegisterPatientSerializer,
@@ -21,10 +22,12 @@ from .serializers import (
 )
 
 
-class LoginView(APIView):
+class PatientLoginView(APIView):
     """
-    POST /api/auth/login/
-    Authenticates user and returns JWT access and refresh token pair.
+    POST /api/auth/patient-login/
+    Dedicated patient authentication endpoint.
+    Strictly validates that the authenticating account possesses the PATIENT role.
+    Rejects privileged accounts (SUPER_ADMIN, HOSPITAL_ADMIN, DOCTOR_STAFF) with HTTP 403 Forbidden.
     Throttled by client IP to defend against brute-force attacks.
     """
     permission_classes = [permissions.AllowAny]
@@ -34,6 +37,65 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+
+        # Enforce that only accounts with role == PATIENT can authenticate via this endpoint
+        if user.role != User.Role.PATIENT:
+            return Response(
+                {"detail": "Access denied: Patient portal is restricted to patient accounts."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        refresh = RefreshToken.for_user(user)
+        refresh['role'] = user.role
+        refresh['email'] = user.email
+
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "name": user.get_full_name() or user.email,
+                "role": user.role,
+                "must_change_password": getattr(user, 'must_change_password', False),
+                "mrn": getattr(getattr(user, 'patient_profile', None), 'mrn', None),
+            }
+        }, status=status.HTTP_200_OK)
+
+
+class LoginView(APIView):
+    """
+    POST /api/auth/login/
+    Authenticates user and returns JWT access and refresh token pair.
+    Optionally validates portal role constraints when 'portal' parameter is provided.
+    Throttled by client IP to defend against brute-force attacks.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [LoginRateThrottle]
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+
+        portal = request.data.get('portal', '').strip().lower()
+        if portal == 'patient':
+            if user.role != User.Role.PATIENT:
+                return Response(
+                    {"detail": "Access denied: Patient portal is restricted to patient accounts."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        elif portal in ['staff', 'admin']:
+            if user.role == User.Role.PATIENT:
+                return Response(
+                    {"detail": "Access denied: Patient accounts cannot log in to the staff portal."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            if portal == 'admin' and user.role not in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN]:
+                return Response(
+                    {"detail": "Access denied: Admin dashboard is restricted to administrative personnel."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
         refresh = RefreshToken.for_user(user)
         # Add custom role claim to token payload
@@ -53,8 +115,10 @@ class LoginView(APIView):
                 "must_change_password": getattr(user, 'must_change_password', False),
                 "doctor_slug": doc.slug if doc else None,
                 "doctor_id": doc.id if doc else None,
+                "mrn": getattr(getattr(user, 'patient_profile', None), 'mrn', None),
             }
         }, status=status.HTTP_200_OK)
+
 
 
 class ChangePasswordView(APIView):

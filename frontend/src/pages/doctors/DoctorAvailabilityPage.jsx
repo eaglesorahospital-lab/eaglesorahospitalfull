@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import EmptyState from '../../components/common/EmptyState';
+import SEO from '../../components/common/SEO';
 import doctorService from '../../services/doctorService';
 import scheduleService from '../../services/scheduleService';
 import {
@@ -221,6 +222,11 @@ export function DoctorAvailabilityPage() {
 
     return (
       <Container className="py-4">
+        <SEO
+          title="Doctor Schedule Not Found | EgleSora Hospital"
+          description="The requested medical specialist schedule could not be located in our directory."
+          noIndex={true}
+        />
         <PageHeader
           title="Doctor Not Found"
           description="The requested medical specialist schedule could not be located."
@@ -271,6 +277,11 @@ export function DoctorAvailabilityPage() {
 
   return (
     <div className="doctor-availability-page py-4">
+      <SEO
+        title={`Outpatient Schedule: ${doctor.name} | EgleSora Hospital`}
+        description={`Weekly OPD consultation slots, timings, and availability for ${doctor.name} (${doctor.specialty || 'Specialist'}) at EgleSora Hospital.`}
+        canonicalUrl={`/doctors/${doctorIdentifier}/availability`}
+      />
       <Container>
         {/* 1. Page Header */}
         <PageHeader

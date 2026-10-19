@@ -1698,3 +1698,360 @@ select.form-select option {
     border-radius: var(--radius-md);
   }
 }
+
+/* ------------------------------------------------------------------------------
+   16. Sticky Mobile Call to Action (< 768px)
+   ------------------------------------------------------------------------------ */
+@media (max-width: 767.98px) {
+  .has-sticky-cta {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.sticky-mobile-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1040;
+  background-color: var(--hospital-surface);
+  border-top: 1px solid var(--hospital-border);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+  padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.sticky-mobile-cta-container {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.sticky-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  min-height: 44px; /* Accessible touch target */
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.sticky-cta-call {
+  background-color: var(--hospital-surface-subtle);
+  color: var(--hospital-text);
+  border: 1px solid var(--hospital-border);
+  box-shadow: var(--neu-raised-sm);
+  flex: 0 0 auto;
+}
+
+.sticky-cta-call:hover,
+.sticky-cta-call:focus {
+  background-color: var(--hospital-surface);
+  color: var(--hospital-medical-blue);
+  box-shadow: var(--neu-inset-sm);
+}
+
+.sticky-cta-book {
+  background: linear-gradient(135deg, var(--hospital-primary-navy), var(--hospital-medical-blue));
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(27, 85, 155, 0.35);
+  flex: 1 1 auto;
+}
+
+.sticky-cta-book:hover,
+.sticky-cta-book:focus {
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(27, 85, 155, 0.5);
+  transform: translateY(-1px);
+}
+
+/* ------------------------------------------------------------------------------
+   17. Cookie Consent Banner & Preferences Modal
+   ------------------------------------------------------------------------------ */
+.cookie-consent-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1060;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.cookie-consent-banner {
+  pointer-events: auto;
+  max-width: 980px;
+  margin: 0 auto;
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+  padding: 1.25rem 1.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.cookie-consent-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.cookie-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--hospital-medical-blue);
+  background: var(--hospital-surface-subtle);
+  border: 1px solid var(--hospital-border);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-pill);
+  margin-bottom: 0.35rem;
+}
+
+.cookie-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--hospital-heading);
+  margin: 0 0 0.35rem 0;
+}
+
+.cookie-text {
+  font-size: 0.865rem;
+  color: var(--hospital-text-muted);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 560px;
+}
+
+.cookie-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.cookie-btn-primary,
+.cookie-btn-secondary,
+.cookie-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1rem;
+  min-height: 40px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.cookie-btn-primary {
+  background-color: var(--hospital-medical-blue);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(40, 120, 200, 0.3);
+}
+.cookie-btn-primary:hover {
+  background-color: var(--hospital-primary-navy);
+  color: #FFFFFF;
+}
+
+.cookie-btn-secondary {
+  background-color: var(--hospital-surface-subtle);
+  color: var(--hospital-text);
+  border-color: var(--hospital-border);
+  box-shadow: var(--neu-raised-sm);
+}
+.cookie-btn-secondary:hover {
+  background-color: var(--hospital-surface);
+  color: var(--hospital-medical-blue);
+}
+
+.cookie-btn-outline {
+  background-color: transparent;
+  color: var(--hospital-text-muted);
+  border-color: var(--hospital-border);
+}
+.cookie-btn-outline:hover {
+  color: var(--hospital-text);
+  border-color: var(--hospital-text-muted);
+}
+
+/* Modal styles for Preferences */
+.cookie-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(10, 25, 45, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1070;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.cookie-modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.cookie-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--hospital-border);
+}
+
+.cookie-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cookie-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--hospital-border);
+  background-color: var(--hospital-surface-subtle);
+}
+
+.cookie-category-card {
+  padding: 1rem;
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md);
+  background-color: var(--hospital-surface);
+  box-shadow: var(--neu-inset-sm);
+}
+
+.cookie-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.cookie-category-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--hospital-heading);
+}
+
+.cookie-category-desc {
+  font-size: 0.825rem;
+  color: var(--hospital-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.cookie-toggle {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.cookie-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.cookie-toggle-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: var(--hospital-border);
+  border-radius: 24px;
+  transition: all var(--transition-fast);
+}
+
+.cookie-toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.cookie-toggle input:checked + .cookie-toggle-slider {
+  background-color: var(--hospital-medical-blue);
+}
+
+.cookie-toggle input:checked + .cookie-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.cookie-toggle input:disabled + .cookie-toggle-slider {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------------------
+   18. Mobile Viewport Refinements (320px, 360px, 375px, 390px, 414px)
+   ------------------------------------------------------------------------------ */
+@media (max-width: 420px) {
+  /* Prevent word overflow on narrow screens */
+  h1, .h1 { font-size: 1.65rem !important; }
+  h2, .h2 { font-size: 1.35rem !important; }
+  h3, .h3 { font-size: 1.15rem !important; }
+
+  .hero-section {
+    padding: var(--space-6) 0 var(--space-8) !important;
+  }
+
+  .cookie-consent-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cookie-actions {
+    flex-direction: column;
+  }
+
+  .cookie-actions button {
+    width: 100%;
+  }
+
+  /* Make tables horizontally scrollable without breaking container */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+}

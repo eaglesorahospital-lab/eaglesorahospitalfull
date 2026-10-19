@@ -46,11 +46,27 @@ export function Footer() {
               </div>
               <div className="d-flex align-items-center gap-2">
                 <PhoneCall size={15} className="text-primary flex-shrink-0" />
-                <span>Help Desk: <strong className="text-body">{HOSPITAL_METADATA.generalPhone}</strong></span>
+                <span>
+                  Help Desk:{' '}
+                  <a
+                    href={`tel:${HOSPITAL_METADATA.generalPhone.replace(/[^0-9+]/g, '')}`}
+                    className="text-decoration-none text-body fw-bold hover-text-primary"
+                  >
+                    {HOSPITAL_METADATA.generalPhone}
+                  </a>
+                </span>
               </div>
               <div className="d-flex align-items-center gap-2">
                 <Mail size={15} className="text-primary flex-shrink-0" />
-                <span>Desk: <a href={`mailto:${HOSPITAL_METADATA.email}`} className="text-decoration-none text-muted">{HOSPITAL_METADATA.email}</a></span>
+                <span>
+                  Desk:{' '}
+                  <a
+                    href={`mailto:${HOSPITAL_METADATA.email}`}
+                    className="text-decoration-none text-muted hover-text-primary"
+                  >
+                    {HOSPITAL_METADATA.email}
+                  </a>
+                </span>
               </div>
             </div>
           </div>
@@ -127,9 +143,22 @@ export function Footer() {
             &copy; {currentYear} {HOSPITAL_METADATA.legalName}. {t('footer.rightsReserved')}
           </div>
           <div className="d-flex align-items-center gap-3">
-            <span className="text-muted">{t('footer.privacy')}</span>
+            <Link to="/privacy" className="text-decoration-none text-muted hover-text-primary">
+              {t('footer.privacy') || 'Privacy Policy'}
+            </Link>
             <span>&bull;</span>
-            <span className="text-muted">{t('footer.terms')}</span>
+            <Link to="/terms" className="text-decoration-none text-muted hover-text-primary">
+              {t('footer.terms') || 'Terms & Conditions'}
+            </Link>
+            <span>&bull;</span>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('openCookiePreferences'))}
+              className="btn btn-link btn-sm p-0 text-decoration-none text-muted hover-text-primary small"
+              style={{ fontSize: 'inherit' }}
+            >
+              Cookie Settings
+            </button>
           </div>
         </div>
       </div>

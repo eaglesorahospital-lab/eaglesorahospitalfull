@@ -16,6 +16,8 @@ import ContactPage from '../pages/public/ContactPage';
 import DepartmentsPage from '../pages/public/DepartmentsPage';
 import DepartmentDetailPage from '../pages/public/DepartmentDetailPage';
 import NotFoundPage from '../pages/public/NotFoundPage';
+import PrivacyPolicyPage from '../pages/public/PrivacyPolicyPage';
+import TermsConditionsPage from '../pages/public/TermsConditionsPage';
 
 // Doctor Pages
 import DoctorsPage from '../pages/doctors/DoctorsPage';
@@ -54,6 +56,8 @@ import DoctorSchedulePage from '../pages/doctor/DoctorSchedulePage';
 import DoctorAppointmentsPage from '../pages/doctor/DoctorAppointmentsPage';
 import DoctorPatientsPage from '../pages/doctor/DoctorPatientsPage';
 import DoctorProfilePage from '../pages/doctor/DoctorProfilePage';
+import DoctorHistoryPage from '../pages/doctor/DoctorHistoryPage';
+import DoctorNotificationsPage from '../pages/doctor/DoctorNotificationsPage';
 
 /**
  * Hospital Platform — Application Route Tree
@@ -76,12 +80,19 @@ export function AppRoutes() {
         <Route path="/doctors/:slug/availability" element={<DoctorAvailabilityPage />} />
         <Route path="/appointments/book" element={<BookAppointmentPage />} />
         <Route path="/appointments/result" element={<AppointmentResultPage />} />
-        <Route path="/my-appointments" element={<MyAppointmentsPage />} />
-        <Route path="/my-appointments/:reference" element={<AppointmentDetailPage />} />
-        <Route path="/profile" element={<PatientProfilePage />} />
+
+        {/* Role-Protected Patient Outpatient Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['PATIENT']} />}>
+          <Route path="/my-appointments" element={<MyAppointmentsPage />} />
+          <Route path="/my-appointments/:reference" element={<AppointmentDetailPage />} />
+          <Route path="/profile" element={<PatientProfilePage />} />
+        </Route>
+
         <Route path="/patient/login" element={<PatientLoginPage />} />
         <Route path="/login" element={<PatientLoginPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsConditionsPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
@@ -94,15 +105,17 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute allowedRoles={['DOCTOR_STAFF', 'SUPER_ADMIN', 'HOSPITAL_ADMIN']} />}>
         <Route path="/doctor" element={<DoctorLayout />}>
           <Route index element={<DoctorDashboardPage />} />
-          <Route path="schedule" element={<DoctorSchedulePage />} />
           <Route path="appointments" element={<DoctorAppointmentsPage />} />
+          <Route path="history" element={<DoctorHistoryPage />} />
           <Route path="patients" element={<DoctorPatientsPage />} />
+          <Route path="schedule" element={<DoctorSchedulePage />} />
+          <Route path="notifications" element={<DoctorNotificationsPage />} />
           <Route path="profile" element={<DoctorProfilePage />} />
         </Route>
       </Route>
 
-      {/* Role-Protected Hospital Staff & Administration Workspace */}
-      <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'HOSPITAL_ADMIN', 'DOCTOR_STAFF']} />}>
+      {/* Role-Protected Hospital Staff & Administration Workspace (Admin Only) */}
+      <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'HOSPITAL_ADMIN']} />}>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="doctors" element={<AdminDoctorsPage />} />

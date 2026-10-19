@@ -3,6 +3,7 @@ import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import EmptyState from '../../components/common/EmptyState';
+import SEO from '../../components/common/SEO';
 import appointmentService from '../../services/appointmentService';
 import {
   CheckCircle2,
@@ -175,6 +176,11 @@ export function AppointmentResultPage() {
   if (!appointment) {
     return (
       <Container className="py-4">
+        <SEO
+          title="Appointment Confirmation | EgleSora Hospital"
+          description="View your digital outpatient consultation slip at EgleSora Hospital."
+          noIndex={true}
+        />
         <PageHeader
           title="Appointment Confirmation"
           description="View your digital outpatient consultation slip."
@@ -217,6 +223,11 @@ export function AppointmentResultPage() {
 
   return (
     <div className="appointment-result-page py-4">
+      <SEO
+        title={`${pageTitle} | EgleSora Hospital`}
+        description={pageDescription}
+        noIndex={true}
+      />
       <Container>
         <PageHeader
           title={pageTitle}
