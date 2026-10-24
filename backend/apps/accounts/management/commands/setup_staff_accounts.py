@@ -65,6 +65,21 @@ class Command(BaseCommand):
             action='store_true',
             help='Reset password for existing staff accounts if password is provided via environment or interactive prompt.',
         )
+        parser.add_argument(
+            '--admin-only',
+            action='store_true',
+            help='Only provision the Hospital Administrator account; skip doctor provisioning.',
+        )
+        parser.add_argument(
+            '--skip-doctor',
+            action='store_true',
+            help='Skip initial doctor staff provisioning.',
+        )
+        parser.add_argument(
+            '--require-doctor',
+            action='store_true',
+            help='Strictly require doctor provisioning (fails if INITIAL_DOCTOR_PASSWORD is not provided).',
+        )
 
     def handle(self, *args, **options):
         admin_email = options['admin_email'].strip().lower()
@@ -77,6 +92,15 @@ class Command(BaseCommand):
 
         is_interactive = options['interactive']
         reset_passwords = options['reset_passwords'] or bool(os.environ.get('RESET_STAFF_PASSWORDS'))
+        skip_doctor = (
+            options.get('skip_doctor')
+            or options.get('admin_only')
+            or os.environ.get('SKIP_DOCTOR_PROVISIONING', '').lower() in ('true', '1', 'yes')
+        )
+        require_doctor = (
+            options.get('require_doctor')
+            or os.environ.get('REQUIRE_DOCTOR_PROVISIONING', '').lower() in ('true', '1', 'yes')
+        )
 
         self.stdout.write(self.style.NOTICE("=== Eagle Sora Hospital: Staff Account Provisioning ==="))
 
@@ -109,6 +133,10 @@ class Command(BaseCommand):
                         )
                     )
                 else:
+                    if not admin_user.is_staff or admin_user.role != User.Role.HOSPITAL_ADMIN:
+                        admin_user.is_staff = True
+                        admin_user.role = User.Role.HOSPITAL_ADMIN
+                        admin_user.save(update_fields=['is_staff', 'role'])
                     self.stdout.write(
                         self.style.WARNING(
                             f"[EXISTS] Administrator account '{admin_email}' already exists (Role: {admin_user.role}). "
@@ -157,70 +185,88 @@ class Command(BaseCommand):
             )
 
             # 2. Provision Doctor / Medical Staff Account
-            doctor_user = User.objects.filter(email=doctor_email).first()
-            doctor_password = os.environ.get('INITIAL_DOCTOR_PASSWORD') or os.environ.get('DOCTOR_PASSWORD')
-            if doctor_user:
-                if reset_passwords and doctor_password:
-                    if len(doctor_password) < 8:
-                        raise CommandError("Doctor password must be at least 8 characters.")
-                    doctor_user.set_password(doctor_password)
-                    doctor_user.role = User.Role.DOCTOR_STAFF
-                    doctor_user.is_staff = True
-                    doctor_user.is_active = True
-                    doctor_user.save()
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f"[RESET] Reset password and verified role for existing doctor '{doctor_email}' (Role: {doctor_user.role})."
-                        )
-                    )
-                else:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"[EXISTS] Doctor account '{doctor_email}' already exists (Role: {doctor_user.role}). "
-                            "Preserving existing credentials and permissions (use --reset-passwords to update)."
-                        )
-                    )
-            else:
-                if is_interactive and not doctor_password:
-                    doctor_password = getpass.getpass(f"Enter secure password for Doctor Staff ({doctor_email}): ")
-                    doctor_password_confirm = getpass.getpass("Confirm password: ")
-                    if doctor_password != doctor_password_confirm:
-                        raise CommandError("Doctor passwords do not match.")
-
-                if not doctor_password or len(doctor_password) < 8:
-                    raise CommandError(
-                        "Doctor password must be at least 8 characters. "
-                        "Set INITIAL_DOCTOR_PASSWORD environment variable or use --interactive."
-                    )
-
-                doctor_user = User.objects.create_user(
-                    email=doctor_email,
-                    password=doctor_password,
-                    first_name=doctor_first,
-                    last_name=doctor_last,
-                    role=User.Role.DOCTOR_STAFF,
-                    is_staff=True,
-                    is_active=True,
-                )
+            if skip_doctor:
                 self.stdout.write(
-                    self.style.SUCCESS(
-                        f"[CREATED] Doctor staff account created: {doctor_email} (Role: {doctor_user.role})"
+                    self.style.NOTICE(
+                        "[SKIPPED] Doctor account provisioning skipped (explicitly disabled via flag or environment)."
                     )
                 )
-
-                # Try linking with existing Doctor profile if available
-                try:
-                    from apps.doctors.models import Doctor
-                    doc_profile = Doctor.objects.filter(name__icontains=doctor_last).first()
-                    if doc_profile and not doc_profile.user:
-                        doc_profile.user = doctor_user
-                        doc_profile.save(update_fields=['user'])
+            else:
+                doctor_user = User.objects.filter(email=doctor_email).first()
+                doctor_password = os.environ.get('INITIAL_DOCTOR_PASSWORD') or os.environ.get('DOCTOR_PASSWORD')
+                if doctor_user:
+                    if reset_passwords and doctor_password:
+                        if len(doctor_password) < 8:
+                            raise CommandError("Doctor password must be at least 8 characters.")
+                        doctor_user.set_password(doctor_password)
+                        doctor_user.role = User.Role.DOCTOR_STAFF
+                        doctor_user.is_staff = True
+                        doctor_user.is_active = True
+                        doctor_user.save()
                         self.stdout.write(
                             self.style.SUCCESS(
-                                f"[LINKED] Linked user {doctor_email} to clinical doctor profile: {doc_profile.name}"
+                                f"[RESET] Reset password and verified role for existing doctor '{doctor_email}' (Role: {doctor_user.role})."
                             )
                         )
-                except Exception as exc:
-                    self.stdout.write(self.style.NOTICE(f"[NOTICE] Doctor profile auto-link skipped: {exc}"))
+                    else:
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"[EXISTS] Doctor account '{doctor_email}' already exists (Role: {doctor_user.role}). "
+                                "Preserving existing credentials and permissions (use --reset-passwords to update)."
+                            )
+                        )
+                else:
+                    if is_interactive and not doctor_password:
+                        doctor_password = getpass.getpass(f"Enter secure password for Doctor Staff ({doctor_email}): ")
+                        doctor_password_confirm = getpass.getpass("Confirm password: ")
+                        if doctor_password != doctor_password_confirm:
+                            raise CommandError("Doctor passwords do not match.")
+
+                    if not doctor_password:
+                        if require_doctor:
+                            raise CommandError(
+                                "Doctor password must be at least 8 characters. "
+                                "Set INITIAL_DOCTOR_PASSWORD environment variable or use --interactive."
+                            )
+                        else:
+                            self.stdout.write(
+                                self.style.NOTICE(
+                                    f"[SKIPPED] Initial doctor staff account '{doctor_email}' not provisioned: "
+                                    "no INITIAL_DOCTOR_PASSWORD supplied. "
+                                    "(Hospital administrators can onboard doctors via the Doctor Invitation Portal)."
+                                )
+                            )
+                    elif len(doctor_password) < 8:
+                        raise CommandError("Doctor password must be at least 8 characters.")
+                    else:
+                        doctor_user = User.objects.create_user(
+                            email=doctor_email,
+                            password=doctor_password,
+                            first_name=doctor_first,
+                            last_name=doctor_last,
+                            role=User.Role.DOCTOR_STAFF,
+                            is_staff=True,
+                            is_active=True,
+                        )
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f"[CREATED] Doctor staff account created: {doctor_email} (Role: {doctor_user.role})"
+                            )
+                        )
+
+                        # Try linking with existing Doctor profile if available
+                        try:
+                            from apps.doctors.models import Doctor
+                            doc_profile = Doctor.objects.filter(name__icontains=doctor_last).first()
+                            if doc_profile and not doc_profile.user:
+                                doc_profile.user = doctor_user
+                                doc_profile.save(update_fields=['user'])
+                                self.stdout.write(
+                                    self.style.SUCCESS(
+                                        f"[LINKED] Linked user {doctor_email} to clinical doctor profile: {doc_profile.name}"
+                                    )
+                                )
+                        except Exception as exc:
+                            self.stdout.write(self.style.NOTICE(f"[NOTICE] Doctor profile auto-link skipped: {exc}"))
 
         self.stdout.write(self.style.SUCCESS("Staff accounts provisioning procedure completed safely."))
