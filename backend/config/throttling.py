@@ -81,3 +81,17 @@ class MediaUploadRateThrottle(SimpleRateThrottle):
             'scope': self.scope,
             'ident': ident
         }
+
+
+class DoctorInvitationRateThrottle(SimpleRateThrottle):
+    """
+    Throttles doctor invitation issuance, validation, and acceptance requests
+    to defend against automated token enumeration and email flooding.
+    """
+    scope = 'doctor_invitation'
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {
+            'scope': self.scope,
+            'ident': self.get_ident(request)
+        }

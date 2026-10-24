@@ -37,8 +37,10 @@ import PatientLoginPage from '../pages/patient/PatientLoginPage';
 // Staff & Administration Authentication
 import StaffLoginPage from '../pages/staff/StaffLoginPage';
 import StaffSetPasswordPage from '../pages/staff/StaffSetPasswordPage';
+import AcceptInvitationPage from '../pages/doctor/AcceptInvitationPage';
 
 // Admin Pages
+
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminDoctorsPage from '../pages/admin/AdminDoctorsPage';
 import AdminDepartmentsPage from '../pages/admin/AdminDepartmentsPage';
@@ -100,6 +102,9 @@ export function AppRoutes() {
       <Route path="/staff/login" element={<StaffLoginPage />} />
       <Route path="/staff/set-password" element={<StaffSetPasswordPage />} />
       <Route path="/doctor/set-password" element={<StaffSetPasswordPage />} />
+      <Route path="/doctor/accept-invitation" element={<AcceptInvitationPage />} />
+      <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
+
 
       {/* Role-Protected Dedicated Doctor Portal */}
       <Route element={<ProtectedRoute allowedRoles={['DOCTOR_STAFF', 'SUPER_ADMIN', 'HOSPITAL_ADMIN']} />}>

@@ -37,8 +37,8 @@ export function normalizeDoctor(doc) {
     ...doc,
     id: doc.id,
     slug: doc.slug,
-    name: doc.name,
-    initials: doc.initials || doc.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
+    name: doc.name || '',
+    initials: doc.initials || (doc.name ? doc.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() : 'DR'),
     specialty: doc.specialty_name || doc.specialty?.name || doc.specialty || 'General Medicine',
     specialty_name: doc.specialty_name || doc.specialty?.name || doc.specialty || 'General Medicine',
     specialtyId: doc.specialty?.id || doc.specialty,
@@ -70,8 +70,14 @@ export function normalizeDoctor(doc) {
     photo: resolvedPhoto,
     photo_url: resolvedPhoto,
     image_url: resolvedPhoto,
+    invitation_status: doc.invitation_status || 'NONE',
+    account_lifecycle_status: doc.account_lifecycle_status || (isActive ? 'ACTIVE' : 'INACTIVE'),
+    latest_invitation_sent_at: doc.latest_invitation_sent_at || null,
+    latest_invitation_expires_at: doc.latest_invitation_expires_at || null,
+    user_is_active: doc.user_is_active !== undefined ? Boolean(doc.user_is_active) : isActive,
   };
 }
+
 
 export const doctorService = {
   /**
@@ -153,9 +159,11 @@ export const doctorService = {
     }
 
     const data = await apiClient.post('/api/doctors/', body, { requiresAuth: true });
+    const docData = data.doctor || data;
     return {
-      doctor: normalizeDoctor(data),
+      doctor: normalizeDoctor(docData),
       credentials: data.credentials || null,
+      invitation: data.invitation || null,
     };
   },
 
@@ -263,7 +271,68 @@ export const doctorService = {
       doctor: normalizeDoctor(data.doctor),
     };
   },
+
+  /**
+   * Send onboarding invitation to doctor via POST /api/doctors/<idOrSlug>/invite/
+   */
+  async inviteDoctor(idOrSlug) {
+    const data = await apiClient.post(`/api/doctors/${idOrSlug}/invite/`, {}, { requiresAuth: true });
+    return data;
+  },
+
+  /**
+   * Resend onboarding invitation to doctor via POST /api/doctors/<idOrSlug>/resend-invitation/
+   */
+  async resendDoctorInvitation(idOrSlug) {
+    const data = await apiClient.post(`/api/doctors/${idOrSlug}/resend-invitation/`, {}, { requiresAuth: true });
+    return data;
+  },
+
+  /**
+   * Revoke active invitation for doctor via POST /api/doctors/<idOrSlug>/revoke-invitation/
+   */
+  async revokeDoctorInvitation(idOrSlug) {
+    const data = await apiClient.post(`/api/doctors/${idOrSlug}/revoke-invitation/`, {}, { requiresAuth: true });
+    return data;
+  },
+
+  /**
+   * Get invitation history for doctor via GET /api/doctors/<idOrSlug>/invitations/
+   */
+  async getDoctorInvitations(idOrSlug) {
+    const data = await apiClient.get(`/api/doctors/${idOrSlug}/invitations/`, { requiresAuth: true });
+    return data;
+  },
+
+  /**
+   * Validate raw invitation token via POST /api/auth/validate-invitation/
+   */
+  async validateInvitationToken(token) {
+    const data = await apiClient.post('/api/auth/validate-invitation/', { token });
+    return data;
+  },
+
+  /**
+   * Accept invitation and set initial password via POST /api/auth/accept-invitation/
+   */
+  async acceptInvitation({ token, password, passwordConfirm }) {
+    const data = await apiClient.post('/api/auth/accept-invitation/', {
+      token,
+      password,
+      password_confirm: passwordConfirm,
+    });
+    if (data.access && data.refresh) {
+      sessionStorage.setItem('eglesora_staff_access', data.access);
+      sessionStorage.setItem('eglesora_staff_refresh', data.refresh);
+      if (data.user) {
+        sessionStorage.setItem('eglesora_staff_user', JSON.stringify(data.user));
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('eglesora-session-updated', { detail: { user: data.user } }));
+      }
+    }
+    return data;
+  },
 };
 
 export default doctorService;
-

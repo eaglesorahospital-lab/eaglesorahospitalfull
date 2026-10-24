@@ -1,6 +1,6 @@
 import re
 from rest_framework import serializers
-from .models import Specialty, Doctor
+from .models import Specialty, Doctor, DoctorInvitation
 from apps.departments.models import Department
 from apps.accounts.models import User
 
@@ -51,6 +51,11 @@ class DoctorListSerializer(serializers.ModelSerializer):
     photo_url = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     image_public_id = serializers.CharField(read_only=True)
+    invitation_status = serializers.CharField(read_only=True)
+    account_lifecycle_status = serializers.CharField(read_only=True)
+    user_is_active = serializers.BooleanField(source='user.is_active', read_only=True)
+    latest_invitation_sent_at = serializers.SerializerMethodField()
+    latest_invitation_expires_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Doctor
@@ -75,8 +80,26 @@ class DoctorListSerializer(serializers.ModelSerializer):
             'image_url',
             'image_public_id',
             'is_active',
+            'user_is_active',
+            'invitation_status',
+            'account_lifecycle_status',
+            'latest_invitation_sent_at',
+            'latest_invitation_expires_at',
         ]
-        read_only_fields = ['id', 'slug', 'image_public_id', 'photo_url', 'image_url', 'email', 'phone']
+        read_only_fields = [
+            'id',
+            'slug',
+            'image_public_id',
+            'photo_url',
+            'image_url',
+            'email',
+            'phone',
+            'user_is_active',
+            'invitation_status',
+            'account_lifecycle_status',
+            'latest_invitation_sent_at',
+            'latest_invitation_expires_at',
+        ]
 
     def get_photo_url(self, obj):
         if not obj.image:
@@ -92,6 +115,14 @@ class DoctorListSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         return self.get_photo_url(obj)
 
+    def get_latest_invitation_sent_at(self, obj):
+        inv = getattr(obj, 'latest_invitation', None)
+        return inv.created_at.isoformat() if inv else None
+
+    def get_latest_invitation_expires_at(self, obj):
+        inv = getattr(obj, 'latest_invitation', None)
+        return inv.expires_at.isoformat() if inv else None
+
 
 class DoctorDetailSerializer(serializers.ModelSerializer):
     """
@@ -105,6 +136,11 @@ class DoctorDetailSerializer(serializers.ModelSerializer):
     photo_url = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
     image_public_id = serializers.CharField(read_only=True)
+    invitation_status = serializers.CharField(read_only=True)
+    account_lifecycle_status = serializers.CharField(read_only=True)
+    user_is_active = serializers.BooleanField(source='user.is_active', read_only=True)
+    latest_invitation_sent_at = serializers.SerializerMethodField()
+    latest_invitation_expires_at = serializers.SerializerMethodField()
 
     class Meta:
         model = Doctor
@@ -132,6 +168,11 @@ class DoctorDetailSerializer(serializers.ModelSerializer):
             'image_url',
             'image_public_id',
             'is_active',
+            'user_is_active',
+            'invitation_status',
+            'account_lifecycle_status',
+            'latest_invitation_sent_at',
+            'latest_invitation_expires_at',
             'created_at',
             'updated_at',
         ]
@@ -144,6 +185,11 @@ class DoctorDetailSerializer(serializers.ModelSerializer):
             'image_public_id',
             'photo_url',
             'image_url',
+            'user_is_active',
+            'invitation_status',
+            'account_lifecycle_status',
+            'latest_invitation_sent_at',
+            'latest_invitation_expires_at',
             'created_at',
             'updated_at',
         ]
@@ -161,6 +207,15 @@ class DoctorDetailSerializer(serializers.ModelSerializer):
 
     def get_image_url(self, obj):
         return self.get_photo_url(obj)
+
+    def get_latest_invitation_sent_at(self, obj):
+        inv = getattr(obj, 'latest_invitation', None)
+        return inv.created_at.isoformat() if inv else None
+
+    def get_latest_invitation_expires_at(self, obj):
+        inv = getattr(obj, 'latest_invitation', None)
+        return inv.expires_at.isoformat() if inv else None
+
 
 
 class DoctorCreateSerializer(serializers.ModelSerializer):
@@ -235,3 +290,46 @@ class DoctorCreateSerializer(serializers.ModelSerializer):
         if not attrs.get('specialty') and not attrs.get('specialty_name'):
             raise serializers.ValidationError({"specialty": "Specialty or specialty name is required."})
         return attrs
+
+
+class DoctorInvitationSerializer(serializers.ModelSerializer):
+    """
+    Sanitized doctor onboarding invitation serializer for hospital administrators.
+    Excludes cryptographic token hash to avoid internal metadata leakage.
+    """
+    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
+    doctor_name = serializers.CharField(source='doctor.name', read_only=True)
+    doctor_slug = serializers.CharField(source='doctor.slug', read_only=True)
+    is_expired = serializers.BooleanField(read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = DoctorInvitation
+        fields = [
+            'id',
+            'doctor',
+            'doctor_name',
+            'doctor_slug',
+            'email',
+            'status',
+            'is_expired',
+            'is_active',
+            'expires_at',
+            'accepted_at',
+            'revoked_at',
+            'created_by',
+            'created_by_name',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = fields
+
+
+class ValidateInvitationTokenSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True, trim_whitespace=True)
+
+
+class AcceptDoctorInvitationSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True, trim_whitespace=True)
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True, required=True, min_length=8)

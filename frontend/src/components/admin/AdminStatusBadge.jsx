@@ -51,8 +51,25 @@ export function AdminStatusBadge({ status, className = '' }) {
       label = 'Rescheduled';
       break;
     case 'INACTIVE':
+    case 'DEACTIVATED':
       neuClass = 'neu-badge-secondary';
-      label = 'Inactive';
+      label = raw === 'DEACTIVATED' ? 'Deactivated' : 'Inactive';
+      break;
+    case 'ACCEPTED':
+      neuClass = 'neu-badge-success';
+      label = 'Accepted';
+      break;
+    case 'EXPIRED':
+      neuClass = 'neu-badge-secondary';
+      label = 'Expired';
+      break;
+    case 'REVOKED':
+      neuClass = 'neu-badge-danger';
+      label = 'Revoked';
+      break;
+    case 'INVITATION_PENDING':
+      neuClass = 'neu-badge-warning';
+      label = 'Invite Pending';
       break;
     case 'WARNING':
       neuClass = 'neu-badge-warning';
@@ -62,6 +79,7 @@ export function AdminStatusBadge({ status, className = '' }) {
       neuClass = 'neu-badge-info';
       label = status;
   }
+
 
   return (
     <span className={`neu-badge ${neuClass} ${className}`.trim()}>

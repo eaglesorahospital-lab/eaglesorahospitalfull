@@ -1338,6 +1338,22 @@ select.form-select option {
   transition: all var(--transition-normal);
 }
 
+.admin-sidebar-header {
+  border-bottom: 1px solid var(--hospital-border);
+}
+
+.admin-sidebar-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hospital-text-muted);
+}
+
+.admin-sidebar-role-text {
+  color: var(--hospital-medical-blue);
+}
+
 .admin-sidebar-nav {
   display: flex;
   flex-direction: column;
@@ -1359,23 +1375,189 @@ select.form-select option {
   border: 1px solid transparent;
 }
 
-.admin-sidebar-link:hover {
+.admin-sidebar-link .admin-sidebar-icon {
+  color: var(--hospital-text-muted);
+  transition: color var(--transition-fast);
+}
+
+.admin-sidebar-link .admin-sidebar-label {
+  color: inherit;
+  transition: color var(--transition-fast);
+}
+
+.admin-sidebar-link:hover:not(.active) {
   background-color: var(--hospital-surface-subtle);
   color: var(--hospital-medical-blue);
   box-shadow: var(--neu-raised-sm);
   border-color: var(--hospital-border);
 }
 
+.admin-sidebar-link:hover:not(.active) .admin-sidebar-icon {
+  color: var(--hospital-medical-blue);
+}
+
 .admin-sidebar-link.active {
   background-color: var(--hospital-surface-subtle);
-  color: var(--hospital-primary-navy);
+  color: var(--hospital-medical-blue);
   box-shadow: var(--neu-inset-sm);
-  border-color: rgba(40, 120, 200, 0.3);
+  border-color: rgba(40, 120, 200, 0.35);
   font-weight: 700;
 }
 
-[data-theme="dark"] .admin-sidebar-link.active {
-  color: var(--hospital-accent-cyan);
+.admin-sidebar-link.active .admin-sidebar-icon {
+  color: var(--hospital-medical-blue);
+}
+
+.admin-sidebar-link.restricted:not(.active) {
+  opacity: 0.8;
+}
+
+.admin-sidebar-link:focus-visible {
+  outline: 2px solid var(--hospital-medical-blue);
+  outline-offset: 2px;
+}
+
+.admin-sidebar-footer {
+  border-top: 1px solid var(--hospital-border);
+}
+
+.admin-sidebar-footer-title {
+  color: var(--hospital-text);
+}
+
+.admin-sidebar-footer-desc {
+  color: var(--hospital-text-muted);
+}
+
+/* ------------------------------------------------------------------------------
+   Admin Sidebar Dark Mode Visibility & Contrast
+   ------------------------------------------------------------------------------ */
+[data-theme="dark"] .admin-sidebar,
+.theme-dark .admin-sidebar {
+  background-color: #15273D !important;
+  border-right-color: #233B57 !important;
+  box-shadow: 4px 0 16px rgba(6, 12, 20, 0.45);
+}
+
+[data-theme="dark"] .admin-sidebar .admin-sidebar-header,
+.theme-dark .admin-sidebar .admin-sidebar-header {
+  border-bottom-color: #233B57 !important;
+}
+
+[data-theme="dark"] .admin-sidebar .btn-close,
+.theme-dark .admin-sidebar .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme="dark"] .admin-sidebar .admin-sidebar-heading,
+.theme-dark .admin-sidebar .admin-sidebar-heading {
+  color: #A9BBD0 !important;
+}
+
+[data-theme="dark"] .admin-sidebar .admin-sidebar-role-text,
+.theme-dark .admin-sidebar .admin-sidebar-role-text {
+  color: #5AA1ED !important;
+}
+
+/* Inactive navigation links in dark mode */
+[data-theme="dark"] .admin-sidebar-link:not(.active),
+.theme-dark .admin-sidebar-link:not(.active) {
+  background-color: transparent !important;
+  color: #D1D5DB !important;
+  border-color: transparent !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link:not(.active) .admin-sidebar-label,
+.theme-dark .admin-sidebar-link:not(.active) .admin-sidebar-label {
+  color: #D1D5DB !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link:not(.active) .admin-sidebar-icon,
+.theme-dark .admin-sidebar-link:not(.active) .admin-sidebar-icon {
+  color: #A9BBD0 !important;
+}
+
+/* Hover state in dark mode */
+[data-theme="dark"] .admin-sidebar-link:hover:not(.active),
+.theme-dark .admin-sidebar-link:hover:not(.active) {
+  background-color: #1B324F !important;
+  color: #FFFFFF !important;
+  border-color: rgba(90, 161, 237, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(6, 12, 20, 0.5) !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link:hover:not(.active) .admin-sidebar-label,
+.theme-dark .admin-sidebar-link:hover:not(.active) .admin-sidebar-label {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link:hover:not(.active) .admin-sidebar-icon,
+.theme-dark .admin-sidebar-link:hover:not(.active) .admin-sidebar-icon {
+  color: #5AA1ED !important;
+}
+
+/* Active navigation item in dark mode */
+[data-theme="dark"] .admin-sidebar-link.active,
+.theme-dark .admin-sidebar-link.active {
+  background-color: rgba(30, 64, 110, 0.55) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(90, 161, 237, 0.5) !important;
+  box-shadow: inset 2px 2px 6px rgba(6, 12, 20, 0.65), inset -1px -1px 4px rgba(90, 161, 237, 0.25) !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link.active .admin-sidebar-label,
+.theme-dark .admin-sidebar-link.active .admin-sidebar-label {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link.active .admin-sidebar-icon,
+.theme-dark .admin-sidebar-link.active .admin-sidebar-icon {
+  color: #5AA1ED !important;
+}
+
+/* Restricted / disabled items in dark mode */
+[data-theme="dark"] .admin-sidebar-link.restricted:not(.active),
+.theme-dark .admin-sidebar-link.restricted:not(.active) {
+  opacity: 0.85 !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link.restricted:not(.active) .admin-sidebar-label,
+.theme-dark .admin-sidebar-link.restricted:not(.active) .admin-sidebar-label {
+  color: #9CA3AF !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link.restricted:not(.active) .admin-sidebar-icon,
+.theme-dark .admin-sidebar-link.restricted:not(.active) .admin-sidebar-icon {
+  color: #6B7280 !important;
+}
+
+[data-theme="dark"] .admin-sidebar-badge,
+.theme-dark .admin-sidebar-badge {
+  background: rgba(35, 59, 87, 0.8) !important;
+  color: #CBD5E1 !important;
+  border: 1px solid rgba(90, 161, 237, 0.25) !important;
+}
+
+/* Focus and footer in dark mode */
+[data-theme="dark"] .admin-sidebar-link:focus-visible,
+.theme-dark .admin-sidebar-link:focus-visible {
+  outline-color: #5AA1ED !important;
+}
+
+[data-theme="dark"] .admin-sidebar .admin-sidebar-footer,
+.theme-dark .admin-sidebar .admin-sidebar-footer {
+  border-top-color: #233B57 !important;
+}
+
+[data-theme="dark"] .admin-sidebar .admin-sidebar-footer-title,
+.theme-dark .admin-sidebar .admin-sidebar-footer-title {
+  color: #E8F0F8 !important;
+}
+
+[data-theme="dark"] .admin-sidebar .admin-sidebar-footer-desc,
+.theme-dark .admin-sidebar .admin-sidebar-footer-desc {
+  color: #95A9C0 !important;
 }
 
 @media (max-width: 991.98px) {

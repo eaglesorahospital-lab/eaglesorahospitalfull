@@ -10,7 +10,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from config.throttling import LoginRateThrottle, RegisterRateThrottle, TokenRefreshRateThrottle
+from config.throttling import (
+    LoginRateThrottle,
+    RegisterRateThrottle,
+    TokenRefreshRateThrottle,
+    DoctorInvitationRateThrottle,
+)
 from .models import User
 from .serializers import (
     LoginSerializer,
@@ -20,6 +25,7 @@ from .serializers import (
     ChangePasswordSerializer,
     SetupPasswordSerializer,
 )
+
 
 
 class PatientLoginView(APIView):
@@ -94,6 +100,14 @@ class LoginView(APIView):
             if portal == 'admin' and user.role not in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN]:
                 return Response(
                     {"detail": "Access denied: Admin dashboard is restricted to administrative personnel."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        if user.role == User.Role.DOCTOR_STAFF:
+            doc = getattr(user, 'doctor_profile', None)
+            if doc and not doc.is_active:
+                return Response(
+                    {"detail": "This doctor account has been deactivated. Please contact hospital administration."},
                     status=status.HTTP_403_FORBIDDEN
                 )
 
@@ -190,6 +204,74 @@ class SetupPasswordView(APIView):
                 "doctor_id": doc.id if doc else None,
             }
         }, status=status.HTTP_200_OK)
+
+
+class ValidateInvitationView(APIView):
+    """
+    POST /api/auth/validate-invitation/
+    Inspects and validates an onboarding invitation token without redeeming it.
+    Returns doctor profile metadata (name, department, email) for display on the setup form.
+    Protected against brute-force enumeration via DoctorInvitationRateThrottle.
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [DoctorInvitationRateThrottle]
+
+    def post(self, request):
+        from apps.doctors.services import DoctorInvitationService
+
+        raw_token = request.data.get('token', '').strip()
+        invitation, status_code, message = DoctorInvitationService.validate_token(raw_token)
+
+        if status_code != "VALID" or not invitation:
+            return Response({
+                "valid": False,
+                "status": status_code,
+                "detail": message or "Invalid or unverified invitation link."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        doctor = invitation.doctor
+        return Response({
+            "valid": True,
+            "status": "VALID",
+            "email": invitation.email,
+            "doctor_name": doctor.name,
+            "doctor": {
+                "id": doctor.id,
+                "name": doctor.name,
+                "department": doctor.department.name if doctor.department else "Clinical Care",
+                "specialty": doctor.specialty_name or "General Consultant",
+                "qualification": doctor.qualification,
+            },
+            "expires_at": invitation.expires_at.isoformat(),
+        }, status=status.HTTP_200_OK)
+
+
+class AcceptInvitationView(APIView):
+    """
+    POST /api/auth/accept-invitation/
+    Redeems a secure single-use invitation token, validates and hashes the new password,
+    activates the doctor account, and returns authenticated JWT access and refresh tokens.
+    Protected against race conditions via row-level database locking (select_for_update).
+    """
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [DoctorInvitationRateThrottle]
+
+    def post(self, request):
+        from apps.doctors.services import DoctorInvitationService
+
+        raw_token = request.data.get('token', '').strip()
+        password = request.data.get('password', '')
+        password_confirm = request.data.get('password_confirm', '') or request.data.get('confirm_password', '')
+
+        result = DoctorInvitationService.accept_invitation(
+            raw_token=raw_token,
+            password=password,
+            password_confirm=password_confirm,
+            request=request,
+        )
+
+        return Response(result, status=status.HTTP_200_OK)
+
 
 
 class RegisterView(APIView):

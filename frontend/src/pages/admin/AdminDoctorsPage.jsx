@@ -23,7 +23,11 @@ import {
   Phone,
   ShieldCheck,
   ShieldAlert,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Send,
+  Ban,
+  RefreshCw,
+  MailCheck
 } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import AdminFilterBar from '../../components/admin/AdminFilterBar';
@@ -59,10 +63,13 @@ export function AdminDoctorsPage() {
   const [isAuthError, setIsAuthError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filters
+  // Filters and Sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [selectedInvitationStatus, setSelectedInvitationStatus] = useState('ALL');
+  const [sortBy, setSortBy] = useState('NAME_ASC');
+  const [invitationLoadingId, setInvitationLoadingId] = useState(null);
 
   // Modals and Alerts state
   const [viewDoctor, setViewDoctor] = useState(null);
@@ -142,14 +149,19 @@ export function AdminDoctorsPage() {
     loadData();
   }, []);
 
-  // Filtered doctors
+  // Filtered and sorted doctors
   const filteredDoctors = useMemo(() => {
-    return doctorsList.filter((doc) => {
+    let list = doctorsList.filter((doc) => {
+      const q = searchTerm.toLowerCase().trim();
+      const qualStr = Array.isArray(doc.qualification) ? doc.qualification.join(' ') : (doc.qualification || '');
       const matchSearch =
-        searchTerm === '' ||
-        doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (doc.specialty || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (doc.departmentName || '').toLowerCase().includes(searchTerm.toLowerCase());
+        q === '' ||
+        (doc.name || '').toLowerCase().includes(q) ||
+        (doc.specialty || '').toLowerCase().includes(q) ||
+        (doc.departmentName || '').toLowerCase().includes(q) ||
+        (doc.email || '').toLowerCase().includes(q) ||
+        (doc.phone || '').toLowerCase().includes(q) ||
+        qualStr.toLowerCase().includes(q);
 
       const matchDept =
         selectedDepartment === 'ALL' ||
@@ -158,13 +170,146 @@ export function AdminDoctorsPage() {
 
       const matchStatus =
         selectedStatus === 'ALL' ||
-        (doc.status && doc.status.toUpperCase() === selectedStatus.toUpperCase()) ||
-        (selectedStatus === 'ACTIVE' && doc.is_active) ||
-        (selectedStatus === 'INACTIVE' && !doc.is_active);
+        (selectedStatus === 'ACTIVE' && (doc.is_active || doc.status === 'Active')) ||
+        (selectedStatus === 'INACTIVE' && (!doc.is_active || doc.status === 'Inactive'));
 
-      return matchSearch && matchDept && matchStatus;
+      const invStatus = (doc.invitationStatus || doc.invitation_status || 'UNINVITED').toUpperCase();
+      const matchInvStatus =
+        selectedInvitationStatus === 'ALL' ||
+        (selectedInvitationStatus === 'PENDING' && (invStatus === 'PENDING' || invStatus === 'INVITATION_PENDING')) ||
+        (selectedInvitationStatus === 'ACCEPTED' && invStatus === 'ACCEPTED') ||
+        (selectedInvitationStatus === 'EXPIRED' && invStatus === 'EXPIRED') ||
+        (selectedInvitationStatus === 'REVOKED' && invStatus === 'REVOKED') ||
+        (selectedInvitationStatus === 'UNINVITED' && (invStatus === 'UNINVITED' || !invStatus));
+
+      return matchSearch && matchDept && matchStatus && matchInvStatus;
     });
-  }, [doctorsList, searchTerm, selectedDepartment, selectedStatus]);
+
+    // Sorting
+    list = [...list].sort((a, b) => {
+      if (sortBy === 'NAME_ASC') return (a.name || '').localeCompare(b.name || '');
+      if (sortBy === 'NAME_DESC') return (b.name || '').localeCompare(a.name || '');
+      if (sortBy === 'EXPERIENCE_DESC') return (Number(b.experience) || 0) - (Number(a.experience) || 0);
+      if (sortBy === 'EXPERIENCE_ASC') return (Number(a.experience) || 0) - (Number(b.experience) || 0);
+      if (sortBy === 'STATUS') {
+        const aActive = a.is_active ? 1 : 0;
+        const bActive = b.is_active ? 1 : 0;
+        return bActive - aActive;
+      }
+      return 0;
+    });
+
+    return list;
+  }, [doctorsList, searchTerm, selectedDepartment, selectedStatus, selectedInvitationStatus, sortBy]);
+
+  // Handle Send Invitation
+  const handleInviteDoctor = async (doctor) => {
+    setActionError(null);
+    setActionNotice(null);
+    setInvitationLoadingId(doctor.id);
+    try {
+      const res = await doctorService.inviteDoctor(doctor.slug || doctor.id);
+      const inv = res.invitation;
+      setDoctorsList((prev) =>
+        prev.map((d) =>
+          d.id === doctor.id
+            ? {
+                ...d,
+                invitationStatus: inv?.status || 'PENDING',
+                invitation_status: inv?.status || 'PENDING',
+                latest_invitation_sent_at: inv?.created_at || new Date().toISOString(),
+                latest_invitation_expires_at: inv?.expires_at,
+              }
+            : d
+        )
+      );
+      if (viewDoctor && viewDoctor.id === doctor.id) {
+        setViewDoctor((prev) => ({
+          ...prev,
+          invitationStatus: inv?.status || 'PENDING',
+          invitation_status: inv?.status || 'PENDING',
+          latest_invitation_sent_at: inv?.created_at || new Date().toISOString(),
+          latest_invitation_expires_at: inv?.expires_at,
+        }));
+      }
+      setActionNotice(res.message || `Invitation successfully sent to ${doctor.name}.`);
+    } catch (err) {
+      setActionError(`Failed to send invitation to ${doctor.name}: ${err.message || 'API error'}`);
+    } finally {
+      setInvitationLoadingId(null);
+    }
+  };
+
+  // Handle Resend Invitation
+  const handleResendInvitation = async (doctor) => {
+    setActionError(null);
+    setActionNotice(null);
+    setInvitationLoadingId(doctor.id);
+    try {
+      const res = await doctorService.resendDoctorInvitation(doctor.slug || doctor.id);
+      const inv = res.invitation;
+      setDoctorsList((prev) =>
+        prev.map((d) =>
+          d.id === doctor.id
+            ? {
+                ...d,
+                invitationStatus: inv?.status || 'PENDING',
+                invitation_status: inv?.status || 'PENDING',
+                latest_invitation_sent_at: inv?.created_at || new Date().toISOString(),
+                latest_invitation_expires_at: inv?.expires_at,
+              }
+            : d
+        )
+      );
+      if (viewDoctor && viewDoctor.id === doctor.id) {
+        setViewDoctor((prev) => ({
+          ...prev,
+          invitationStatus: inv?.status || 'PENDING',
+          invitation_status: inv?.status || 'PENDING',
+          latest_invitation_sent_at: inv?.created_at || new Date().toISOString(),
+          latest_invitation_expires_at: inv?.expires_at,
+        }));
+      }
+      setActionNotice(res.message || `Invitation successfully resent to ${doctor.name}.`);
+    } catch (err) {
+      setActionError(`Failed to resend invitation to ${doctor.name}: ${err.message || 'API error'}`);
+    } finally {
+      setInvitationLoadingId(null);
+    }
+  };
+
+  // Handle Revoke Invitation
+  const handleRevokeInvitation = async (doctor) => {
+    setActionError(null);
+    setActionNotice(null);
+    setInvitationLoadingId(doctor.id);
+    try {
+      const res = await doctorService.revokeDoctorInvitation(doctor.slug || doctor.id);
+      setDoctorsList((prev) =>
+        prev.map((d) =>
+          d.id === doctor.id
+            ? {
+                ...d,
+                invitationStatus: 'REVOKED',
+                invitation_status: 'REVOKED',
+              }
+            : d
+        )
+      );
+      if (viewDoctor && viewDoctor.id === doctor.id) {
+        setViewDoctor((prev) => ({
+          ...prev,
+          invitationStatus: 'REVOKED',
+          invitation_status: 'REVOKED',
+        }));
+      }
+      setActionNotice(res.message || `Invitation for ${doctor.name} has been revoked.`);
+    } catch (err) {
+      setActionError(`Failed to revoke invitation for ${doctor.name}: ${err.message || 'API error'}`);
+    } finally {
+      setInvitationLoadingId(null);
+    }
+  };
 
   // Handle Toggle Active/Inactive with PostgreSQL persistence
   const handleToggleStatus = async (doctor) => {
@@ -446,6 +591,7 @@ export function AdminDoctorsPage() {
       const res = await doctorService.createDoctor(formData);
       const createdDoctor = res.doctor || res;
       const creds = res.credentials;
+      const invitation = res.invitation;
 
       setDoctorsList((prev) => [createdDoctor, ...prev]);
       setActionNotice(`Successfully registered consultant ${createdDoctor.name} and provisioned account.`);
@@ -460,9 +606,10 @@ export function AdminDoctorsPage() {
       setFieldErrors({});
 
       // Open credentials modal
-      if (creds) {
+      if (creds || invitation) {
         setCreatedCredentials({
           doctor: createdDoctor,
+          invitation: invitation,
           ...creds,
         });
       }
@@ -592,17 +739,25 @@ export function AdminDoctorsPage() {
         <>
           {/* Filter and Search Bar */}
           <AdminFilterBar
-            searchPlaceholder="Search by doctor name, specialty, or department..."
+            searchPlaceholder="Search by doctor name, email, specialty, or phone..."
             searchValue={searchTerm}
             onSearchChange={setSearchTerm}
-            hasActiveFilters={searchTerm !== '' || selectedDepartment !== 'ALL' || selectedStatus !== 'ALL'}
+            hasActiveFilters={
+              searchTerm !== '' ||
+              selectedDepartment !== 'ALL' ||
+              selectedStatus !== 'ALL' ||
+              selectedInvitationStatus !== 'ALL' ||
+              sortBy !== 'NAME_ASC'
+            }
             onClear={() => {
               setSearchTerm('');
               setSelectedDepartment('ALL');
               setSelectedStatus('ALL');
+              setSelectedInvitationStatus('ALL');
+              setSortBy('NAME_ASC');
             }}
           >
-            <div className="col-12 col-sm-6 col-md-3">
+            <div className="col-12 col-sm-6 col-md-2">
               <select
                 className="neu-select"
                 value={selectedDepartment}
@@ -618,16 +773,47 @@ export function AdminDoctorsPage() {
               </select>
             </div>
 
-            <div className="col-12 col-sm-6 col-md-3">
+            <div className="col-12 col-sm-6 col-md-2">
               <select
                 className="neu-select"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 aria-label="Filter by status"
               >
-                <option value="ALL">All Statuses</option>
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
+                <option value="ALL">All Accounts</option>
+                <option value="ACTIVE">Active Account</option>
+                <option value="INACTIVE">Inactive Account</option>
+              </select>
+            </div>
+
+            <div className="col-12 col-sm-6 col-md-2">
+              <select
+                className="neu-select"
+                value={selectedInvitationStatus}
+                onChange={(e) => setSelectedInvitationStatus(e.target.value)}
+                aria-label="Filter by invitation onboarding status"
+              >
+                <option value="ALL">All Onboarding</option>
+                <option value="PENDING">Invitation Pending</option>
+                <option value="ACCEPTED">Invitation Accepted</option>
+                <option value="EXPIRED">Invitation Expired</option>
+                <option value="REVOKED">Invitation Revoked</option>
+                <option value="UNINVITED">Not Yet Invited</option>
+              </select>
+            </div>
+
+            <div className="col-12 col-sm-6 col-md-2">
+              <select
+                className="neu-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                aria-label="Sort doctor roster"
+              >
+                <option value="NAME_ASC">Name (A–Z)</option>
+                <option value="NAME_DESC">Name (Z–A)</option>
+                <option value="EXPERIENCE_DESC">Experience (High–Low)</option>
+                <option value="EXPERIENCE_ASC">Experience (Low–High)</option>
+                <option value="STATUS">Active First</option>
               </select>
             </div>
           </AdminFilterBar>
@@ -642,21 +828,22 @@ export function AdminDoctorsPage() {
                     <th className="col-qualification">Qualifications</th>
                     <th className="col-experience">Experience</th>
                     <th className="col-slot-duration">Slot Duration</th>
-                    <th className="col-status">Status</th>
+                    <th className="col-status">Account</th>
+                    <th className="col-invitation">Onboarding</th>
                     <th className="col-actions text-end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan="7" className="text-center py-5 text-muted">
+                      <td colSpan="8" className="text-center py-5 text-muted">
                         <RotateCw size={24} className="spin-anim mb-2 text-primary" />
                         <div>Loading doctor directory...</div>
                       </td>
                     </tr>
                   ) : filteredDoctors.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="text-center py-5 text-muted">
+                      <td colSpan="8" className="text-center py-5 text-muted">
                         <AlertCircle size={28} className="mb-2 text-muted" />
                         <div className="fw-semibold">No doctor records match the selected criteria.</div>
                       </td>
@@ -703,8 +890,8 @@ export function AdminDoctorsPage() {
                                 {doc.name}
                               </div>
                               <div className="small text-muted d-flex align-items-center gap-1 mt-1">
-                                <MapPin size={13} className="flex-shrink-0 text-muted" />
-                                <span className="text-truncate">{doc.consultation?.location || 'Clinical Suite, Wing A'}</span>
+                                <Mail size={12} className="flex-shrink-0 text-muted" />
+                                <span className="text-truncate">{doc.email || 'No email registered'}</span>
                               </div>
                             </div>
                           </div>
@@ -733,7 +920,17 @@ export function AdminDoctorsPage() {
                           </span>
                         </td>
                         <td className="col-status">
-                          <AdminStatusBadge status={doc.status} />
+                          <AdminStatusBadge status={doc.is_active ? 'Active' : 'Inactive'} />
+                        </td>
+                        <td className="col-invitation">
+                          <div className="d-flex flex-column gap-1">
+                            <AdminStatusBadge status={doc.invitationStatus || doc.invitation_status || 'UNINVITED'} />
+                            {doc.latest_invitation_sent_at && (
+                              <span className="text-muted" style={{ fontSize: '0.72rem' }}>
+                                Sent: {new Date(doc.latest_invitation_sent_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="col-actions text-end text-nowrap">
                           <div className="neu-action-btns">
@@ -755,14 +952,70 @@ export function AdminDoctorsPage() {
                               <Edit3 size={13} className="me-1" />
                               Edit
                             </button>
+
+                            {/* Invitation Action Buttons */}
+                            {(() => {
+                              const invStatus = (doc.invitationStatus || doc.invitation_status || 'UNINVITED').toUpperCase();
+                              const isInvLoading = invitationLoadingId === doc.id;
+                              if (invStatus === 'ACCEPTED') {
+                                return null;
+                              }
+                              if (invStatus === 'PENDING' || invStatus === 'INVITATION_PENDING') {
+                                return (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="neu-btn neu-btn-outline neu-btn-sm"
+                                      onClick={() => handleResendInvitation(doc)}
+                                      disabled={isInvLoading || isSubmitting}
+                                      title="Resend onboarding invitation email"
+                                    >
+                                      {isInvLoading ? (
+                                        <RotateCw size={13} className="spin-anim me-1" />
+                                      ) : (
+                                        <RefreshCw size={13} className="me-1" />
+                                      )}
+                                      Resend
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="neu-btn neu-btn-outline neu-btn-sm text-danger"
+                                      onClick={() => handleRevokeInvitation(doc)}
+                                      disabled={isInvLoading || isSubmitting}
+                                      title="Revoke active invitation"
+                                    >
+                                      <Ban size={13} className="me-1" />
+                                      Revoke
+                                    </button>
+                                  </>
+                                );
+                              }
+                              return (
+                                <button
+                                  type="button"
+                                  className="neu-btn neu-btn-outline neu-btn-sm text-primary"
+                                  onClick={() => handleInviteDoctor(doc)}
+                                  disabled={isInvLoading || isSubmitting}
+                                  title="Send onboarding invitation email"
+                                >
+                                  {isInvLoading ? (
+                                    <RotateCw size={13} className="spin-anim me-1" />
+                                  ) : (
+                                    <Send size={13} className="me-1" />
+                                  )}
+                                  Invite
+                                </button>
+                              );
+                            })()}
+
                             <button
                               type="button"
                               className={`neu-btn neu-btn-sm ${
                                 doc.status === 'Active' || doc.is_active ? 'neu-btn-danger' : 'neu-btn-primary'
                               }`}
                               onClick={() => handleToggleStatus(doc)}
-                              disabled={isSubmitting}
-                              title={doc.status === 'Active' ? 'Deactivate consultant' : 'Activate consultant'}
+                              disabled={isSubmitting || invitationLoadingId === doc.id}
+                              title={doc.status === 'Active' || doc.is_active ? 'Deactivate consultant' : 'Activate consultant'}
                             >
                               <Power size={13} className="me-1" />
                               {doc.status === 'Active' || doc.is_active ? 'Deactivate' : 'Activate'}
@@ -852,6 +1105,100 @@ export function AdminDoctorsPage() {
                     >
                       <div className="small text-muted fw-bold mb-1 text-uppercase">Professional Background</div>
                       <p className="small mb-0 text-muted">{viewDoctor.bio || 'Consultant in active clinical practice at EagleSora Hospital.'}</p>
+                    </div>
+                  </div>
+
+                  {/* Onboarding & Account Lifecycle Card */}
+                  <div className="col-12">
+                    <div
+                      className="p-3 neu-card-sm"
+                      style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
+                    >
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div className="small text-muted fw-bold text-uppercase">Account Lifecycle & Onboarding</div>
+                        <div className="d-flex align-items-center gap-2">
+                          <AdminStatusBadge status={viewDoctor.is_active ? 'Active' : 'Inactive'} />
+                          <AdminStatusBadge status={viewDoctor.invitationStatus || viewDoctor.invitation_status || 'UNINVITED'} />
+                        </div>
+                      </div>
+
+                      <div className="row g-2 small mb-3">
+                        <div className="col-12 col-md-6">
+                          <span className="text-muted">Account Email: </span>
+                          <span className="fw-semibold font-monospace">{viewDoctor.email || 'N/A'}</span>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <span className="text-muted">Contact Phone: </span>
+                          <span className="fw-semibold">{viewDoctor.phone || 'N/A'}</span>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <span className="text-muted">Invitation Sent: </span>
+                          <span>
+                            {viewDoctor.latest_invitation_sent_at
+                              ? new Date(viewDoctor.latest_invitation_sent_at).toLocaleString()
+                              : 'Never'}
+                          </span>
+                        </div>
+                        <div className="col-12 col-md-6">
+                          <span className="text-muted">Invitation Expiry: </span>
+                          <span>
+                            {viewDoctor.latest_invitation_expires_at
+                              ? new Date(viewDoctor.latest_invitation_expires_at).toLocaleString()
+                              : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Modal Actions */}
+                      <div className="d-flex gap-2 pt-2 border-top">
+                        {(() => {
+                          const invStatus = (viewDoctor.invitationStatus || viewDoctor.invitation_status || 'UNINVITED').toUpperCase();
+                          const isInvLoading = invitationLoadingId === viewDoctor.id;
+                          if (invStatus === 'ACCEPTED') {
+                            return (
+                              <div className="small text-success d-flex align-items-center gap-1">
+                                <CheckCircle2 size={14} />
+                                <span>Doctor has activated their account and set their password.</span>
+                              </div>
+                            );
+                          }
+                          if (invStatus === 'PENDING' || invStatus === 'INVITATION_PENDING') {
+                            return (
+                              <>
+                                <button
+                                  type="button"
+                                  className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center gap-1"
+                                  onClick={() => handleResendInvitation(viewDoctor)}
+                                  disabled={isInvLoading}
+                                >
+                                  {isInvLoading ? <RotateCw size={13} className="spin-anim" /> : <RefreshCw size={13} />}
+                                  Resend Invitation
+                                </button>
+                                <button
+                                  type="button"
+                                  className="neu-btn neu-btn-outline neu-btn-sm text-danger d-inline-flex align-items-center gap-1"
+                                  onClick={() => handleRevokeInvitation(viewDoctor)}
+                                  disabled={isInvLoading}
+                                >
+                                  <Ban size={13} />
+                                  Revoke Invitation
+                                </button>
+                              </>
+                            );
+                          }
+                          return (
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center gap-1"
+                              onClick={() => handleInviteDoctor(viewDoctor)}
+                              disabled={isInvLoading}
+                            >
+                              {isInvLoading ? <RotateCw size={13} className="spin-anim" /> : <Send size={13} />}
+                              Send Invitation
+                            </button>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1769,6 +2116,63 @@ export function AdminDoctorsPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Onboarding Invitation Link */}
+                  {createdCredentials.invitation?.setup_url && (
+                    <div className="col-12">
+                      <div
+                        className="p-3 neu-card-sm"
+                        style={{ borderRadius: '16px', background: 'var(--hospital-surface)', border: '1px solid rgba(49, 130, 206, 0.35)' }}
+                      >
+                        <div className="d-flex justify-content-between align-items-center mb-1">
+                          <div className="small fw-bold text-uppercase text-primary d-flex align-items-center gap-1">
+                            <MailCheck size={15} />
+                            <span>Doctor Invitation & Onboarding Link</span>
+                          </div>
+                          <span className="neu-badge neu-badge-primary small">Cryptographic Hash</span>
+                        </div>
+                        <div className="small text-muted mb-2">
+                          {createdCredentials.invitation.email_sent ? (
+                            <span className="text-success d-inline-flex align-items-center gap-1">
+                              <CheckCircle2 size={13} />
+                              Invitation email dispatched to {createdCredentials.invitation.email}.
+                            </span>
+                          ) : (
+                            <span className="text-warning d-inline-flex align-items-center gap-1">
+                              <AlertCircle size={13} />
+                              Email delivery pending or in development mode. You may share this secure link directly.
+                            </span>
+                          )}
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            className="neu-input font-monospace small"
+                            value={createdCredentials.invitation.setup_url}
+                            style={{ background: 'var(--hospital-bg)' }}
+                          />
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-primary neu-btn-sm flex-shrink-0"
+                            onClick={() => handleCopy('inviteUrl', createdCredentials.invitation.setup_url)}
+                          >
+                            {copiedKey === 'inviteUrl' ? (
+                              <>
+                                <Check size={14} className="me-1" />
+                                Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={14} className="me-1" />
+                                Copy Link
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="small text-muted text-center">
@@ -1789,7 +2193,7 @@ Doctor: ${createdCredentials.doctor?.name}
 Department: ${createdCredentials.doctor?.departmentName}
 Email/Username: ${createdCredentials.email || createdCredentials.username}
 Temporary Password: ${createdCredentials.temporary_password}
-Password Setup Link: ${createdCredentials.setup_url || `${window.location.origin}/staff/set-password`}
+Password Setup Link: ${createdCredentials.setup_url || `${window.location.origin}/staff/set-password`}${createdCredentials.invitation?.setup_url ? `\nInvitation Onboarding Link: ${createdCredentials.invitation.setup_url}` : ''}
 Note: You will be required to choose a new password upon first login.`;
                     handleCopy('allCreds', fullText);
                   }}

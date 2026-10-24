@@ -1,3 +1,4 @@
+import logging
 import secrets
 from django.db import transaction
 from django.utils.http import urlsafe_base64_encode
@@ -11,16 +12,18 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Specialty, Doctor
+from .models import Specialty, Doctor, DoctorInvitation
 from .serializers import (
     SpecialtySerializer,
     DoctorListSerializer,
     DoctorDetailSerializer,
     DoctorCreateSerializer,
+    DoctorInvitationSerializer,
 )
+from .services import DoctorInvitationService
 from config.pagination import StandardResultsSetPagination
 from config.media_service import MediaService, CLOUDINARY_FOLDERS
-from config.throttling import MediaUploadRateThrottle
+from config.throttling import MediaUploadRateThrottle, DoctorInvitationRateThrottle
 from apps.accounts.models import User
 from apps.accounts.permissions import (
     IsAdminUserOrReadOnly,
@@ -31,8 +34,11 @@ from apps.accounts.permissions import (
 from apps.scheduling.services import AvailabilityEngine
 from apps.notifications.models import AuditLog
 
+logger = logging.getLogger('hospital.doctors')
+
 
 class SpecialtyViewSet(viewsets.ReadOnlyModelViewSet):
+
     """
     Medical clinical specialties directory API.
     Public read-only; administrative mutations.
@@ -82,7 +88,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
         return qs
 
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action in ['create', 'toggle_status', 'invite', 'resend_invitation', 'revoke_invitation', 'invitations']:
             return [permissions.IsAuthenticated(), IsAdminOrHospitalAdmin()]
         if self.action in ['upload_photo', 'delete_photo']:
             return [permissions.IsAuthenticated(), CanManageDoctorMedia()]
@@ -123,6 +129,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
         """
         Authorized hospital administrators provision a new consultant and secure Doctor account.
         Creates linked User with DOCTOR_STAFF role, random temporary password, and expiring setup link.
+        Atomically issues a cryptographic DoctorInvitation record and dispatches an invitation email.
         """
         serializer = DoctorCreateSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -180,7 +187,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
                 **validated_data
             )
 
-            # 4. Generate secure expiring setup token
+            # 4. Generate secure expiring setup token (legacy compatibility)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             setup_url = f"/staff/set-password?uid={uid}&token={token}"
@@ -204,30 +211,51 @@ class DoctorViewSet(viewsets.ModelViewSet):
                 ip_address=request.META.get('REMOTE_ADDR'),
             )
 
-        # 6. Safely attempt to send invitation email if mail server is configured
+        # 6. Issue secure invitation and send invitation email
+        inv_data = None
         try:
-            subject = "Welcome to EgleSora Hospital — Set Up Your Consultant Portal Password"
-            message = (
-                f"Hello {doctor.name},\n\n"
-                f"Your consultant staff account has been registered by hospital administration.\n\n"
-                f"Please set up your secure password using the following link:\n"
-                f"{request.build_absolute_uri(setup_url)}\n\n"
-                f"This setup link is valid for 24 hours.\n\n"
-                f"Warm regards,\n"
-                f"EgleSora Hospital Medical Administration"
+            inv_res = DoctorInvitationService.send_invitation(
+                doctor=doctor,
+                created_by=request.user if request.user.is_authenticated else None,
+                request=request
             )
-            send_mail(
-                subject,
-                message,
-                getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@hospital.local'),
-                [user.email],
-                fail_silently=True,
-            )
-        except Exception:
-            pass
+            inv = inv_res['invitation']
+            inv_data = {
+                "id": inv.id,
+                "email": inv.email,
+                "status": inv.status,
+                "expires_at": inv.expires_at.isoformat(),
+                "email_sent": inv_res['email_sent'],
+                "setup_url": inv_res['setup_url'],
+            }
+        except Exception as exc:
+            logger.warning(f"Failed to issue DoctorInvitation on registration: {exc}")
+
+        # 7. Safely attempt to send legacy notification email if not already delivered
+        if not (inv_data and inv_data.get('email_sent')):
+            try:
+                subject = "Welcome to EgleSora Hospital — Set Up Your Consultant Portal Password"
+                message = (
+                    f"Hello {doctor.name},\n\n"
+                    f"Your consultant staff account has been registered by hospital administration.\n\n"
+                    f"Please set up your secure password using the following link:\n"
+                    f"{request.build_absolute_uri(setup_url)}\n\n"
+                    f"This setup link is valid for 24 hours.\n\n"
+                    f"Warm regards,\n"
+                    f"EgleSora Hospital Medical Administration"
+                )
+                send_mail(
+                    subject,
+                    message,
+                    getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@hospital.local'),
+                    [user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
 
         out_serializer = DoctorDetailSerializer(doctor, context={'request': request})
-        return Response({
+        response_payload = {
             "message": f"Consultant {doctor.name} registered and doctor staff account provisioned successfully.",
             "doctor": out_serializer.data,
             "credentials": {
@@ -239,7 +267,11 @@ class DoctorViewSet(viewsets.ModelViewSet):
                 "must_change_password": True,
                 "expires_in": "24 hours",
             }
-        }, status=status.HTTP_201_CREATED)
+        }
+        if inv_data:
+            response_payload["invitation"] = inv_data
+        return Response(response_payload, status=status.HTTP_201_CREATED)
+
 
     def perform_update(self, serializer):
         image_file = self.request.FILES.get('image') or self.request.FILES.get('photo')
@@ -370,3 +402,114 @@ class DoctorViewSet(viewsets.ModelViewSet):
         else:
             data = AvailabilityEngine.get_doctor_availability(doctor, date_str)
         return Response(data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrHospitalAdmin],
+        throttle_classes=[DoctorInvitationRateThrottle],
+        url_path='invite'
+    )
+    def invite(self, request, slug=None):
+        """
+        Sends an onboarding invitation to an uninvited or reinvited doctor.
+        """
+        doctor = self.get_object()
+        res = DoctorInvitationService.send_invitation(doctor, created_by=request.user, request=request)
+        return Response({
+            "message": f"Invitation issued for {doctor.name} ({doctor.user.email if doctor.user else 'no email'}).",
+            "invitation": DoctorInvitationSerializer(res['invitation']).data,
+            "email_sent": res['email_sent'],
+            "delivery_error": res.get('delivery_error'),
+        }, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrHospitalAdmin],
+        throttle_classes=[DoctorInvitationRateThrottle],
+        url_path='resend-invitation'
+    )
+    def resend_invitation(self, request, slug=None):
+        """
+        Resends an invitation to a doctor, revoking earlier pending invitations and issuing a fresh token.
+        """
+        doctor = self.get_object()
+        res = DoctorInvitationService.resend_invitation(doctor, created_by=request.user, request=request)
+        return Response({
+            "message": f"Invitation resent to {doctor.name} ({doctor.user.email if doctor.user else 'no email'}).",
+            "invitation": DoctorInvitationSerializer(res['invitation']).data,
+            "email_sent": res['email_sent'],
+            "delivery_error": res.get('delivery_error'),
+        }, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrHospitalAdmin],
+        url_path='revoke-invitation'
+    )
+    def revoke_invitation(self, request, slug=None):
+        """
+        Revokes any active pending invitation for this doctor.
+        """
+        doctor = self.get_object()
+        count = DoctorInvitationService.revoke_invitation(doctor, revoked_by=request.user, request=request)
+        return Response({
+            "message": f"Outstanding invitation(s) for {doctor.name} revoked successfully.",
+            "revoked_count": count,
+        }, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['get'],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrHospitalAdmin],
+        url_path='invitations'
+    )
+    def invitations(self, request, slug=None):
+        """
+        Retrieves complete invitation audit history for this doctor profile.
+        """
+        doctor = self.get_object()
+        invitations_qs = doctor.invitations.all().select_related('created_by')
+        serializer = DoctorInvitationSerializer(invitations_qs, many=True)
+        return Response({
+            "doctor_id": doctor.id,
+            "doctor_name": doctor.name,
+            "invitations": serializer.data,
+            "current_status": doctor.invitation_status,
+            "account_status": doctor.account_lifecycle_status,
+        }, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrHospitalAdmin],
+        url_path='toggle-status'
+    )
+    def toggle_status(self, request, slug=None):
+        """
+        Toggles is_active status of a Doctor and their linked User account.
+        """
+        doctor = self.get_object()
+        new_status = not doctor.is_active
+        doctor.is_active = new_status
+        doctor.save(update_fields=['is_active', 'updated_at'])
+        if doctor.user:
+            doctor.user.is_active = new_status
+            doctor.user.save(update_fields=['is_active', 'updated_at'])
+        serializer = DoctorDetailSerializer(doctor, context={'request': request})
+        return Response({
+            "message": f"Doctor {doctor.name} status updated to {'Active' if new_status else 'Inactive'}.",
+            "is_active": new_status,
+            "doctor": serializer.data,
+        }, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated, IsAdminOrHospitalAdmin],
+        url_path='toggle_status'
+    )
+    def toggle_status_alias(self, request, slug=None):
+        return self.toggle_status(request, slug=slug)

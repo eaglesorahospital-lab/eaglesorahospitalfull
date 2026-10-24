@@ -16,7 +16,10 @@ import os
 import sys
 from datetime import timedelta
 from pathlib import Path
-import dj_database_url
+try:
+    import dj_database_url
+except ImportError:
+    dj_database_url = None
 
 logger = logging.getLogger('config.settings')
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -118,14 +121,26 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+]
+
+try:
+    import whitenoise  # noqa: F401
+    MIDDLEWARE.append('whitenoise.middleware.WhiteNoiseMiddleware')
+except ImportError:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "CRITICAL DEPENDENCY ERROR: 'whitenoise' is required for static asset serving in production (DEBUG=False). "
+            "Install all packages listed in backend/requirements.txt."
+        )
+
+MIDDLEWARE.extend([
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+])
 
 ROOT_URLCONF = 'config.urls'
 
@@ -155,6 +170,8 @@ ASGI_APPLICATION = 'config.asgi.application'
 _raw_db_url = os.environ.get('DATABASE_URL', '').strip()
 
 if _raw_db_url:
+    if dj_database_url is None:
+        raise ImproperlyConfigured("dj_database_url is required to parse DATABASE_URL.")
     try:
         _parsed_db = dj_database_url.parse(_raw_db_url)
         if not _parsed_db or not _parsed_db.get('ENGINE'):
@@ -335,8 +352,10 @@ REST_FRAMEWORK = {
         'auth_refresh': '30/minute',
         'appointment_booking': '30/minute',
         'media_upload': '30/minute',
+        'doctor_invitation': '30/minute',
     },
 }
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('JWT_ACCESS_MINUTES', 15))),
@@ -553,6 +572,12 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@hospitalplatform.local')
+
+# ==============================================================================
+# Doctor Invitation & Onboarding Configuration
+# ==============================================================================
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+DOCTOR_INVITATION_EXPIRY_HOURS = int(os.environ.get('DOCTOR_INVITATION_EXPIRY_HOURS', 48))
 
 # Setup verification marker
 configured = True

@@ -207,15 +207,15 @@ class CanManageDoctorMedia(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if not (request.user and request.user.is_authenticated):
             return False
-        # Full administrative management
+        # Doctor staff restricted strictly to their own linked doctor profile
+        if request.user.role == User.Role.DOCTOR_STAFF:
+            return bool(obj.user and obj.user == request.user)
+        # Full administrative management for Super Admins and Hospital Admins
         if (
             request.user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN]
             or request.user.is_superuser
             or request.user.is_staff
         ):
             return True
-        # Doctor staff restricted to their own linked doctor profile
-        if request.user.role == User.Role.DOCTOR_STAFF:
-            return bool(obj.user and obj.user == request.user)
         return False
 

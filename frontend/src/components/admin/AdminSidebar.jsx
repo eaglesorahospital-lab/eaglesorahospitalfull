@@ -56,8 +56,8 @@ export function AdminSidebar({
     >
       <div className="admin-sidebar-header p-3 border-bottom d-flex justify-content-between align-items-center">
         <div>
-          <div className="neu-eyebrow text-uppercase small text-muted">Active Role</div>
-          <div className="fw-bold text-primary">{currentRole?.label}</div>
+          <div className="admin-sidebar-heading text-uppercase small">Active Role</div>
+          <div className="fw-bold admin-sidebar-role-text">{currentRole?.label}</div>
         </div>
         <button
           type="button"
@@ -68,7 +68,7 @@ export function AdminSidebar({
       </div>
 
       <nav className="admin-sidebar-nav p-2">
-        <div className="neu-eyebrow text-muted small px-3 py-2 text-uppercase fw-bold">
+        <div className="admin-sidebar-heading small px-3 py-2 text-uppercase fw-bold">
           Operations Modules
         </div>
         {ADMIN_NAV_LINKS.map((link) => {
@@ -83,14 +83,14 @@ export function AdminSidebar({
               onClick={onCloseSidebar}
               className={({ isActive }) =>
                 `admin-sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-decoration-none my-1 transition-all ${
-                  isActive ? 'active neu-inset fw-bold text-primary' : 'text-body hover-text-primary'
-                } ${!allowed ? 'restricted opacity-75' : ''}`
+                  isActive ? 'active' : ''
+                } ${!allowed ? 'restricted' : ''}`
               }
             >
-              <IconComp size={16} className="flex-shrink-0" />
-              <span className="link-title flex-grow-1">{link.label}</span>
+              <IconComp size={16} className="admin-sidebar-icon flex-shrink-0" />
+              <span className="admin-sidebar-label link-title flex-grow-1">{link.label}</span>
               {!allowed && (
-                <span className="neu-badge neu-badge-neutral ms-auto small d-inline-flex align-items-center gap-1" style={{ fontSize: '0.65rem' }}>
+                <span className="admin-sidebar-badge neu-badge neu-badge-neutral ms-auto small d-inline-flex align-items-center gap-1" style={{ fontSize: '0.65rem' }}>
                   <Lock size={10} />
                   Restricted
                 </span>
@@ -100,14 +100,14 @@ export function AdminSidebar({
         })}
       </nav>
 
-      <div className="admin-sidebar-footer p-3 mt-auto border-top text-muted small">
+      <div className="admin-sidebar-footer p-3 mt-auto border-top small">
         {isLiveSession ? (
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
               <span className="pulse-dot"></span>
-              <span className="fw-bold text-body">Live PostgreSQL Mode</span>
+              <span className="fw-bold admin-sidebar-footer-title">Live PostgreSQL Mode</span>
             </div>
-            <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+            <div className="admin-sidebar-footer-desc" style={{ fontSize: '0.75rem' }}>
               DRF API &bull; {staffUser?.email || 'Authenticated'}
             </div>
           </div>
@@ -115,9 +115,9 @@ export function AdminSidebar({
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
               <span className="neu-badge neu-badge-warning p-1 rounded-circle" style={{ width: '8px', height: '8px', display: 'inline-block' }}></span>
-              <span className="fw-bold text-body">Prototype Demo Mode</span>
+              <span className="fw-bold admin-sidebar-footer-title">Prototype Demo Mode</span>
             </div>
-            <div className="text-muted" style={{ fontSize: '0.75rem' }}>Local Mock State Only</div>
+            <div className="admin-sidebar-footer-desc" style={{ fontSize: '0.75rem' }}>Local Mock State Only</div>
           </div>
         )}
       </div>

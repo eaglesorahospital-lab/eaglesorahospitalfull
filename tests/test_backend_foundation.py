@@ -126,7 +126,7 @@ class BackendFoundationTests(SimpleTestCase):
             'accounts': 2,       # User, PatientProfile
             'hospital': 4,       # HospitalProfile, HospitalFacility, HospitalAnnouncement, HospitalFAQ
             'departments': 3,    # Department, DepartmentService, DepartmentFAQ
-            'doctors': 2,        # Specialty, Doctor
+            'doctors': 3,        # Specialty, Doctor, DoctorInvitation
             'scheduling': 4,     # DoctorSchedule, ScheduleBreak, DoctorLeave, ScheduleOverride
             'appointments': 1,   # Appointment
             'notifications': 2,  # Notification, AuditLog
