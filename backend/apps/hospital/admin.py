@@ -22,6 +22,7 @@ class HospitalProfileAdmin(admin.ModelAdmin):
         'updated_at',
     )
     list_editable = ('is_active',)
+    ordering = ('id',)
     search_fields = ('name', 'legal_name', 'contact_email', 'address')
     readonly_fields = ('created_at', 'updated_at', 'logo_url')
     fieldsets = (

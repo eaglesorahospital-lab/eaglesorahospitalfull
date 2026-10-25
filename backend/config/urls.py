@@ -109,29 +109,61 @@ urlpatterns = [
     path('api/audit/', include(audit_router.urls)),
 ]
 
-from django.http import JsonResponse
+import logging
+from django.http import JsonResponse, HttpResponseServerError
+from django.views.defaults import page_not_found, server_error
+
+logger = logging.getLogger('django.request')
+
 
 def custom_404_handler(request, exception=None):
     """
-    Standardized JSON 404 for unmapped API endpoints.
-    Ensures missing API requests return a structured JSON response instead of HTML.
+    Standardized 404 handler:
+    Returns structured JSON for REST API requests (/api/*).
+    Preserves Django's standard HTML 404 page for Django Admin and browser web views.
     """
-    return JsonResponse({
-        "status": 404,
-        "error": "Not Found",
-        "detail": "The requested API endpoint does not exist on this server.",
-        "path": request.path
-    }, status=404)
+    if request.path.startswith('/api/'):
+        return JsonResponse({
+            "status": 404,
+            "error": "Not Found",
+            "detail": "The requested API endpoint does not exist on this server.",
+            "path": request.path
+        }, status=404)
+    return page_not_found(request, exception)
+
 
 def custom_500_handler(request):
     """
-    Sanitized JSON 500 handler to prevent leakages on unhandled top-level errors.
+    Sanitized 500 handler with full server-side diagnostic logging:
+    1. Captures and logs the complete exception traceback to Gunicorn/Render logs.
+    2. Preserves sanitized JSON response for REST API clients (/api/*).
+    3. Preserves standard HTML error page for Django Admin (/admin/*) and web views.
     """
-    return JsonResponse({
-        "status": 500,
-        "error": "Internal Server Error",
-        "detail": "An internal error occurred. Please contact hospital technical support."
-    }, status=500)
+    logger.error(
+        "Internal Server Error on %s: Unhandled exception processing request.",
+        request.path,
+        exc_info=True,
+        extra={'status_code': 500, 'request': request}
+    )
+
+    if request.path.startswith('/api/'):
+        return JsonResponse({
+            "status": 500,
+            "error": "Internal Server Error",
+            "detail": "An internal error occurred. Please contact hospital technical support."
+        }, status=500)
+
+    try:
+        return server_error(request)
+    except Exception:
+        return HttpResponseServerError(
+            "<!DOCTYPE html><html><head><title>500 Internal Server Error</title></head>"
+            "<body><h1>500 Internal Server Error</h1>"
+            "<p>An unexpected server error occurred. Hospital technical support has been notified.</p></body></html>",
+            content_type="text/html; charset=utf-8"
+        )
+
 
 handler404 = 'config.urls.custom_404_handler'
 handler500 = 'config.urls.custom_500_handler'
+

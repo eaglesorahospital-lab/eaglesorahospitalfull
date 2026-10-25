@@ -406,3 +406,90 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
         self.assertIn('Download hospital_setup.template.json', content_str)
         self.assertIn('Upload Configuration File', content_str)
         self.assertIn('Dry Run (Safe Validation Mode)', content_str)
+
+    def test_admin_hospital_profile_changelist_render(self):
+        """Regression test: Verifies authenticated staff can load HospitalProfile changelist view without 500."""
+        from apps.hospital.admin import HospitalProfileAdmin
+        from apps.hospital.models import HospitalProfile
+        from django.test import RequestFactory
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.admin.views.main import ChangeList
+
+        rf = RequestFactory()
+        req = rf.get('/admin/hospital/hospitalprofile/')
+        mock_user = MagicMock(is_staff=True, is_active=True, is_superuser=True)
+        mock_user.has_perm.return_value = True
+        mock_user.has_module_perms.return_value = True
+        req.user = mock_user
+        req.session = {}
+        req._messages = FallbackStorage(req)
+
+        mock_profile = HospitalProfile(
+            id=1,
+            name='EgleSora Hospital',
+            legal_name='EgleSora Hospital (academic demo)',
+            contact_phone='+91 7232 245100',
+            emergency_phone='+91 7232 245108',
+            contact_email='eaglesora.hospital@gmail.com',
+            is_active=True,
+        )
+
+        mock_qs = MagicMock()
+        mock_qs.ordered = True
+        mock_qs.model = HospitalProfile
+        mock_qs._prefetch_related_lookups = ()
+        mock_qs._clone.return_value = mock_qs
+        mock_qs.count.return_value = 1
+        mock_qs.__len__.return_value = 1
+        mock_qs.__iter__.return_value = iter([mock_profile])
+        mock_qs.__getitem__.side_effect = lambda idx: [mock_profile][idx]
+        mock_qs.filter.return_value = mock_qs
+
+        def fake_get_results(cl_self, request):
+            cl_self.result_count = 1
+            cl_self.full_result_count = 1
+            cl_self.result_list = mock_qs
+            cl_self.can_show_all = True
+            cl_self.multi_page = False
+            cl_self.paginator = MagicMock(count=1, num_pages=1)
+
+        with patch.object(ChangeList, 'get_results', fake_get_results):
+            admin_instance = HospitalProfileAdmin(HospitalProfile, admin.site)
+            resp = admin_instance.changelist_view(req)
+
+        self.assertEqual(resp.status_code, 200)
+        if hasattr(resp, 'render'):
+            resp.render()
+        content_str = resp.content.decode('utf-8')
+        self.assertIn('Import Setup JSON', content_str)
+        self.assertIn('Download Setup Template', content_str)
+        self.assertIn('Select hospital profile to change', content_str)
+
+    def test_custom_500_handler_api_preserves_json(self):
+        """Verifies custom_500_handler returns JSON for API requests."""
+        from config.urls import custom_500_handler
+        from django.test import RequestFactory
+
+        rf = RequestFactory()
+        req = rf.get('/api/hospital/profile/')
+        with patch('config.urls.logger.error') as mock_log:
+            resp = custom_500_handler(req)
+            self.assertEqual(resp.status_code, 500)
+            self.assertEqual(resp['Content-Type'], 'application/json')
+            self.assertIn(b'"status": 500', resp.content)
+            self.assertIn(b'"error": "Internal Server Error"', resp.content)
+            mock_log.assert_called_once()
+
+    def test_custom_500_handler_admin_returns_html(self):
+        """Verifies custom_500_handler preserves HTML error response for /admin/* requests."""
+        from config.urls import custom_500_handler
+        from django.test import RequestFactory
+
+        rf = RequestFactory()
+        req = rf.get('/admin/hospital/hospitalprofile/')
+        with patch('config.urls.logger.error') as mock_log:
+            resp = custom_500_handler(req)
+            self.assertEqual(resp.status_code, 500)
+            self.assertTrue(resp['Content-Type'].startswith('text/html'))
+            mock_log.assert_called_once()
+
