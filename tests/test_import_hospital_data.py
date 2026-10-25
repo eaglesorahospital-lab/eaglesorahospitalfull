@@ -1,0 +1,284 @@
+"""
+Unit tests for the import_hospital_data management command.
+Validates:
+1. Rejection of unresolved placeholder strings in production mode.
+2. Data schema validation for required fields, time constraints, and break bounds.
+3. Foreign key reference validation (department and specialty linkages).
+4. Dry-run execution reporting without database mutations.
+5. Idempotent record execution with conflict-safe update_or_create logic.
+"""
+
+import json
+import os
+import sys
+import tempfile
+from io import StringIO
+from unittest.mock import patch, MagicMock
+
+# Ensure backend directory is in sys.path
+backend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'backend')
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+import django
+django.setup()
+
+from django.test import SimpleTestCase
+from django.core.management import call_command
+from django.core.management.base import CommandError
+
+from apps.hospital.management.commands.import_hospital_data import Command as ImportCommand, parse_time_str
+
+
+class ImportHospitalDataUnitTests(SimpleTestCase):
+    def setUp(self):
+        self.cmd = ImportCommand()
+        self.valid_data = {
+            "hospital_profile": {
+                "name": "EgleSora Hospital Test",
+                "legal_name": "EgleSora Test Healthcare Ltd.",
+                "tagline": "Test Tagline",
+                "overview": "Tertiary hospital test overview.",
+                "contact_phone": "+91 22 1111 2222",
+                "emergency_phone": "+91 22 3333 4444",
+                "contact_email": "desk@test-hospital.org",
+                "address": "123 Medical Road, City",
+                "visiting_hours": "08:00 - 20:00",
+                "emergency_info": "24/7 emergency trauma care.",
+                "is_active": True,
+            },
+            "specialties": [
+                {
+                    "name": "Cardiology",
+                    "slug": "cardiology",
+                    "description": "Cardiovascular medical specialty.",
+                    "is_active": True,
+                }
+            ],
+            "departments": [
+                {
+                    "name": "Department of Cardiology",
+                    "slug": "cardiology-dept",
+                    "specialty": "Cardiovascular Medicine",
+                    "short_description": "Cardiology short overview.",
+                    "full_description": "Comprehensive cardiac care.",
+                    "location": "Wing B, 2nd Floor",
+                    "opd_hours": "09:00 - 17:00",
+                    "contact_phone": "+91 22 5555 6666",
+                    "contact_email": "cardiology@test-hospital.org",
+                    "extension": "201",
+                    "services": [
+                        {
+                            "name": "Echocardiography",
+                            "description": "2D Echo procedure.",
+                            "order": 1,
+                        }
+                    ],
+                    "faqs": [
+                        {
+                            "question": "Is appointment required?",
+                            "answer": "Yes, prior booking is recommended.",
+                            "order": 1,
+                        }
+                    ],
+                }
+            ],
+            "doctors": [
+                {
+                    "name": "Dr. Aarav Mehta",
+                    "slug": "dr-aarav-mehta",
+                    "department_slug": "cardiology-dept",
+                    "specialty_slug": "cardiology",
+                    "qualification": "MBBS, MD, DM (Cardiology)",
+                    "experience_years": 12,
+                    "bio": "Senior interventional cardiologist.",
+                    "expertise": "Coronary angioplasty, heart failure",
+                    "consultation_type": "In-person Consultation",
+                    "consultation_duration_minutes": 30,
+                    "consultation_location": "Wing B, Suite 204",
+                    "schedules": [
+                        {
+                            "day_of_week": "Monday",
+                            "start_time": "09:00",
+                            "end_time": "13:00",
+                            "slot_duration_minutes": 30,
+                            "capacity": 1,
+                            "breaks": [
+                                {
+                                    "name": "Ward Round",
+                                    "start_time": "11:00",
+                                    "end_time": "11:30",
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def _write_temp_json(self, data):
+        tmp = tempfile.NamedTemporaryFile('w', delete=False, suffix='.json', encoding='utf-8')
+        json.dump(data, tmp)
+        tmp.close()
+        self.addCleanup(os.remove, tmp.name)
+        return tmp.name
+
+    def test_parse_time_str(self):
+        """Verifies valid and invalid 24-hour time string parsing."""
+        t1 = parse_time_str("09:30")
+        self.assertEqual(t1.hour, 9)
+        self.assertEqual(t1.minute, 30)
+
+        t2 = parse_time_str("18:45:00")
+        self.assertEqual(t2.hour, 18)
+        self.assertEqual(t2.minute, 45)
+
+        with self.assertRaises(ValueError):
+            parse_time_str("invalid-time")
+
+    def test_placeholder_rejection_without_allow_flag(self):
+        """Aborts when template placeholder strings like '[REPLACE WITH' are detected."""
+        placeholder_data = dict(self.valid_data)
+        placeholder_data["hospital_profile"]["name"] = "[REPLACE WITH: Official Name]"
+
+        temp_file = self._write_temp_json(placeholder_data)
+        out = StringIO()
+
+        with self.assertRaises(CommandError) as ctx:
+            call_command("import_hospital_data", file=temp_file, stdout=out)
+
+        self.assertIn("placeholders", str(ctx.exception).lower())
+
+    def test_validation_passes_on_valid_data(self):
+        """Valid data structure produces zero validation errors."""
+        errors = self.cmd.validate_data(self.valid_data)
+        self.assertEqual(errors, [])
+
+    def test_validation_rejects_missing_doctor_qualification(self):
+        """Validation fails if required doctor qualification is missing."""
+        invalid_data = dict(self.valid_data)
+        invalid_data["doctors"] = [
+            {
+                "name": "Dr. Incomplete",
+                "department_slug": "cardiology-dept",
+                "consultation_location": "Room 1",
+            }
+        ]
+        errors = self.cmd.validate_data(invalid_data)
+        self.assertTrue(any("qualification is required" in e for e in errors))
+
+    def test_validation_rejects_invalid_shift_hours(self):
+        """Validation fails if schedule end_time is earlier than or equal to start_time."""
+        invalid_data = dict(self.valid_data)
+        invalid_data["doctors"][0]["schedules"][0]["start_time"] = "14:00"
+        invalid_data["doctors"][0]["schedules"][0]["end_time"] = "10:00"
+
+        errors = self.cmd.validate_data(invalid_data)
+        self.assertTrue(any("must be later than start_time" in e for e in errors))
+
+    def test_validation_rejects_break_outside_shift(self):
+        """Validation fails if schedule break falls outside shift hours."""
+        invalid_data = dict(self.valid_data)
+        invalid_data["doctors"][0]["schedules"][0]["breaks"][0]["end_time"] = "14:00"  # Shift ends at 13:00
+
+        errors = self.cmd.validate_data(invalid_data)
+        self.assertTrue(any("must fit strictly within shift hours" in e for e in errors))
+
+    def test_validation_rejects_non_existent_department(self):
+        """Validation fails if doctor references a department that does not exist in file or DB."""
+        invalid_data = dict(self.valid_data)
+        invalid_data["doctors"][0]["department_slug"] = "non-existent-department-slug"
+
+        errors = self.cmd.validate_data(invalid_data)
+        self.assertTrue(any("references non-existent department" in e for e in errors))
+
+    def test_validation_rejects_duplicate_schedule_days(self):
+        """Validation fails if a doctor has multiple schedules for the same day."""
+        invalid_data = dict(self.valid_data)
+        invalid_data["doctors"][0]["schedules"].append({
+            "day_of_week": "Monday",
+            "start_time": "14:00",
+            "end_time": "18:00",
+        })
+
+        errors = self.cmd.validate_data(invalid_data)
+        self.assertTrue(any("duplicate schedule entry for 'Monday'" in e for e in errors))
+
+    @patch("apps.hospital.management.commands.import_hospital_data.HospitalProfile.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.Specialty.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.Department.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.Doctor.objects")
+    def test_dry_run_command_execution(self, mock_doc, mock_dept, mock_spec, mock_prof):
+        """Dry run passes validation and reports preview without database mutation."""
+        mock_prof.filter.return_value.first.return_value = None
+        mock_spec.filter.return_value.exists.return_value = False
+        mock_dept.filter.return_value.exists.return_value = False
+        mock_doc.filter.return_value.exists.return_value = False
+
+        temp_file = self._write_temp_json(self.valid_data)
+        out = StringIO()
+
+        call_command("import_hospital_data", file=temp_file, dry_run=True, stdout=out)
+        output = out.getvalue()
+
+        self.assertIn("DRY RUN COMPLETE", output)
+        self.assertIn("No database records were modified", output)
+        self.assertIn("Cardiology (cardiology): NEW (will create)", output)
+        self.assertIn("Dr. Aarav Mehta (dr-aarav-mehta): NEW (will create)", output)
+
+    @patch("apps.hospital.management.commands.import_hospital_data.transaction.atomic")
+    @patch("apps.hospital.management.commands.import_hospital_data.ScheduleBreak.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.DoctorSchedule.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.Doctor.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.DepartmentFAQ.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.DepartmentService.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.Department.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.Specialty.objects")
+    @patch("apps.hospital.management.commands.import_hospital_data.HospitalProfile.objects")
+    def test_live_execution_creates_all_entities(
+        self,
+        mock_prof,
+        mock_spec,
+        mock_dept,
+        mock_svc,
+        mock_faq,
+        mock_doc,
+        mock_sched,
+        mock_brk,
+        mock_atomic,
+    ):
+        """Live run invokes update_or_create for each entity within atomic transaction."""
+        mock_prof.filter.return_value.first.return_value = None
+        mock_spec.update_or_create.return_value = (MagicMock(slug='cardiology'), True)
+
+        dept_mock = MagicMock(slug='cardiology-dept')
+        mock_dept.update_or_create.return_value = (dept_mock, True)
+        mock_svc.update_or_create.return_value = (MagicMock(), True)
+        mock_faq.update_or_create.return_value = (MagicMock(), True)
+
+        doc_mock = MagicMock(slug='dr-aarav-mehta', consultation_duration_minutes=30)
+        mock_doc.update_or_create.return_value = (doc_mock, True)
+
+        sched_mock = MagicMock()
+        mock_sched.update_or_create.return_value = (sched_mock, True)
+        mock_brk.update_or_create.return_value = (MagicMock(), True)
+
+        temp_file = self._write_temp_json(self.valid_data)
+        out = StringIO()
+
+        call_command("import_hospital_data", file=temp_file, stdout=out)
+        output = out.getvalue()
+
+        self.assertIn("Import Completed Successfully", output)
+        self.assertIn("Specialties      : 1 created, 0 updated", output)
+        self.assertIn("Departments      : 1 created, 0 updated", output)
+        self.assertIn("Doctors          : 1 created, 0 updated", output)
+        self.assertIn("Doctor Schedules : 1 created, 0 updated", output)
+
+        mock_spec.update_or_create.assert_called_once()
+        mock_dept.update_or_create.assert_called_once()
+        mock_doc.update_or_create.assert_called_once()
+        mock_sched.update_or_create.assert_called_once()
+        mock_brk.update_or_create.assert_called_once()

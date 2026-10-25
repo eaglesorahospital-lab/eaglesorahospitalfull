@@ -1,0 +1,138 @@
+{
+  "_documentation": {
+    "instructions": "This template is used to configure your hospital platform. Fill in the placeholders marked with '[REPLACE WITH: ...]' with genuine hospital information, then save a copy as 'database/seeds/hospital_setup.json'.",
+    "safety_rule": "Do NOT invent fake doctors, qualifications, or clinical credentials. The import command will validate all fields and relations before inserting records.",
+    "execution_command": "Run 'python backend/manage.py import_hospital_data --file database/seeds/hospital_setup.json --dry-run' to validate without writing, then run without '--dry-run' to import."
+  },
+  "hospital_profile": {
+    "name": "[REPLACE WITH: Official Hospital Name, e.g. EgleSora Memorial Hospital]",
+    "legal_name": "[REPLACE WITH: Registered Legal Entity Name, e.g. EgleSora Healthcare & Research Foundation Pvt. Ltd.]",
+    "tagline": "[REPLACE WITH: Hospital Tagline, e.g. Excellence in Clinical Care & Patient Safety]",
+    "overview": "[REPLACE WITH: Institutional mission overview describing clinical governance, tertiary care scope, and facilities.]",
+    "contact_phone": "[REPLACE WITH: General Reception / Desk Phone Number, e.g. +91 22 2450 1000]",
+    "emergency_phone": "[REPLACE WITH: 24/7 Dedicated Emergency Hotline Number, e.g. +91 22 2450 1099]",
+    "contact_email": "[REPLACE WITH: Official General Inquiry Email, e.g. desk@eglesorahospital.org]",
+    "address": "[REPLACE WITH: Full Physical Postal Address, e.g. 100 Healthcare Avenue, Medical District, Mumbai, MH 400001]",
+    "visiting_hours": "[REPLACE WITH: Inpatient & OPD Visiting Hours, e.g. Monday - Saturday: 08:00 AM - 08:00 PM]",
+    "emergency_info": "[REPLACE WITH: Emergency services protocol, trauma triage instructions, and ambulance bay directions.]",
+    "is_active": true
+  },
+  "specialties": [
+    {
+      "name": "[REPLACE WITH: Clinical Specialty Name, e.g. Cardiology]",
+      "slug": "cardiology",
+      "description": "[REPLACE WITH: Clinical scope description, e.g. Comprehensive diagnostic, preventive, and interventional cardiovascular medicine.]",
+      "is_active": true
+    },
+    {
+      "name": "[REPLACE WITH: Clinical Specialty Name, e.g. Neurology]",
+      "slug": "neurology",
+      "description": "[REPLACE WITH: Clinical scope description, e.g. Diagnostic and therapeutic management of central, peripheral, and autonomic nervous system disorders.]",
+      "is_active": true
+    },
+    {
+      "name": "[REPLACE WITH: Clinical Specialty Name, e.g. Orthopaedics]",
+      "slug": "orthopaedics",
+      "description": "[REPLACE WITH: Clinical scope description, e.g. Musculoskeletal disorders, trauma surgery, joint reconstruction, and sports medicine.]",
+      "is_active": true
+    },
+    {
+      "name": "[REPLACE WITH: Clinical Specialty Name, e.g. Paediatrics & Child Health]",
+      "slug": "paediatrics",
+      "description": "[REPLACE WITH: Clinical scope description, e.g. General and subspecialty healthcare for infants, children, and adolescents.]",
+      "is_active": true
+    }
+  ],
+  "departments": [
+    {
+      "name": "[REPLACE WITH: Department Name, e.g. Department of Cardiovascular Sciences]",
+      "slug": "cardiovascular-sciences",
+      "specialty": "[REPLACE WITH: Specialty Domain, e.g. Cardiology & Vascular Surgery]",
+      "short_description": "[REPLACE WITH: Short 1-2 sentence summary of department capabilities]",
+      "full_description": "[REPLACE WITH: Comprehensive description of clinical procedures, inpatient wards, intensive care, and diagnostic laboratories]",
+      "location": "[REPLACE WITH: Exact building, wing, and floor, e.g. Wing B, 2nd Floor, Suite 201-210]",
+      "opd_hours": "[REPLACE WITH: Outpatient operational hours, e.g. Monday - Saturday: 08:30 AM - 05:00 PM]",
+      "contact_phone": "[REPLACE WITH: Department Direct Phone, e.g. +91 22 2450 1201]",
+      "contact_email": "[REPLACE WITH: Department Direct Email, e.g. cardiology@eglesorahospital.org]",
+      "extension": "[REPLACE WITH: Internal Extension, e.g. 201]",
+      "is_active": true,
+      "services": [
+        {
+          "name": "[REPLACE WITH: Clinical Service Name, e.g. 2D Transthoracic Echocardiography & Colour Doppler]",
+          "description": "[REPLACE WITH: Brief procedure overview]",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "[REPLACE WITH: Clinical Service Name, e.g. 24-Hour Ambulatory Blood Pressure & Holter Monitoring]",
+          "description": "[REPLACE WITH: Brief procedure overview]",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "[REPLACE WITH: Frequent Patient Question, e.g. Do I need to fast before a routine echocardiogram?]",
+          "answer": "[REPLACE WITH: Authoritative clinical guidance, e.g. No, routine transthoracic echocardiography does not require fasting unless sedation is planned.]",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    }
+  ],
+  "doctors": [
+    {
+      "name": "[REPLACE WITH: Doctor Full Name with Title, e.g. Dr. Ramesh K. Sharma]",
+      "slug": "dr-ramesh-k-sharma",
+      "department_slug": "cardiovascular-sciences",
+      "specialty_slug": "cardiology",
+      "specialty_name": "[REPLACE WITH: Clinical Title / Display Specialty, e.g. Senior Consultant Interventional Cardiologist]",
+      "qualification": "[REPLACE WITH: Academic Degrees & Fellowships, e.g. MBBS, MD (General Medicine), DM (Cardiology), FACC]",
+      "experience_years": 15,
+      "bio": "[REPLACE WITH: Professional biography highlighting clinical focus, past hospital appointments, and patient care philosophy]",
+      "expertise": "[REPLACE WITH: Comma-separated clinical focus areas, e.g. Complex Coronary Angioplasty, Radial Interventions, Heart Failure Management, Lipid Disorders]",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "[REPLACE WITH: Room / Suite, e.g. Wing B, 2nd Floor, OPD Suite 204]",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Monday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Clinical Briefing / Inpatient Rounds",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Wednesday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": []
+        },
+        {
+          "day_of_week": "Friday",
+          "start_time": "14:00",
+          "end_time": "18:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": []
+        }
+      ]
+    }
+  ]
+}
