@@ -23,7 +23,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 import django
 django.setup()
 
-from django.test import TestCase
+from unittest import TestCase
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 import dj_database_url

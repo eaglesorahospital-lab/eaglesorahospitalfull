@@ -61,15 +61,15 @@ class DoctorSchedule(models.Model):
                 name='unique_doctor_day_schedule',
             ),
             models.CheckConstraint(
-                check=Q(end_time__gt=F('start_time')),
+                condition=Q(end_time__gt=F('start_time')),
                 name='schedule_end_time_after_start_time',
             ),
             models.CheckConstraint(
-                check=Q(slot_duration_minutes__gt=0),
+                condition=Q(slot_duration_minutes__gt=0),
                 name='positive_slot_duration',
             ),
             models.CheckConstraint(
-                check=Q(capacity__gt=0),
+                condition=Q(capacity__gt=0),
                 name='positive_slot_capacity',
             ),
         ]
@@ -103,7 +103,7 @@ class ScheduleBreak(models.Model):
         ordering = ['start_time']
         constraints = [
             models.CheckConstraint(
-                check=Q(end_time__gt=F('start_time')),
+                condition=Q(end_time__gt=F('start_time')),
                 name='break_end_time_after_start_time',
             ),
         ]
@@ -139,7 +139,7 @@ class DoctorLeave(models.Model):
         ordering = ['start_date']
         constraints = [
             models.CheckConstraint(
-                check=Q(end_date__gte=F('start_date')),
+                condition=Q(end_date__gte=F('start_date')),
                 name='leave_end_date_gte_start_date',
             ),
         ]

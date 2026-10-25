@@ -9,8 +9,8 @@ from django.db import transaction
 from django.contrib.auth import get_user_model
 import datetime
 
-from apps.hospital.models import HospitalProfile
-from apps.departments.models import Department
+from apps.hospital.models import HospitalProfile, HospitalFacility, HospitalAnnouncement, HospitalFAQ
+from apps.departments.models import Department, DepartmentService, DepartmentFAQ
 from apps.doctors.models import Specialty, Doctor
 from apps.scheduling.models import DoctorSchedule, ScheduleBreak
 
@@ -20,7 +20,24 @@ User = get_user_model()
 class Command(BaseCommand):
     help = "Idempotently seeds initial clinical departments, specialties, doctors, and schedules into PostgreSQL."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--confirm',
+            action='store_true',
+            help='Explicit confirmation to seed demonstration hospital records into PostgreSQL.',
+        )
+
     def handle(self, *args, **options):
+        from django.conf import settings
+        is_production = not getattr(settings, 'DEBUG', True)
+        if is_production and not options.get('confirm'):
+            self.stdout.write(self.style.WARNING(
+                "SAFETY ABORT: settings.DEBUG is False. Seeding demonstration hospital records into production "
+                "requires the '--confirm' flag to prevent unintended creation of demo doctors in a live database.\n"
+                "To proceed, rerun with: python manage.py seed_hospital_data --confirm"
+            ))
+            return
+
         self.stdout.write(self.style.NOTICE("=== Seeding Eagle Sora Hospital Clinical Data ==="))
 
         with transaction.atomic():
@@ -321,5 +338,213 @@ class Command(BaseCommand):
                     )
 
             self.stdout.write(f"Doctor schedules verified: {total_schedules}")
+
+            # 6. Hospital Facilities
+            facilities_data = [
+                {
+                    'name': '24/7 Emergency & Acute Trauma Center',
+                    'description': 'Level-1 emergency department equipped with advanced resuscitation bays, dedicated trauma team, and direct ambulance ramp access.',
+                    'order': 1,
+                    'is_active': True,
+                },
+                {
+                    'name': 'Advanced Cardiac Catheterization Laboratory',
+                    'description': 'State-of-the-art digital biplane cath lab for primary percutaneous coronary interventions, electrophysiology studies, and device implantations.',
+                    'order': 2,
+                    'is_active': True,
+                },
+                {
+                    'name': 'Multi-Disciplinary Intensive Care Units (ICU & CCU)',
+                    'description': '24-bed critical care facility with continuous invasive hemodynamic monitoring, high-frequency ventilators, and round-the-clock intensivist coverage.',
+                    'order': 3,
+                    'is_active': True,
+                },
+                {
+                    'name': 'Comprehensive Diagnostic Imaging & Radiology',
+                    'description': 'High-resolution 128-slice CT scanner, 3.0 Tesla MRI, digital mammography, 4D Doppler ultrasound, and PACS digital reporting.',
+                    'order': 4,
+                    'is_active': True,
+                },
+                {
+                    'name': 'Modular Surgical Theatres & Laparoscopy Suites',
+                    'description': 'Class-100 laminar airflow operating theatres equipped for complex neurosurgery, joint replacements, and minimally invasive laparoscopic procedures.',
+                    'order': 5,
+                    'is_active': True,
+                },
+                {
+                    'name': 'Automated Clinical Pathology & Blood Transfusion Bank',
+                    'description': 'NABH-accredited laboratory delivering high-throughput biochemical profiles, rapid cross-matching, and 24/7 blood component therapy.',
+                    'order': 6,
+                    'is_active': True,
+                },
+            ]
+            fac_count = 0
+            for fac in facilities_data:
+                _, created = HospitalFacility.objects.get_or_create(
+                    name=fac['name'],
+                    defaults=fac,
+                )
+                if created:
+                    fac_count += 1
+            self.stdout.write(f"Hospital Facilities verified: {len(facilities_data)} ({fac_count} created)")
+
+            # 7. Hospital Public Announcements
+            now = datetime.datetime.now(datetime.timezone.utc)
+            announcements_data = [
+                {
+                    'title': '24/7 Acute Stroke Triage & Thrombolysis Protocol Activated',
+                    'slug': 'acute-stroke-triage-protocol',
+                    'category': 'Clinical Advisory',
+                    'summary': 'Rapid response protocol for hyperacute ischemic stroke care within the crucial 4.5-hour therapeutic window.',
+                    'content': 'EgleSora Hospital has operationalized an ultra-fast acute stroke protocol in partnership with the Department of Neurology and Emergency Medicine. Any suspected stroke presentation triggers immediate Code Stroke activation with instant 3T MRI perfusion sequencing and priority thrombolysis assessment.',
+                    'is_published': True,
+                    'published_at': now,
+                },
+                {
+                    'title': 'Annual Preventive Cardiovascular Health Screening Initiative',
+                    'slug': 'cardiovascular-health-screening',
+                    'category': 'Public Health',
+                    'summary': 'Comprehensive heart risk evaluations including lipid profiling, resting ECG, and cardiologist consultation.',
+                    'content': 'In line with our community preventive mission, the Department of Cardiology is conducting structured outpatient wellness checkups. Packages include non-invasive stress testing, echocardiogram reviews, and individualized dietetic counseling.',
+                    'is_published': True,
+                    'published_at': now,
+                },
+                {
+                    'title': 'New 128-Slice High-Speed CT Scanner Operational in Diagnostic Wing',
+                    'slug': '128-slice-ct-operational',
+                    'category': 'Infrastructure',
+                    'summary': 'Next-generation low-dose diagnostic imaging with ultra-fast cardiac angiography and pulmonary embolism screening.',
+                    'content': 'Our diagnostic radiology unit has completed commissioning and clinical calibration of the new high-resolution 128-slice CT scanner. This equipment reduces patient radiation dosage by up to 60% while providing sub-millimeter anatomical detail in under five seconds.',
+                    'is_published': True,
+                    'published_at': now,
+                },
+            ]
+            ann_count = 0
+            for ann in announcements_data:
+                _, created = HospitalAnnouncement.objects.get_or_create(
+                    slug=ann['slug'],
+                    defaults=ann,
+                )
+                if created:
+                    ann_count += 1
+            self.stdout.write(f"Hospital Announcements verified: {len(announcements_data)} ({ann_count} created)")
+
+            # 8. Hospital FAQs
+            faqs_data = [
+                {
+                    'question': 'How do I book an outpatient appointment at EgleSora Hospital?',
+                    'answer': 'You can book an appointment online anytime through our website by choosing your specialist doctor, date, and preferred time slot. You can also contact our centralized outpatient appointment desk at +91 (0) 22 0000 2222.',
+                    'order': 1,
+                    'is_active': True,
+                },
+                {
+                    'question': 'What are the visiting hours for inpatient wards and ICUs?',
+                    'answer': 'General inpatient ward visiting hours are Monday to Saturday from 04:30 PM to 07:00 PM, and Sundays from 10:00 AM to 12:00 PM and 04:30 PM to 07:00 PM. To ensure critical patient safety and infection control, ICU visitor access is restricted to designated immediate family members during specific 30-minute intervals.',
+                    'order': 2,
+                    'is_active': True,
+                },
+                {
+                    'question': 'Are emergency services available 24 hours a day?',
+                    'answer': 'Yes. Our Emergency and Acute Trauma Center operates 24 hours a day, 7 days a week, 365 days a year with full triage, dedicated trauma surgeons, critical care intensivists, and continuous radiology and blood bank support.',
+                    'order': 3,
+                    'is_active': True,
+                },
+                {
+                    'question': 'What documents should I bring for my first consultation?',
+                    'answer': 'Please bring a valid government-issued photo ID, any previous medical records, diagnostic scan reports, laboratory test results, current prescription medications, and health insurance policy documents if applicable.',
+                    'order': 4,
+                    'is_active': True,
+                },
+                {
+                    'question': 'Does EgleSora Hospital support cashless health insurance processing?',
+                    'answer': 'Yes. We partner with all leading health insurance providers and Third-Party Administrators (TPAs) to provide seamless cashless hospitalization and direct pre-authorization for eligible planned and emergency admissions.',
+                    'order': 5,
+                    'is_active': True,
+                },
+            ]
+            faq_count = 0
+            for faq in faqs_data:
+                _, created = HospitalFAQ.objects.get_or_create(
+                    question=faq['question'],
+                    defaults=faq,
+                )
+                if created:
+                    faq_count += 1
+            self.stdout.write(f"Hospital FAQs verified: {len(faqs_data)} ({faq_count} created)")
+
+            # 9. Department Services and FAQs
+            dept_services = {
+                'cardiology': [
+                    ('Coronary Angiography & Stenting', 'Advanced catheter-based evaluation and stent revascularization.'),
+                    ('Transthoracic & Stress Echocardiography', 'High-resolution ultrasound imaging of heart chambers and valves.'),
+                    ('Electrophysiology & Pacemaker Clinic', 'Diagnosis of arrhythmias, pacemaker implantations, and CRT therapies.'),
+                    ('Preventive Heart Health Checkups', 'Comprehensive risk profiling and clinical cardiovascular prevention.'),
+                ],
+                'neurology': [
+                    ('Hyperacute Stroke Care & Thrombolysis', 'Rapid emergency brain revascularization and neuro-intensive monitoring.'),
+                    ('Comprehensive Epilepsy Assessment', 'Digital video EEG monitoring and tailored pharmacological management.'),
+                    ('Neuromuscular & EMG Diagnostics', 'Electromyography and nerve conduction studies for peripheral nerve disorders.'),
+                    ('Movement Disorders & Parkinson Clinic', 'Specialized assessments for tremors, dystonia, and gait rehabilitation.'),
+                ],
+                'orthopaedics': [
+                    ('Total Knee & Hip Arthroplasty', 'Primary and revision computer-assisted joint replacement surgery.'),
+                    ('Arthroscopic Sports Injury Reconstruction', 'Minimally invasive repair for ACL/PCL tears and rotator cuff injuries.'),
+                    ('Complex Trauma & Fracture Fixation', '24/7 dedicated surgical management of high-energy polytrauma injuries.'),
+                    ('Spine Assessment & Disc Therapy', 'Comprehensive conservative and surgical spinal care.'),
+                ],
+                'oncology': [
+                    ('Precision Systemic Chemotherapy', 'Customized oncological infusion protocols in dedicated daycare suites.'),
+                    ('Targeted Biological & Immunotherapy', 'Next-generation molecular tumor-specific biological treatments.'),
+                    ('Multidisciplinary Tumor Board Reviews', 'Consensus clinical review by medical, surgical, and radiation specialists.'),
+                    ('Palliative Care & Pain Management', 'Holistic symptom management and compassionate patient support.'),
+                ],
+                'paediatrics': [
+                    ('Well-Child & Newborn Care', 'Comprehensive neonatal development checks and pediatric wellness tracking.'),
+                    ('Universal Immunization Schedules', 'Routine and recommended vaccination tracking by specialist pediatricians.'),
+                    ('Pediatric Asthma & Allergy Management', 'Specialized pulmonary evaluation and allergy immunotherapy protocols.'),
+                    ('Pediatric Emergency & Inpatient Triage', 'Dedicated acute care for infant and childhood medical emergencies.'),
+                ],
+                'emergency': [
+                    ('24/7 Resuscitation & Trauma Triage', 'Immediate Level-1 emergency stabilization and trauma team activation.'),
+                    ('Point-of-Care Ultrasound & Rapid Diagnostics', 'Instant bedside ultrasonography and rapid laboratory testing.'),
+                    ('Acute Toxicology & Overdose Management', 'Immediate gastric decontamination, antidote administration, and ICU monitoring.'),
+                    ('Advanced Airway & Mechanical Ventilation', 'Rapid sequence intubation and emergency hemodynamic support.'),
+                ],
+            }
+
+            for dept_slug, services in dept_services.items():
+                dept = dept_map.get(dept_slug)
+                if dept:
+                    for order_idx, (s_name, s_desc) in enumerate(services, start=1):
+                        DepartmentService.objects.get_or_create(
+                            department=dept,
+                            name=s_name,
+                            defaults={'description': s_desc, 'order': order_idx, 'is_active': True}
+                        )
+
+            dept_faqs = {
+                'cardiology': [
+                    ('How do I prepare for a stress echocardiogram?', 'Wear comfortable walking shoes and clothing. Refrain from heavy meals or caffeine for 3 hours before the test, and follow your physician instructions regarding morning beta-blockers.'),
+                    ('What is the difference between an ECG and an Echocardiogram?', 'An ECG records electrical impulses of your heart rhythm, whereas an echocardiogram is an ultrasound scan showing live video of heart muscle contractions and valve function.'),
+                ],
+                'neurology': [
+                    ('What are the warning signs of an acute stroke?', 'Remember FAST: Facial drooping, Arm weakness, Speech difficulty, and Time to call emergency hotline +91 (0) 22 0000 1111 immediately.'),
+                    ('How should I prepare for an EEG test?', 'Wash your hair the evening before the test and do not apply hair oils, gels, or sprays. Continue routine medications unless advised otherwise by your neurologist.'),
+                ],
+                'orthopaedics': [
+                    ('How long is recovery after a total knee replacement?', 'Most patients begin assisted walking within 24 hours. Full functional recovery typically takes 6 to 12 weeks with structured physical therapy.'),
+                    ('Do all ligament tears require surgery?', 'Not all tears require surgery. Partial tears may be successfully treated with physical rehabilitation, bracing, and activity modification.'),
+                ],
+            }
+
+            for dept_slug, faqs in dept_faqs.items():
+                dept = dept_map.get(dept_slug)
+                if dept:
+                    for order_idx, (q, a) in enumerate(faqs, start=1):
+                        DepartmentFAQ.objects.get_or_create(
+                            department=dept,
+                            question=q,
+                            defaults={'answer': a, 'order': order_idx, 'is_active': True}
+                        )
 
         self.stdout.write(self.style.SUCCESS("All hospital clinical data seeded successfully into PostgreSQL!"))
