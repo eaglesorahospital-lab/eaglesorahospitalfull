@@ -6,7 +6,6 @@ import EmptyState from '../../components/common/EmptyState';
 import SEO from '../../components/common/SEO';
 import doctorService from '../../services/doctorService';
 import scheduleService from '../../services/scheduleService';
-import { getDoctorByIdOrSlug } from '../../data/hospitalData';
 import {
   Calendar,
   Clock,
@@ -18,6 +17,7 @@ import {
   AlertTriangle,
   FileText,
   UserCheck,
+  RefreshCw,
 } from 'lucide-react';
 
 function formatTime12h(timeStr) {
@@ -39,10 +39,10 @@ export function DoctorDetailPage() {
   const { slug, id } = useParams();
   const identifier = slug || id;
 
-  const [doctor, setDoctor] = useState(() => getDoctorByIdOrSlug(identifier));
+  const [doctor, setDoctor] = useState(null);
   const [dbSchedules, setDbSchedules] = useState([]);
   const [dbLeaves, setDbLeaves] = useState([]);
-  const [isLoading, setIsLoading] = useState(!doctor);
+  const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
   const loadDoctorProfile = () => {
@@ -59,7 +59,9 @@ export function DoctorDetailPage() {
           setDoctor(docResult.value);
         } else if (docResult.status === 'rejected') {
           console.warn(`Could not load doctor ${identifier} from API:`, docResult.reason);
-          setApiError('Unable to load physician profile from server. Please retry.');
+          setApiError('Unable to load physician profile from server. Please verify connection and retry.');
+        } else {
+          setDoctor(null);
         }
 
         if (schedResult.status === 'fulfilled' && Array.isArray(schedResult.value)) {
@@ -113,12 +115,27 @@ export function DoctorDetailPage() {
         />
         <div className="py-4">
           <EmptyState
-            title="Doctor Record Not Found"
-            message={`We could not locate any physician profile corresponding to "${identifier}". The specialist may have relocated or the address may be typed incorrectly.`}
+            title={apiError ? 'Unable to Retrieve Doctor Profile' : 'Doctor Record Not Found'}
+            message={
+              apiError ||
+              `We could not locate any physician profile corresponding to "${identifier}". The specialist may have relocated or the address may be typed incorrectly.`
+            }
             action={
-              <Link to="/doctors" className="neu-btn neu-btn-primary">
-                Return to Doctor Directory
-              </Link>
+              <div className="d-flex flex-wrap gap-2 justify-content-center">
+                {apiError && (
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1"
+                    onClick={loadDoctorProfile}
+                  >
+                    <RefreshCw size={14} />
+                    <span>Retry Connection</span>
+                  </button>
+                )}
+                <Link to="/doctors" className="neu-btn neu-btn-outline">
+                  Return to Doctor Directory
+                </Link>
+              </div>
             }
           />
         </div>

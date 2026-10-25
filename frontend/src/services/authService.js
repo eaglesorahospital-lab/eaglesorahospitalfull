@@ -17,7 +17,20 @@ const ACCESS_TOKEN_KEY = 'eglesora_staff_access';
 const REFRESH_TOKEN_KEY = 'eglesora_staff_refresh';
 const USER_KEY = 'eglesora_staff_user';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+function resolveApiBaseUrl() {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return String(import.meta.env.VITE_API_BASE_URL).replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const host = window.location.hostname;
+    if (host.includes('eaglesora-hospital-frontend.onrender.com')) {
+      return 'https://eaglesorahospitalfull.onrender.com';
+    }
+  }
+  return '';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 /**
  * Safely decodes base64 JWT payload without external dependencies

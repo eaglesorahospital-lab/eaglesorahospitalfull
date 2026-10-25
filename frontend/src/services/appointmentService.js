@@ -6,8 +6,9 @@
  */
 
 import authService from './authService';
+import { getApiBaseUrl } from './api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Normalizes appointment response from DRF API into uniform shape

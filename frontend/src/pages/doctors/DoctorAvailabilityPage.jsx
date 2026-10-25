@@ -234,12 +234,32 @@ export function DoctorAvailabilityPage() {
         />
         <div className="py-4">
           <EmptyState
-            title="Doctor Profile Not Found"
-            message={`No physician schedule was found for identifier "${identifier}".`}
+            title={apiError ? 'Unable to Retrieve Doctor Schedule' : 'Doctor Profile Not Found'}
+            message={apiError || `No physician schedule was found for identifier "${identifier}".`}
             action={
-              <Link to="/doctors" className="neu-btn neu-btn-primary">
-                Return to Doctor Directory
-              </Link>
+              <div className="d-flex flex-wrap gap-2 justify-content-center">
+                {apiError && (
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1"
+                    onClick={() => {
+                      setIsLoadingDoctor(true);
+                      setApiError(null);
+                      doctorService
+                        .getDoctor(identifier)
+                        .then((data) => setDoctor(data))
+                        .catch(() => setApiError('Retry connection failed. Please try again.'))
+                        .finally(() => setIsLoadingDoctor(false));
+                    }}
+                  >
+                    <RotateCw size={14} />
+                    <span>Retry Connection</span>
+                  </button>
+                )}
+                <Link to="/doctors" className="neu-btn neu-btn-outline">
+                  Return to Doctor Directory
+                </Link>
+              </div>
             }
           />
         </div>

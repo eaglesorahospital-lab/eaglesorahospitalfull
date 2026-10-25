@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
-import { DEMO_DOCTORS, DEMO_DEPARTMENTS } from '../../data/hospitalData';
 import { Stethoscope, Clock, MapPin, ChevronRight, User, Award, Search, Filter } from 'lucide-react';
 
 /**
@@ -11,32 +10,39 @@ import { Stethoscope, Clock, MapPin, ChevronRight, User, Award, Search, Filter }
  * with Neumorphic styling and department/specialty filtering.
  */
 export function DoctorBookingSummary({ doctor, onSelectDoctor, onChangeDoctor }) {
-  const [activeDoctors, setActiveDoctors] = useState(() => DEMO_DOCTORS.filter((d) => d.status === 'active'));
-  const [departments, setDepartments] = useState(() => DEMO_DEPARTMENTS);
+  const [activeDoctors, setActiveDoctors] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
   const [selectedDept, setSelectedDept] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadData = () => {
+    setIsLoading(true);
+    setApiError(null);
     Promise.allSettled([
       doctorService.getDoctors({ is_active: true, page_size: 100 }),
       departmentService.getDepartments(),
     ]).then(([docRes, deptRes]) => {
-      if (!isMounted) return;
       if (docRes.status === 'fulfilled' && docRes.value?.results) {
         const activeOnly = docRes.value.results.filter(
           (d) => d.is_active !== false && String(d.status).toLowerCase() !== 'inactive'
         );
         setActiveDoctors(activeOnly);
+      } else if (docRes.status === 'rejected') {
+        console.warn('Doctor booking summary API error:', docRes.reason);
+        setApiError('Unable to load available specialists from server.');
       }
-      if (deptRes.status === 'fulfilled' && deptRes.value?.length > 0) {
+      if (deptRes.status === 'fulfilled' && Array.isArray(deptRes.value)) {
         setDepartments(deptRes.value);
       }
+    }).finally(() => {
+      setIsLoading(false);
     });
+  };
 
-    return () => {
-      isMounted = false;
-    };
+  useEffect(() => {
+    loadData();
   }, []);
 
   const filteredDoctors = useMemo(() => {
@@ -183,7 +189,27 @@ export function DoctorBookingSummary({ doctor, onSelectDoctor, onChangeDoctor })
       </div>
 
       <div className="row g-3">
-        {filteredDoctors.length === 0 ? (
+        {isLoading ? (
+          <div className="col-12 text-center py-4 text-muted small">
+            <div className="spinner-border spinner-border-sm text-primary me-2" role="status" />
+            Loading attending specialists...
+          </div>
+        ) : apiError && activeDoctors.length === 0 ? (
+          <div className="col-12 text-center py-4 text-muted small">
+            <p className="mb-2 text-danger">{apiError}</p>
+            <button
+              type="button"
+              className="neu-btn neu-btn-outline neu-btn-sm"
+              onClick={loadData}
+            >
+              Retry
+            </button>
+          </div>
+        ) : activeDoctors.length === 0 ? (
+          <div className="col-12 text-center py-4 text-muted small">
+            No active medical consultants are currently registered in the hospital booking directory. Please contact our outpatient reception desk at +91 (0) 22 0000 2222.
+          </div>
+        ) : filteredDoctors.length === 0 ? (
           <div className="col-12 text-center py-4 text-muted small">
             No active doctors match the selected department or search filter.
           </div>

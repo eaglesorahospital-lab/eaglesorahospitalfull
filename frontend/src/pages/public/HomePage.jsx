@@ -51,7 +51,7 @@ export function HomePage() {
   const [selectedDeptSlug, setSelectedDeptSlug] = useState('');
 
   // Authoritative data state synced with backend API
-  const [doctors, setDoctors] = useState(() => DEMO_DOCTORS.filter((d) => d.status === 'active'));
+  const [doctors, setDoctors] = useState([]);
   const [departments, setDepartments] = useState(() => DEMO_DEPARTMENTS);
 
   useEffect(() => {
@@ -59,12 +59,16 @@ export function HomePage() {
     doctorService
       .getDoctors({ is_active: true, page_size: 10 })
       .then((res) => {
-        if (isMounted && res?.results && res.results.length > 0) {
-          const activeOnly = res.results.filter((d) => d.status === 'active');
+        if (isMounted) {
+          const list = res?.results || [];
+          const activeOnly = list.filter((d) => d.status === 'active' || d.is_active);
           setDoctors(activeOnly);
         }
       })
-      .catch((err) => console.warn('Could not load doctors from API:', err));
+      .catch((err) => {
+        console.warn('Could not load doctors from API:', err);
+        if (isMounted) setDoctors([]);
+      });
 
     departmentService
       .getDepartments()
@@ -425,11 +429,23 @@ export function HomePage() {
           </div>
 
           <div className="row g-4">
-            {doctors.slice(0, 6).map((doc) => (
-              <div key={doc.id} className="col-12 col-md-6 col-lg-4">
-                <DoctorCard doctor={doc} />
+            {doctors.length > 0 ? (
+              doctors.slice(0, 6).map((doc) => (
+                <div key={doc.id} className="col-12 col-md-6 col-lg-4">
+                  <DoctorCard doctor={doc} />
+                </div>
+              ))
+            ) : (
+              <div className="col-12">
+                <div className="neu-raised neu-surface p-4 rounded-4 text-center text-muted">
+                  <p className="mb-3">Attending medical specialists and outpatient consultant rosters are currently being updated in the registry.</p>
+                  <Link to="/doctors" className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center gap-1">
+                    <span>View Doctors Directory</span>
+                    <ChevronRight size={14} />
+                  </Link>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </Container>
       </section>

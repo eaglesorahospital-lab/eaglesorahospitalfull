@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import doctorService from '../services/doctorService';
 import appointmentService from '../services/appointmentService';
-import { getDoctorByIdOrSlug } from '../data/hospitalData';
 
 /**
  * Hospital Platform — Appointment Booking Hook
@@ -15,14 +14,9 @@ export function useAppointmentBooking() {
   const initialDateParam = searchParams.get('date');
   const initialTimeParam = searchParams.get('time');
 
-  // Find initial doctor from query parameter if present
-  const resolvedInitialDoctor = initialDoctorParam
-    ? getDoctorByIdOrSlug(initialDoctorParam)
-    : null;
-
   // Multi-step indicator: 1 = Doctor, 2 = Date & Time, 3 = Patient Details, 4 = Review
-  const [step, setStep] = useState(resolvedInitialDoctor && (resolvedInitialDoctor.status === 'active' || resolvedInitialDoctor.is_active) ? 2 : 1);
-  const [doctor, setDoctor] = useState(resolvedInitialDoctor && (resolvedInitialDoctor.status === 'active' || resolvedInitialDoctor.is_active) ? resolvedInitialDoctor : null);
+  const [step, setStep] = useState(1);
+  const [doctor, setDoctor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(initialDateParam || '');
   const [selectedDayName, setSelectedDayName] = useState('');
   const [selectedTime, setSelectedTime] = useState(initialTimeParam || '');
@@ -48,21 +42,13 @@ export function useAppointmentBooking() {
         .then((apiDoc) => {
           if (apiDoc && (apiDoc.status === 'active' || apiDoc.is_active)) {
             setDoctor(apiDoc);
-            if (step === 1) setStep(2);
+            setStep((s) => (s === 1 ? 2 : s));
           } else {
-            const fallback = getDoctorByIdOrSlug(initialDoctorParam);
-            if (fallback && fallback.status === 'active') {
-              setDoctor(fallback);
-              if (step === 1) setStep(2);
-            }
+            setDoctor(null);
           }
         })
         .catch(() => {
-          const fallback = getDoctorByIdOrSlug(initialDoctorParam);
-          if (fallback && fallback.status === 'active') {
-            setDoctor(fallback);
-            if (step === 1) setStep(2);
-          }
+          setDoctor(null);
         });
     }
     if (initialDateParam) {

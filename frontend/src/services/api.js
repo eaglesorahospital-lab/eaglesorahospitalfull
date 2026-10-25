@@ -14,10 +14,25 @@ import authService from './authService';
 const configuredTimeout = Number(import.meta.env.VITE_API_TIMEOUT_MS);
 const DEFAULT_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTimeout > 0
   ? configuredTimeout
-  : 60000;
+  : 15000;
+
+export function getApiBaseUrl() {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return String(import.meta.env.VITE_API_BASE_URL).replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const host = window.location.hostname;
+    if (host.includes('eaglesora-hospital-frontend.onrender.com')) {
+      return 'https://eaglesorahospitalfull.onrender.com';
+    }
+  }
+  return '';
+}
 
 export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  get baseURL() {
+    return getApiBaseUrl();
+  },
   timeout: DEFAULT_TIMEOUT_MS,
   endpoints: {
     health: '/api/health/',
@@ -171,6 +186,15 @@ export async function request(endpoint, options = {}) {
     data = await response.json().catch(() => null);
   } else {
     data = await response.text().catch(() => null);
+  }
+
+  // Guard against SPA router rewrite returning HTML for /api calls
+  if (endpoint.startsWith('/api') && contentType.includes('text/html')) {
+    throw new ApiError(
+      'The API service returned an unexpected HTML document instead of JSON. The backend server may be starting up or the API endpoint path was not recognized.',
+      response.status === 200 ? 502 : response.status,
+      data
+    );
   }
 
   if (!response.ok) {

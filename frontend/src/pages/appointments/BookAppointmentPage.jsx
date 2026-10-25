@@ -39,6 +39,8 @@ export function BookAppointmentPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
+  const effectiveStep = !doctor && step > 1 ? 1 : step;
+
   const breadcrumbs = [
     { label: 'Home', to: '/' },
     { label: 'Appointments' },
@@ -74,10 +76,10 @@ export function BookAppointmentPage() {
         />
 
         {/* Step Indicator */}
-        <BookingStepIndicator currentStep={step} onStepClick={goToStep} />
+        <BookingStepIndicator currentStep={effectiveStep} onStepClick={(s) => (s === 1 || doctor) && goToStep(s)} />
 
         {/* STEP 1: DOCTOR SELECTION */}
-        {step === 1 && (
+        {effectiveStep === 1 && (
           <div>
             <DoctorBookingSummary
               doctor={doctor}
@@ -96,7 +98,7 @@ export function BookAppointmentPage() {
         )}
 
         {/* STEP 2: DATE & TIME SELECTION */}
-        {step === 2 && doctor && (
+        {effectiveStep === 2 && doctor && (
           <div>
             <DoctorBookingSummary
               doctor={doctor}
@@ -127,7 +129,7 @@ export function BookAppointmentPage() {
         )}
 
         {/* STEP 3: PATIENT INTAKE DETAILS */}
-        {step === 3 && doctor && (
+        {effectiveStep === 3 && doctor && (
           <div>
             {/* Quick appointment summary pill */}
             <div className="p-3 mb-4 neu-raised neu-surface rounded-4 d-flex flex-wrap justify-content-between align-items-center gap-2 small">
@@ -166,7 +168,7 @@ export function BookAppointmentPage() {
         )}
 
         {/* STEP 4: REVIEW & CONFIRMATION */}
-        {step === 4 && doctor && (
+        {effectiveStep === 4 && doctor && (
           <div className="mb-5">
             {submitError && (
               <div className="neu-inset p-3 mb-3 rounded-4 border-start border-4 border-danger small text-danger d-flex justify-content-between align-items-center" role="alert">

@@ -7,7 +7,7 @@ import SEO from '../../components/common/SEO';
 import DoctorCard from '../../components/doctors/DoctorCard';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
-import { DEMO_DEPARTMENTS, DEMO_DOCTORS } from '../../data/hospitalData';
+import { DEMO_DEPARTMENTS } from '../../data/hospitalData';
 import {
   Calendar,
   Clock,
@@ -59,11 +59,7 @@ export function DepartmentDetailPage() {
     );
   }
 
-  const [associatedDoctors, setAssociatedDoctors] = useState(() =>
-    (department.doctorIds || [])
-      .map((id) => DEMO_DOCTORS.find((doc) => doc.id === id && doc.status === 'active'))
-      .filter(Boolean)
-  );
+  const [associatedDoctors, setAssociatedDoctors] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -76,11 +72,14 @@ export function DepartmentDetailPage() {
               doc.departmentId === slug ||
               (department?.doctorIds || []).includes(doc.id))
         );
-        if (matches.length > 0) {
-          setAssociatedDoctors(matches);
-        }
+        setAssociatedDoctors(matches);
+      } else if (isMounted) {
+        setAssociatedDoctors([]);
       }
-    }).catch((err) => console.warn('Could not fetch doctors for department:', err));
+    }).catch((err) => {
+      console.warn('Could not fetch doctors for department:', err);
+      if (isMounted) setAssociatedDoctors([]);
+    });
 
     return () => {
       isMounted = false;

@@ -6,7 +6,6 @@
 
 import authService from './authService';
 import apiClient from './api';
-import { DEMO_DOCTORS } from '../data/hospitalData';
 
 /**
  * Normalizes a doctor object from the Django REST API into the shape

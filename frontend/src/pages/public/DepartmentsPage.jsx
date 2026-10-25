@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import DepartmentCard from '../../components/departments/DepartmentCard';
 import EmptyState from '../../components/common/EmptyState';
 import SEO from '../../components/common/SEO';
-import { DEMO_DEPARTMENTS } from '../../data/hospitalData';
-import { Search, X, Building2, Filter } from 'lucide-react';
+import departmentService from '../../services/departmentService';
+import { Search, X, Building2, Filter, RefreshCw, AlertTriangle } from 'lucide-react';
 
 /**
  * Hospital Platform — Clinical Departments Directory
@@ -17,39 +17,76 @@ export function DepartmentsPage() {
     { label: 'Clinical Departments' },
   ];
 
+  const [departmentsList, setDepartmentsList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('ALL');
 
-  const specialtyCategories = useMemo(() => {
-    const specialties = new Set(DEMO_DEPARTMENTS.map((d) => d.specialty));
-    return ['ALL', ...Array.from(specialties)];
+  const fetchDepartments = () => {
+    setIsLoading(true);
+    setApiError(null);
+
+    let isFinished = false;
+    const safetyTimer = setTimeout(() => {
+      if (!isFinished) {
+        setIsLoading(false);
+        setApiError('The departments request timed out. Please click retry to reconnect.');
+      }
+    }, 15000);
+
+    departmentService
+      .getDepartments()
+      .then((data) => {
+        setDepartmentsList(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.warn('Could not load departments:', err);
+        setApiError('Unable to load clinical departments from server. Please retry.');
+      })
+      .finally(() => {
+        isFinished = true;
+        clearTimeout(safetyTimer);
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchDepartments();
   }, []);
+
+  const specialtyCategories = useMemo(() => {
+    const specialties = new Set(departmentsList.map((d) => d.specialty).filter(Boolean));
+    return ['ALL', ...Array.from(specialties)];
+  }, [departmentsList]);
 
   const filteredDepartments = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return DEMO_DEPARTMENTS.filter((dept) => {
+    return departmentsList.filter((dept) => {
       const matchesCategory =
         selectedSpecialty === 'ALL' || dept.specialty === selectedSpecialty;
 
       if (!matchesCategory) return false;
       if (!query) return true;
 
-      const nameMatch = dept.name.toLowerCase().includes(query);
-      const specialtyMatch = dept.specialty.toLowerCase().includes(query);
-      const shortDescMatch = dept.shortDescription.toLowerCase().includes(query);
+      const nameMatch = (dept.name || '').toLowerCase().includes(query);
+      const specialtyMatch = (dept.specialty || '').toLowerCase().includes(query);
+      const shortDescMatch = (dept.shortDescription || '').toLowerCase().includes(query);
       const fullDescMatch = dept.fullDescription
         ? dept.fullDescription.toLowerCase().includes(query)
         : false;
 
       return nameMatch || specialtyMatch || shortDescMatch || fullDescMatch;
     });
-  }, [searchQuery, selectedSpecialty]);
+  }, [departmentsList, searchQuery, selectedSpecialty]);
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedSpecialty('ALL');
   };
+
+  const hasActiveFilters = searchQuery.trim() !== '' || selectedSpecialty !== 'ALL';
 
   return (
     <div className="departments-page py-4">
@@ -64,6 +101,30 @@ export function DepartmentsPage() {
           description="Explore specialized medical disciplines, outpatient consultation timings, diagnostic capabilities, and consultant physician rosters."
           breadcrumbs={breadcrumbs}
         />
+
+        {/* API Error Notice Banner */}
+        {apiError && departmentsList.length > 0 && (
+          <div
+            className="neu-raised neu-surface p-3 mb-4 rounded-4 border-start border-4 border-danger d-flex flex-wrap align-items-center justify-content-between gap-2"
+            role="alert"
+          >
+            <div className="d-flex align-items-center gap-2">
+              <AlertTriangle size={20} className="text-danger flex-shrink-0" />
+              <div>
+                <strong className="text-danger">Departments Notice:</strong>{' '}
+                <span className="text-muted">{apiError}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="neu-btn neu-btn-outline neu-btn-sm d-flex align-items-center gap-1"
+              onClick={fetchDepartments}
+            >
+              <RefreshCw size={13} />
+              <span>Retry</span>
+            </button>
+          </div>
+        )}
 
         {/* Introduction Panel */}
         <div className="neu-raised neu-surface p-4 rounded-4 mb-4">
@@ -97,6 +158,7 @@ export function DepartmentsPage() {
                   placeholder="e.g. Cardiology, Bone, Skin..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={isLoading}
                   aria-label="Search departments by name or clinical keywords"
                 />
                 {searchQuery && (
@@ -125,9 +187,10 @@ export function DepartmentsPage() {
                   className="form-select bg-transparent border-0 shadow-none"
                   value={selectedSpecialty}
                   onChange={(e) => setSelectedSpecialty(e.target.value)}
+                  disabled={isLoading || specialtyCategories.length <= 1}
                   aria-label="Filter departments by specialty"
                 >
-                  <option value="ALL">All Departments ({DEMO_DEPARTMENTS.length})</option>
+                  <option value="ALL">All Departments ({departmentsList.length})</option>
                   {specialtyCategories
                     .filter((s) => s !== 'ALL')
                     .map((spec) => (
@@ -144,7 +207,7 @@ export function DepartmentsPage() {
                   const isActive = selectedSpecialty === spec;
                   const label =
                     spec === 'ALL'
-                      ? `All (${DEMO_DEPARTMENTS.length})`
+                      ? `All (${departmentsList.length})`
                       : spec;
 
                   return (
@@ -155,6 +218,7 @@ export function DepartmentsPage() {
                         isActive ? 'neu-btn-primary' : 'neu-btn-secondary'
                       }`}
                       onClick={() => setSelectedSpecialty(spec)}
+                      disabled={isLoading}
                       aria-pressed={isActive}
                     >
                       {label}
@@ -168,14 +232,20 @@ export function DepartmentsPage() {
 
         {/* Results Counter Bar */}
         <div className="d-flex justify-content-between align-items-center mb-4 px-1">
-          <div className="small text-muted">
-            Showing <strong>{filteredDepartments.length}</strong> of{' '}
-            <strong>{DEMO_DEPARTMENTS.length}</strong> clinical departments
-            {selectedSpecialty !== 'ALL' && ` in "${selectedSpecialty}"`}
-            {searchQuery && ` matching "${searchQuery}"`}
+          <div className="small text-muted" role="status" aria-live="polite">
+            {isLoading ? (
+              <span>Loading clinical departments...</span>
+            ) : (
+              <span>
+                Showing <strong>{filteredDepartments.length}</strong> of{' '}
+                <strong>{departmentsList.length}</strong> clinical departments
+                {selectedSpecialty !== 'ALL' && ` in "${selectedSpecialty}"`}
+                {searchQuery && ` matching "${searchQuery}"`}
+              </span>
+            )}
           </div>
 
-          {(searchQuery || selectedSpecialty !== 'ALL') && (
+          {!isLoading && hasActiveFilters && (
             <button
               type="button"
               className="neu-btn neu-btn-outline neu-btn-sm py-1 px-2"
@@ -186,14 +256,65 @@ export function DepartmentsPage() {
           )}
         </div>
 
-        {/* Department Grid or Empty Result State */}
-        {filteredDepartments.length > 0 ? (
+        {/* Department Grid or Loading or Empty Result State */}
+        {isLoading ? (
+          <div className="py-5 text-center my-4" aria-live="polite">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading departments...</span>
+            </div>
+            <p className="mt-3 text-muted">Retrieving clinical departments from hospital registry...</p>
+          </div>
+        ) : apiError && departmentsList.length === 0 ? (
+          <div className="my-5">
+            <EmptyState
+              title="Unable to Retrieve Clinical Departments"
+              message={apiError || 'We could not connect to the hospital departments registry. Please check server status and retry.'}
+              action={
+                <div className="d-flex flex-wrap gap-2 justify-content-center">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1"
+                    onClick={fetchDepartments}
+                  >
+                    <RefreshCw size={14} />
+                    <span>Retry Connection</span>
+                  </button>
+                  <a href="tel:+9102200002222" className="neu-btn neu-btn-outline">
+                    Contact Hospital Desk
+                  </a>
+                </div>
+              }
+            />
+          </div>
+        ) : filteredDepartments.length > 0 ? (
           <div className="row g-4 mb-5">
             {filteredDepartments.map((department) => (
               <div key={department.id} className="col-12 col-md-6 col-lg-4">
                 <DepartmentCard department={department} />
               </div>
             ))}
+          </div>
+        ) : departmentsList.length === 0 ? (
+          <div className="my-5">
+            <EmptyState
+              title="Clinical Departments Registry Being Configured"
+              message="Hospital clinical divisions, outpatient clinics, and diagnostic centers are currently being registered in the system. Please check back shortly or contact our outpatient registration desk."
+              action={
+                <div className="d-flex flex-wrap gap-2 justify-content-center">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1"
+                    onClick={fetchDepartments}
+                  >
+                    <RefreshCw size={14} />
+                    <span>Refresh Departments</span>
+                  </button>
+                  <a href="tel:+9102200002222" className="neu-btn neu-btn-outline">
+                    Contact Reception Desk
+                  </a>
+                </div>
+              }
+            />
           </div>
         ) : (
           <div className="my-5">

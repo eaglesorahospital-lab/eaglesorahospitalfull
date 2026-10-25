@@ -31,6 +31,14 @@ export function DoctorsPage() {
     setIsLoading(true);
     setApiError(null);
 
+    let isFinished = false;
+    const safetyTimer = setTimeout(() => {
+      if (!isFinished) {
+        setIsLoading(false);
+        setApiError('The directory request timed out. Please click retry to reconnect.');
+      }
+    }, 15000);
+
     const doctorsPromise = doctorService
       .getDoctors({ is_active: true, page_size: 100 })
       .then((res) => {
@@ -60,6 +68,8 @@ export function DoctorsPage() {
         }
       })
       .finally(() => {
+        isFinished = true;
+        clearTimeout(safetyTimer);
         setIsLoading(false);
       });
   };
@@ -257,11 +267,17 @@ export function DoctorsPage() {
           {/* Result Count and Clear Filters Action */}
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-3 border-top">
             <div className="small text-muted" role="status" aria-live="polite">
-              Showing <strong className="text-body">{filteredDoctors.length}</strong> of{' '}
-              <strong className="text-body">{doctorsList.length}</strong> active medical consultants
+              {isLoading ? (
+                <span>Loading attending medical consultants...</span>
+              ) : (
+                <span>
+                  Showing <strong className="text-body">{filteredDoctors.length}</strong> of{' '}
+                  <strong className="text-body">{doctorsList.length}</strong> active medical consultants
+                </span>
+              )}
             </div>
 
-            {hasActiveFilters && (
+            {!isLoading && hasActiveFilters && (
               <button
                 type="button"
                 className="neu-btn neu-btn-outline neu-btn-sm py-1 px-2"
@@ -282,6 +298,28 @@ export function DoctorsPage() {
             </div>
             <p className="mt-3 text-muted">Retrieving attending medical consultants from hospital directory...</p>
           </div>
+        ) : apiError && doctorsList.length === 0 ? (
+          <div className="mb-5">
+            <EmptyState
+              title="Unable to Retrieve Medical Specialists"
+              message={apiError || 'We could not connect to the hospital medical records service. Please verify server connectivity and retry.'}
+              action={
+                <div className="d-flex flex-wrap gap-2 justify-content-center">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1"
+                    onClick={fetchDirectory}
+                  >
+                    <RefreshCw size={14} />
+                    <span>Retry Directory Connection</span>
+                  </button>
+                  <a href="tel:+9102200002222" className="neu-btn neu-btn-outline">
+                    Contact Hospital Desk
+                  </a>
+                </div>
+              }
+            />
+          </div>
         ) : filteredDoctors.length > 0 ? (
           <section aria-label="Doctors Directory Listing" className="mb-5">
             <div className="row g-4">
@@ -292,10 +330,32 @@ export function DoctorsPage() {
               ))}
             </div>
           </section>
+        ) : doctorsList.length === 0 ? (
+          <div className="mb-5">
+            <EmptyState
+              title="No Active Medical Consultants Registered"
+              message="The hospital medical staff directory is currently being populated with credentialed attending physicians and clinical specialists. Please check back shortly or contact our outpatient registration desk."
+              action={
+                <div className="d-flex flex-wrap gap-2 justify-content-center">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1"
+                    onClick={fetchDirectory}
+                  >
+                    <RefreshCw size={14} />
+                    <span>Refresh Directory</span>
+                  </button>
+                  <a href="tel:+9102200002222" className="neu-btn neu-btn-outline">
+                    Call Outpatient Desk
+                  </a>
+                </div>
+              }
+            />
+          </div>
         ) : (
           <div className="mb-5">
             <EmptyState
-              title="No Medical Specialists Found"
+              title="No Matching Specialists Found"
               message="No consultant physicians matched your specified search keywords or filter criteria. Try broadening your specialty or department selection."
               action={
                 <button type="button" className="neu-btn neu-btn-primary" onClick={handleResetFilters}>

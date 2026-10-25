@@ -4,9 +4,7 @@
  */
 
 import authService from './authService';
-import { DEMO_DEPARTMENTS } from '../data/hospitalData';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { getApiBaseUrl } from './api';
 
 export function normalizeDepartment(dept) {
   if (!dept) return null;
@@ -32,34 +30,41 @@ export function normalizeDepartment(dept) {
 export const departmentService = {
   async getDepartments() {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/departments/?page_size=50`);
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/api/departments/?page_size=50`);
       if (!res.ok) {
-        throw new Error(`Failed to fetch departments: ${res.status}`);
+        throw new Error(`Failed to fetch departments: HTTP ${res.status}`);
+      }
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('API returned non-JSON response.');
       }
       const data = await res.json();
       const rawList = Array.isArray(data.results) ? data.results : Array.isArray(data) ? data : [];
-      if (rawList.length === 0) {
-        return DEMO_DEPARTMENTS.map(normalizeDepartment);
-      }
       return rawList.map(normalizeDepartment);
     } catch (err) {
-      console.warn('API error in getDepartments, using fallback:', err);
-      return DEMO_DEPARTMENTS.map(normalizeDepartment);
+      console.warn('API error in getDepartments:', err);
+      return [];
     }
   },
 
   async getDepartment(slug) {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/departments/${slug}/`);
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/api/departments/${slug}/`);
       if (!res.ok) {
-        throw new Error(`Failed to fetch department: ${res.status}`);
+        if (res.status === 404) return null;
+        throw new Error(`Failed to fetch department: HTTP ${res.status}`);
+      }
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('API returned non-JSON response.');
       }
       const data = await res.json();
       return normalizeDepartment(data);
     } catch (err) {
-      console.warn(`API error in getDepartment(${slug}), using fallback:`, err);
-      const fallback = DEMO_DEPARTMENTS.find((d) => d.slug === slug || d.id === slug);
-      return fallback ? normalizeDepartment(fallback) : null;
+      console.warn(`API error in getDepartment(${slug}):`, err);
+      return null;
     }
   },
 
@@ -72,7 +77,8 @@ export const departmentService = {
       'Authorization': `Bearer ${token}`,
     };
 
-    const res = await fetch(`${API_BASE_URL}/api/departments/`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/api/departments/`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -104,7 +110,8 @@ export const departmentService = {
       'Authorization': `Bearer ${token}`,
     };
 
-    const res = await fetch(`${API_BASE_URL}/api/departments/${slugOrId}/`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/api/departments/${slugOrId}/`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify(payload),
