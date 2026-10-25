@@ -382,3 +382,25 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp['Content-Type'], 'application/json; charset=utf-8')
         self.assertIn('attachment; filename="hospital_setup.template.json"', resp['Content-Disposition'])
+
+    def test_admin_import_setup_view_get_render(self):
+        """Regression test: Verifies import_setup_view GET renders HTTP 200 and import_setup.html has valid tags."""
+        from apps.hospital.admin import HospitalProfileAdmin
+        from apps.hospital.models import HospitalProfile
+        from django.test import RequestFactory
+        from django.contrib.auth.models import AnonymousUser
+
+        rf = RequestFactory()
+        req = rf.get('/admin/hospital/hospitalprofile/import-setup/')
+        mock_user = MagicMock(is_staff=True, is_active=True, is_superuser=True)
+        req.user = mock_user
+
+        admin_instance = HospitalProfileAdmin(HospitalProfile, admin.site)
+        resp = admin_instance.import_setup_view(req)
+
+        self.assertEqual(resp.status_code, 200)
+        content_str = resp.content.decode('utf-8')
+        self.assertIn('Automated Hospital Platform Setup', content_str)
+        self.assertIn('Download hospital_setup.template.json', content_str)
+        self.assertIn('Upload Configuration File', content_str)
+        self.assertIn('Dry Run (Safe Validation Mode)', content_str)
