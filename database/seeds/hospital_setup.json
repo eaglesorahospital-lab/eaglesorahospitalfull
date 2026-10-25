@@ -1,0 +1,946 @@
+{
+  "_metadata": {
+    "project_name": "EgleSora Hospital Platform",
+    "project_type": "Internship Final-Year Engineering Project Demo",
+    "generation_date": "2026-10-25",
+    "safety_declaration": "All doctors, qualifications, experience, consulting rooms, schedules, and clinical department records in this file are simulated demo entries strictly for academic evaluation. No real medical practitioner, patient, or real-world clinical record is represented."
+  },
+  "hospital_profile": {
+    "name": "EgleSora Hospital",
+    "legal_name": "EgleSora Hospital (academic demo)",
+    "tagline": "Healthcare Simulation & Clinical Care Demonstration | Final-Year Project",
+    "overview": "EgleSora Hospital Platform is an academic healthcare demonstration system developed for final-year engineering internship evaluation. The portal simulates modern clinical governance, specialized department workflows, attending physician schedules, and digital appointment booking for the Yavatmal district in Maharashtra.",
+    "contact_phone": "+91 7232 245100 (Demo Desk)",
+    "emergency_phone": "+91 7232 245108 (Demo Helpline)",
+    "contact_email": "eaglesora.hospital@gmail.com",
+    "address": "Civil Lines Road, Near GMC Campus, Yavatmal, Maharashtra 445001",
+    "visiting_hours": "Monday - Saturday: 08:30 AM - 07:30 PM (Demo OPD)",
+    "emergency_info": "[ACADEMIC DEMO NOTICE] This portal is an educational demonstration project. In case of an actual medical emergency, please dial 108 or contact your nearest government medical college & hospital.",
+    "is_active": true
+  },
+  "specialties": [
+    {
+      "name": "General Medicine",
+      "slug": "general-medicine",
+      "description": "Comprehensive primary medical care, adult fever triage, and chronic lifestyle disease management.",
+      "is_active": true
+    },
+    {
+      "name": "Cardiology",
+      "slug": "cardiology",
+      "description": "Comprehensive diagnostic, preventive, and clinical cardiovascular medicine.",
+      "is_active": true
+    },
+    {
+      "name": "Orthopaedics",
+      "slug": "orthopaedics",
+      "description": "Musculoskeletal health, joint care, fracture triage, and mobility rehabilitation.",
+      "is_active": true
+    },
+    {
+      "name": "Paediatrics & Child Health",
+      "slug": "paediatrics",
+      "description": "General and preventive healthcare for infants, children, and adolescents.",
+      "is_active": true
+    },
+    {
+      "name": "Neurology & Neuro-Care",
+      "slug": "neurology",
+      "description": "Comprehensive stroke management, headache disorders, and neuromuscular medical care.",
+      "is_active": true
+    },
+    {
+      "name": "Otolaryngology (ENT)",
+      "slug": "ent",
+      "description": "Medical and surgical diagnosis of ear, nose, throat, voice, and sinus conditions.",
+      "is_active": true
+    },
+    {
+      "name": "Dermatology & Skin Care",
+      "slug": "dermatology",
+      "description": "Clinical diagnosis of dermatological conditions, allergic eczema, and hair disorders.",
+      "is_active": true
+    }
+  ],
+  "departments": [
+    {
+      "name": "Department of General Medicine",
+      "slug": "general-medicine-dept",
+      "specialty": "General & Internal Medicine",
+      "short_description": "Comprehensive primary adult medical care, diagnostic evaluation, fever triage, and chronic illness management.",
+      "full_description": "The Department of General Medicine provides diagnostic and therapeutic care for common and complex adult medical conditions, seasonal fevers, hypertension, and diabetes management.",
+      "location": "Wing A, Ground Floor, OPD Suites 101-105",
+      "opd_hours": "Monday - Saturday: 09:00 AM - 05:00 PM",
+      "contact_phone": "+91 7232 245101",
+      "contact_email": "eaglesora.hospital@gmail.com",
+      "extension": "101",
+      "is_active": true,
+      "services": [
+        {
+          "name": "Comprehensive Adult Health Checkup",
+          "description": "Routine diagnostic clinical evaluation and vital assessment.",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "Diabetic & Hypertension Triage",
+          "description": "Metabolic monitoring and preventive lifestyle health guidance.",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Is prior fasting required for a routine general consultation?",
+          "answer": "Routine general consultation does not require fasting unless fasting blood sugar or lipid tests are scheduled.",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "name": "Department of Cardiovascular Sciences",
+      "slug": "cardiovascular-sciences",
+      "specialty": "Cardiology & Vascular Medicine",
+      "short_description": "Comprehensive non-invasive cardiovascular diagnostics, preventative cardiology, and cardiac monitoring.",
+      "full_description": "The Department of Cardiovascular Sciences offers high-precision cardiac diagnostics including 2D Echocardiography, Treadmill Stress Testing (TMT), and ambulatory blood pressure monitoring for heart wellness.",
+      "location": "Wing B, 1st Floor, OPD Suites 201-208",
+      "opd_hours": "Monday - Saturday: 09:30 AM - 04:30 PM",
+      "contact_phone": "+91 7232 245102",
+      "contact_email": "eaglesora.hospital@gmail.com",
+      "extension": "201",
+      "is_active": true,
+      "services": [
+        {
+          "name": "2D Transthoracic Echocardiography",
+          "description": "High-resolution cardiac ultrasound imaging for chamber and valve assessment.",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "Treadmill Stress Test (TMT)",
+          "description": "Cardiovascular exercise tolerance and ischemic monitoring.",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "What medical records should I bring for a cardiology appointment?",
+          "answer": "Please carry previous ECG records, discharge summaries, and ongoing prescription medicines for clinical review.",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "name": "Department of Orthopaedics & Joint Care",
+      "slug": "orthopaedics-dept",
+      "specialty": "Musculoskeletal Medicine & Joint Care",
+      "short_description": "Evaluation of joint disorders, fracture healing, back pain, and musculoskeletal rehabilitation.",
+      "full_description": "The Department of Orthopaedics delivers outpatient consultations for joint arthritis management, sports injury rehabilitation, fracture care, and spine health.",
+      "location": "Wing C, 1st Floor, OPD Suites 301-306",
+      "opd_hours": "Monday - Saturday: 10:00 AM - 05:00 PM",
+      "contact_phone": "+91 7232 245103",
+      "contact_email": "eaglesora.hospital@gmail.com",
+      "extension": "301",
+      "is_active": true,
+      "services": [
+        {
+          "name": "Digital Musculoskeletal X-Ray Assessment",
+          "description": "High-resolution digital radiography for bone and joint evaluation.",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "Joint Injections & Plaster Care",
+          "description": "Conservative joint pain therapy and immobilisation casting.",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Are wheelchair facilities available at the OPD reception?",
+          "answer": "Yes, wheelchair and assisted mobility support are available at the entrance and Wing C desk.",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "name": "Department of Paediatrics & Child Health",
+      "slug": "paediatrics-dept",
+      "specialty": "Paediatrics & Neonatology",
+      "short_description": "Infant care, child growth monitoring, national immunisation, and pediatric wellness.",
+      "full_description": "Dedicated child-friendly outpatient care focusing on newborn growth monitoring, childhood nutrition, vaccination programs, and pediatric recovery.",
+      "location": "Wing A, 2nd Floor, OPD Suites 210-216",
+      "opd_hours": "Monday - Saturday: 09:00 AM - 04:00 PM",
+      "contact_phone": "+91 7232 245104",
+      "contact_email": "eaglesora.hospital@gmail.com",
+      "extension": "210",
+      "is_active": true,
+      "services": [
+        {
+          "name": "Child Immunisation Program",
+          "description": "Vaccination and scheduled booster immunization according to national health standards.",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "Pediatric Growth & Developmental Screening",
+          "description": "Holistic developmental milestones evaluation for infants and toddlers.",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Should I bring the child's immunization booklet?",
+          "answer": "Yes, always carry the government or hospital vaccination record booklet for every visit.",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "name": "Department of Neurosciences & Stroke Care",
+      "slug": "neurology-dept",
+      "specialty": "Neurology & Cognitive Disorders",
+      "short_description": "Diagnostic evaluation of stroke risk, persistent migraines, epilepsy, and neuromuscular conditions.",
+      "full_description": "The Department of Neurosciences delivers specialized outpatient clinical evaluation for headache syndromes, movement disorders, peripheral neuropathy, and post-stroke recovery management.",
+      "location": "Wing B, 2nd Floor, OPD Suites 220-225",
+      "opd_hours": "Monday - Saturday: 10:00 AM - 04:00 PM",
+      "contact_phone": "+91 7232 245105",
+      "contact_email": "eaglesora.hospital@gmail.com",
+      "extension": "220",
+      "is_active": true,
+      "services": [
+        {
+          "name": "Neurological Clinical Assessment",
+          "description": "Detailed cranial nerve, motor reflex, and sensory nerve clinical examination.",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "Migraine & Headache Triage",
+          "description": "Evidence-based therapeutic management of chronic headaches.",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Can I consult for chronic dizziness or balance issues?",
+          "answer": "Yes, our neuro-assessment includes vestibular and cerebellar clinical evaluation.",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "name": "Department of ENT & Head-Neck Care",
+      "slug": "ent-head-neck",
+      "specialty": "Otolaryngology & Audiology",
+      "short_description": "Diagnostic management of hearing difficulties, allergic sinusitis, throat infections, and vertigo.",
+      "full_description": "Comprehensive outpatient care for common and chronic ear infections, nasal polyps, allergic sinusitis, voice disorders, and tonsillitis.",
+      "location": "Wing C, Ground Floor, OPD Suites 110-114",
+      "opd_hours": "Monday - Saturday: 09:00 AM - 04:30 PM",
+      "contact_phone": "+91 7232 245106",
+      "contact_email": "eaglesora.hospital@gmail.com",
+      "extension": "110",
+      "is_active": true,
+      "services": [
+        {
+          "name": "Diagnostic Video Otoscopy & Nasal Endoscopy",
+          "description": "High-definition endoscopic visualization for ear and nasal passages.",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "Audiometric Hearing Screening",
+          "description": "Pure tone screening for hearing thresholds across age groups.",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Is ear wax removal performed during the OPD visit?",
+          "answer": "Yes, gentle microsuction or syringing is performed in the procedure room after clinical evaluation.",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "name": "Department of Dermatology & Skin Health",
+      "slug": "dermatology-dept",
+      "specialty": "Clinical Dermatology & Skin Care",
+      "short_description": "Clinical diagnosis and care for allergic dermatoses, acne, fungal infections, and psoriasis.",
+      "full_description": "Specialized dermatological consultations providing evidence-based treatment for chronic skin allergies, hair fall evaluation, nail disorders, and eczema.",
+      "location": "Wing A, 1st Floor, OPD Suites 120-124",
+      "opd_hours": "Monday - Saturday: 09:30 AM - 05:00 PM",
+      "contact_phone": "+91 7232 245107",
+      "contact_email": "eaglesora.hospital@gmail.com",
+      "extension": "120",
+      "is_active": true,
+      "services": [
+        {
+          "name": "Clinical Dermoscopy & Skin Lesion Check",
+          "description": "High-magnification surface microscopy for pigmented lesions and rashes.",
+          "order": 1,
+          "is_active": true
+        },
+        {
+          "name": "Allergy & Eczema Medical Management",
+          "description": "Targeted topical and systemic management of dermatitis.",
+          "order": 2,
+          "is_active": true
+        }
+      ],
+      "faqs": [
+        {
+          "question": "Should I wash off facial ointments before coming to the appointment?",
+          "answer": "Yes, keeping the affected skin clean and free of cosmetics allows accurate dermoscopic visualization.",
+          "order": 1,
+          "is_active": true
+        }
+      ]
+    }
+  ],
+  "doctors": [
+    {
+      "name": "Dr. Rajeshwar Deshmukh (Demo)",
+      "slug": "dr-rajeshwar-deshmukh-demo",
+      "department_slug": "general-medicine-dept",
+      "specialty_slug": "general-medicine",
+      "specialty_name": "Senior Consultant Physician (Demo)",
+      "qualification": "MBBS, MD (General Medicine) [Academic Demo Profile]",
+      "experience_years": 14,
+      "bio": "[DEMO RECORD] Fictional physician profile created for EgleSora Hospital academic project evaluation. Focuses on adult internal medicine, fever triage, and chronic lifestyle condition management.",
+      "expertise": "Internal Medicine, Diabetes Management, Hypertension Triage, Preventive Healthcare",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing A, Ground Floor, OPD Room 102",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Monday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Clinical Rounds Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Wednesday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Clinical Rounds Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Friday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Clinical Rounds Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dr. Anand Kulkarni (Demo)",
+      "slug": "dr-anand-kulkarni-demo",
+      "department_slug": "general-medicine-dept",
+      "specialty_slug": "general-medicine",
+      "specialty_name": "Consultant Physician (Demo)",
+      "qualification": "MBBS, DNB (Family Medicine) [Academic Demo Profile]",
+      "experience_years": 9,
+      "bio": "[DEMO RECORD] Fictional physician profile for academic evaluation. Specializes in adult viral fevers, seasonal illness screening, and family preventive care.",
+      "expertise": "Primary Care, Seasonal Infections, Adult Wellness, Thyroid Disorders",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing A, Ground Floor, OPD Room 104",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Tuesday",
+          "start_time": "09:30",
+          "end_time": "13:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Briefing Break",
+              "start_time": "11:30",
+              "end_time": "12:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Thursday",
+          "start_time": "09:30",
+          "end_time": "13:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Briefing Break",
+              "start_time": "11:30",
+              "end_time": "12:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Saturday",
+          "start_time": "09:30",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": []
+        }
+      ]
+    },
+    {
+      "name": "Dr. Snehal Patil (Demo)",
+      "slug": "dr-snehal-patil-demo",
+      "department_slug": "cardiovascular-sciences",
+      "specialty_slug": "cardiology",
+      "specialty_name": "Consultant Cardiologist (Demo)",
+      "qualification": "MBBS, MD (Medicine), DM (Cardiology) [Academic Demo Profile]",
+      "experience_years": 11,
+      "bio": "[DEMO RECORD] Fictional cardiologist profile created for EgleSora Hospital academic project evaluation. Demonstrates cardiac outpatient scheduling, non-invasive cardiac evaluation, and preventive heart care.",
+      "expertise": "Clinical Cardiology, 2D Echocardiography, Hypertension, Dyslipidemia",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing B, 1st Floor, OPD Room 204",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Monday",
+          "start_time": "10:00",
+          "end_time": "14:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Echo Lab Review",
+              "start_time": "12:00",
+              "end_time": "12:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Wednesday",
+          "start_time": "10:00",
+          "end_time": "14:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Echo Lab Review",
+              "start_time": "12:00",
+              "end_time": "12:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Friday",
+          "start_time": "10:00",
+          "end_time": "14:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Echo Lab Review",
+              "start_time": "12:00",
+              "end_time": "12:30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dr. Vikramaditya Joshi (Demo)",
+      "slug": "dr-vikramaditya-joshi-demo",
+      "department_slug": "cardiovascular-sciences",
+      "specialty_slug": "cardiology",
+      "specialty_name": "Associate Consultant Cardiologist (Demo)",
+      "qualification": "MBBS, MD (General Medicine), DNB (Cardiology) [Academic Demo Profile]",
+      "experience_years": 8,
+      "bio": "[DEMO RECORD] Fictional cardiac consultant profile. Focuses on preventative cardiology, exercise stress testing (TMT), and post-procedural medical follow-ups.",
+      "expertise": "Preventive Cardiology, Stress Testing, Ambulatory BP Monitoring, Lipid Management",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing B, 1st Floor, OPD Room 206",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Tuesday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Holter Review Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Thursday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Holter Review Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Saturday",
+          "start_time": "09:00",
+          "end_time": "12:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": []
+        }
+      ]
+    },
+    {
+      "name": "Dr. Amit Verma (Demo)",
+      "slug": "dr-amit-verma-demo",
+      "department_slug": "orthopaedics-dept",
+      "specialty_slug": "orthopaedics",
+      "specialty_name": "Consultant Orthopaedic Surgeon (Demo)",
+      "qualification": "MBBS, MS (Orthopaedics), Fellowship in Joint Care [Academic Demo Profile]",
+      "experience_years": 12,
+      "bio": "[DEMO RECORD] Fictional orthopaedic consultant profile created for EgleSora Hospital academic project evaluation. Demonstrates joint assessment, back pain triage, and mobility management workflows.",
+      "expertise": "Joint Pain Evaluation, Sports Injuries, Fracture Triage, Spine Health",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing C, 1st Floor, OPD Room 302",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Monday",
+          "start_time": "14:00",
+          "end_time": "18:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Plaster Clinic Break",
+              "start_time": "16:00",
+              "end_time": "16:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Wednesday",
+          "start_time": "14:00",
+          "end_time": "18:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Plaster Clinic Break",
+              "start_time": "16:00",
+              "end_time": "16:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Friday",
+          "start_time": "14:00",
+          "end_time": "18:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Plaster Clinic Break",
+              "start_time": "16:00",
+              "end_time": "16:30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dr. Priya Kulkarni (Demo)",
+      "slug": "dr-priya-kulkarni-demo",
+      "department_slug": "paediatrics-dept",
+      "specialty_slug": "paediatrics",
+      "specialty_name": "Consultant Paediatrician (Demo)",
+      "qualification": "MBBS, DCH, DNB (Paediatrics) [Academic Demo Profile]",
+      "experience_years": 8,
+      "bio": "[DEMO RECORD] Fictional paediatrician profile created for EgleSora Hospital academic project evaluation. Demonstrates infant health monitoring, immunization schedules, and childhood wellness triage.",
+      "expertise": "Child Health, Immunisation Protocols, Growth & Nutrition, Paediatric Allergy",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing A, 2nd Floor, OPD Room 212",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Monday",
+          "start_time": "09:30",
+          "end_time": "13:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Vaccine Briefing Break",
+              "start_time": "11:30",
+              "end_time": "12:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Tuesday",
+          "start_time": "09:30",
+          "end_time": "13:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Vaccine Briefing Break",
+              "start_time": "11:30",
+              "end_time": "12:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Thursday",
+          "start_time": "09:30",
+          "end_time": "13:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Vaccine Briefing Break",
+              "start_time": "11:30",
+              "end_time": "12:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dr. Rohan Salunkhe (Demo)",
+      "slug": "dr-rohan-salunkhe-demo",
+      "department_slug": "paediatrics-dept",
+      "specialty_slug": "paediatrics",
+      "specialty_name": "Associate Consultant Paediatrician (Demo)",
+      "qualification": "MBBS, MD (Paediatrics) [Academic Demo Profile]",
+      "experience_years": 6,
+      "bio": "[DEMO RECORD] Fictional paediatric consultant profile. Focuses on childhood infectious ailments, nutritional guidance, and preschool developmental checks.",
+      "expertise": "Childhood Infections, Nutritional Assessment, Neonatal Follow-up, Asthma in Children",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing A, 2nd Floor, OPD Room 214",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Wednesday",
+          "start_time": "14:00",
+          "end_time": "17:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Mid-afternoon Break",
+              "start_time": "15:30",
+              "end_time": "16:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Friday",
+          "start_time": "14:00",
+          "end_time": "17:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Mid-afternoon Break",
+              "start_time": "15:30",
+              "end_time": "16:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Saturday",
+          "start_time": "13:30",
+          "end_time": "17:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": []
+        }
+      ]
+    },
+    {
+      "name": "Dr. Neha Bapat (Demo)",
+      "slug": "dr-neha-bapat-demo",
+      "department_slug": "neurology-dept",
+      "specialty_slug": "neurology",
+      "specialty_name": "Consultant Neurologist (Demo)",
+      "qualification": "MBBS, MD (Medicine), DM (Neurology) [Academic Demo Profile]",
+      "experience_years": 10,
+      "bio": "[DEMO RECORD] Fictional neurologist profile for academic evaluation. Demonstrates neurological consultations for headache syndromes, stroke risk assessment, and peripheral neuropathy.",
+      "expertise": "Headache & Migraine, Stroke Prevention, Epilepsy Triage, Neuropathy Management",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing B, 2nd Floor, OPD Room 222",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Tuesday",
+          "start_time": "10:00",
+          "end_time": "14:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Neuro Review Break",
+              "start_time": "12:00",
+              "end_time": "12:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Thursday",
+          "start_time": "10:00",
+          "end_time": "14:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Neuro Review Break",
+              "start_time": "12:00",
+              "end_time": "12:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Friday",
+          "start_time": "10:00",
+          "end_time": "14:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Neuro Review Break",
+              "start_time": "12:00",
+              "end_time": "12:30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dr. Santosh Gaikwad (Demo)",
+      "slug": "dr-santosh-gaikwad-demo",
+      "department_slug": "ent-head-neck",
+      "specialty_slug": "ent",
+      "specialty_name": "Consultant ENT Surgeon (Demo)",
+      "qualification": "MBBS, MS (ENT) [Academic Demo Profile]",
+      "experience_years": 11,
+      "bio": "[DEMO RECORD] Fictional otolaryngologist profile. Specializes in nasal endoscopy, sinusitis treatment, hearing evaluation, and allergic rhinitis management.",
+      "expertise": "Sinusitis Treatment, Hearing Assessment, Allergic Rhinitis, Vertigo Triage",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing C, Ground Floor, OPD Room 112",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Monday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Endoscopy Lab Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Wednesday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Endoscopy Lab Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Thursday",
+          "start_time": "09:00",
+          "end_time": "13:00",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Endoscopy Lab Break",
+              "start_time": "11:00",
+              "end_time": "11:30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dr. Rashmi Iyer (Demo)",
+      "slug": "dr-rashmi-iyer-demo",
+      "department_slug": "dermatology-dept",
+      "specialty_slug": "dermatology",
+      "specialty_name": "Consultant Dermatologist (Demo)",
+      "qualification": "MBBS, MD (Dermatology, Venereology & Leprosy) [Academic Demo Profile]",
+      "experience_years": 7,
+      "bio": "[DEMO RECORD] Fictional dermatologist profile. Specializes in medical skin care, dermoscopy, chronic eczema, acne therapeutics, and hair fall evaluation.",
+      "expertise": "Clinical Dermatology, Dermoscopy, Eczema Management, Acne Therapeutics",
+      "consultation_type": "In-person Consultation",
+      "consultation_duration_minutes": 30,
+      "consultation_location": "Wing A, 1st Floor, OPD Room 122",
+      "is_active": true,
+      "schedules": [
+        {
+          "day_of_week": "Tuesday",
+          "start_time": "14:00",
+          "end_time": "17:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Procedure Break",
+              "start_time": "15:30",
+              "end_time": "16:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Thursday",
+          "start_time": "14:00",
+          "end_time": "17:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Procedure Break",
+              "start_time": "15:30",
+              "end_time": "16:00"
+            }
+          ]
+        },
+        {
+          "day_of_week": "Saturday",
+          "start_time": "14:00",
+          "end_time": "17:30",
+          "slot_duration_minutes": 30,
+          "capacity": 1,
+          "is_working_day": true,
+          "is_active": true,
+          "breaks": [
+            {
+              "name": "Procedure Break",
+              "start_time": "15:30",
+              "end_time": "16:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

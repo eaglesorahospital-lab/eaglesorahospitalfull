@@ -284,9 +284,11 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
         mock_sched.update_or_create.assert_called_once()
         mock_brk.update_or_create.assert_called_once()
 
+    @patch("apps.hospital.management.commands.import_hospital_data.os.path.exists")
     @patch("apps.hospital.management.commands.import_hospital_data.Specialty.objects")
-    def test_seed_specialties_standalone(self, mock_spec):
+    def test_seed_specialties_standalone(self, mock_spec, mock_exists):
         """Calling import_hospital_data --seed-specialties without a file seeds standard specialties."""
+        mock_exists.return_value = False
         mock_spec.update_or_create.return_value = (MagicMock(), True)
         out = StringIO()
 
