@@ -1,3 +1,11 @@
-# Netlify Single Page Application (SPA) routing fallback
-# Redirects all frontend routes to index.html with a 200 status code
+# Single Page Application (SPA) routing fallback
+# Netlify & Cloudflare Pages rule:
 /*    /index.html   200
+
+# Note for Render Static Sites:
+# Render Static Sites do not read _redirects files automatically.
+# In the Render Dashboard under Static Site -> "Redirects / Rewrites":
+#   Source: /*
+#   Destination: /index.html
+#   Action: Rewrite
+

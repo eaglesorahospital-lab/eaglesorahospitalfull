@@ -1,5 +1,24 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function spaFallbackPlugin() {
+  return {
+    name: 'spa-fallback-plugin',
+    closeBundle() {
+      const distDir = path.resolve(__dirname, 'dist');
+      const indexPath = path.join(distDir, 'index.html');
+      const notFoundPath = path.join(distDir, '404.html');
+      if (fs.existsSync(indexPath)) {
+        fs.copyFileSync(indexPath, notFoundPath);
+      }
+    },
+  };
+}
 
 const apiProxy = {
   '/api': {
@@ -13,7 +32,7 @@ const apiProxy = {
 };
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), spaFallbackPlugin()],
   server: {
     host: '0.0.0.0',
     port: 3000,
@@ -25,3 +44,4 @@ export default defineConfig({
     proxy: apiProxy,
   },
 });
+
