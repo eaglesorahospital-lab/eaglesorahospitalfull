@@ -25,6 +25,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 import django
 django.setup()
 
+from django.contrib import admin
 from django.test import SimpleTestCase
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -282,3 +283,102 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
         mock_doc.update_or_create.assert_called_once()
         mock_sched.update_or_create.assert_called_once()
         mock_brk.update_or_create.assert_called_once()
+
+    @patch("apps.hospital.management.commands.import_hospital_data.Specialty.objects")
+    def test_seed_specialties_standalone(self, mock_spec):
+        """Calling import_hospital_data --seed-specialties without a file seeds standard specialties."""
+        mock_spec.update_or_create.return_value = (MagicMock(), True)
+        out = StringIO()
+
+        call_command("import_hospital_data", seed_specialties=True, stdout=out)
+        output = out.getvalue()
+
+        self.assertIn("Standard Medical Specialties Catalog", output)
+        self.assertIn("Standard specialties setup finished", output)
+        self.assertEqual(mock_spec.update_or_create.call_count, 20)
+
+    @patch("apps.doctors.admin.DoctorSchedule.objects")
+    def test_generate_standard_weekday_schedule_action(self, mock_sched):
+        """Verifies admin action generates Mon-Fri 09:00-13:00 shifts for doctors."""
+        from apps.doctors.admin import generate_standard_weekday_schedule
+
+        mock_sched.get_or_create.return_value = (MagicMock(), True)
+        mock_doctor = MagicMock(name="Dr. Test", consultation_duration_minutes=30)
+        mock_qs = [mock_doctor]
+        mock_admin = MagicMock()
+        mock_req = MagicMock()
+
+        generate_standard_weekday_schedule(mock_admin, mock_req, mock_qs)
+
+        # 5 weekdays generated
+        self.assertEqual(mock_sched.get_or_create.call_count, 5)
+        mock_admin.message_user.assert_called_once()
+
+    @patch("apps.scheduling.admin.DoctorSchedule.objects")
+    def test_duplicate_to_remaining_weekdays_action(self, mock_sched):
+        """Verifies duplicate_to_remaining_weekdays creates the other 4 weekdays."""
+        from apps.scheduling.admin import duplicate_to_remaining_weekdays
+        from apps.scheduling.models import DoctorSchedule
+
+        mock_sched.get_or_create.return_value = (MagicMock(), True)
+        mock_shift = MagicMock(
+            day_of_week=DoctorSchedule.DayOfWeek.MONDAY,
+            start_time="09:00",
+            end_time="13:00",
+            slot_duration_minutes=30,
+            capacity=1,
+            timezone="Asia/Kolkata",
+            is_working_day=True,
+            is_active=True,
+        )
+        mock_admin = MagicMock()
+        mock_req = MagicMock()
+
+        duplicate_to_remaining_weekdays(mock_admin, mock_req, [mock_shift])
+
+        # Monday skipped, remaining 4 weekdays created
+        self.assertEqual(mock_sched.get_or_create.call_count, 4)
+        mock_admin.message_user.assert_called_once()
+
+    @patch("apps.scheduling.admin.DoctorSchedule.objects")
+    def test_duplicate_to_mwf_action(self, mock_sched):
+        """Verifies duplicate_to_mwf creates Wednesday and Friday when Monday is source."""
+        from apps.scheduling.admin import duplicate_to_mwf
+        from apps.scheduling.models import DoctorSchedule
+
+        mock_sched.get_or_create.return_value = (MagicMock(), True)
+        mock_shift = MagicMock(
+            day_of_week=DoctorSchedule.DayOfWeek.MONDAY,
+            start_time="09:00",
+            end_time="13:00",
+            slot_duration_minutes=30,
+            capacity=1,
+            timezone="Asia/Kolkata",
+            is_working_day=True,
+            is_active=True,
+        )
+        mock_admin = MagicMock()
+        mock_req = MagicMock()
+
+        duplicate_to_mwf(mock_admin, mock_req, [mock_shift])
+
+        # Monday skipped, Wed and Fri created = 2 calls
+        self.assertEqual(mock_sched.get_or_create.call_count, 2)
+        mock_admin.message_user.assert_called_once()
+
+    def test_admin_download_template_view(self):
+        """Verifies admin download_template_view returns JSON file attachment."""
+        from apps.hospital.admin import HospitalProfileAdmin
+        from apps.hospital.models import HospitalProfile
+        from django.test import RequestFactory
+
+        rf = RequestFactory()
+        req = rf.get('/admin/hospital/hospitalprofile/download-template/')
+        req.user = MagicMock(is_staff=True, is_active=True)
+
+        admin_instance = HospitalProfileAdmin(HospitalProfile, admin.site)
+        resp = admin_instance.download_template_view(req)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp['Content-Type'], 'application/json; charset=utf-8')
+        self.assertIn('attachment; filename="hospital_setup.template.json"', resp['Content-Disposition'])

@@ -1,0 +1,93 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Import Hospital Setup JSON | {% get_admin_interface_title %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='hospital' %}">Hospital</a>
+&rsaquo; <a href="{% url 'admin:hospital_hospitalprofile_changelist' %}">Hospital Profile</a>
+&rsaquo; {% translate 'Import Hospital Setup' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" style="max-width: 900px;">
+    <div class="module" style="padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <h2 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #0284c7; padding-bottom: 8px;">
+            Automated Hospital Platform Setup
+        </h2>
+        <p style="color: #475569; font-size: 14px; line-height: 1.6;">
+            Use this secure import tool to configure your institution's profile, clinical departments, medical specialties, consulting doctors, and weekly schedules from a validated JSON configuration file.
+        </p>
+        
+        <div style="background: #f0f9ff; border-left: 4px solid #0284c7; padding: 12px 16px; margin: 16px 0; border-radius: 0 4px 4px 0;">
+            <p style="margin: 0; color: #0369a1; font-size: 13px;">
+                <strong>Step 1:</strong> Download the pre-formatted template with clearly labeled placeholders.<br>
+                <strong>Step 2:</strong> Fill in genuine hospital details (contact phone, address, real doctors, qualifications, and actual OPD schedules).<br>
+                <strong>Step 3:</strong> Test with <em>Dry Run</em> enabled first to verify timings and relationships, then uncheck <em>Dry Run</em> to import.
+            </p>
+        </div>
+
+        <div style="margin: 16px 0;">
+            <a href="{% url 'admin:hospital_profile_download_template' %}" class="button" style="background: #0284c7; color: #ffffff; padding: 8px 16px; font-weight: 600; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                Download hospital_setup.template.json
+            </a>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" action="{% url 'admin:hospital_profile_import_setup' %}">
+        {% csrf_token %}
+        <div class="module aligned" style="padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="margin-top: 0; color: #334155;">Upload Configuration File</h3>
+            
+            <div class="form-row" style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                <label for="id_json_file" style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 6px;">
+                    Select JSON Setup File:
+                </label>
+                <input type="file" name="json_file" id="id_json_file" accept=".json" style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; width: 100%; max-width: 400px;" />
+                <div class="help" style="color: #64748b; font-size: 12px; margin-top: 4px;">
+                    Upload a completed <code>hospital_setup.json</code> file.
+                </div>
+            </div>
+
+            <div class="form-row" style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                <label for="id_json_text" style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 6px;">
+                    Or Paste JSON Directly:
+                </label>
+                <textarea name="json_text" id="id_json_text" rows="8" style="width: 100%; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;" placeholder='{ "hospital_profile": { ... }, "specialties": [ ... ] }'></textarea>
+            </div>
+
+            <h3 style="margin-top: 24px; color: #334155;">Automation & Safety Options</h3>
+
+            <div class="form-row" style="padding: 8px 0;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #1e293b; font-weight: 500;">
+                    <input type="checkbox" name="dry_run" id="id_dry_run" checked />
+                    <span><strong>Dry Run (Safe Validation Mode):</strong> Validate schema, shift timings, and foreign keys without saving any changes to the database.</span>
+                </label>
+            </div>
+
+            <div class="form-row" style="padding: 8px 0;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #1e293b; font-weight: 500;">
+                    <input type="checkbox" name="seed_specialties" id="id_seed_specialties" checked />
+                    <span><strong>Pre-populate Standard Medical Specialties:</strong> Automatically seed the 20 internationally recognized medical specialties (Cardiology, Neurology, Oncology, Orthopaedics, Paediatrics, etc.).</span>
+                </label>
+            </div>
+
+            <div class="form-row" style="padding: 8px 0;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #64748b; font-size: 13px;">
+                    <input type="checkbox" name="allow_placeholders" id="id_allow_placeholders" />
+                    <span>Allow placeholder tokens (e.g. <code>[REPLACE...</code>, <code>example.com</code>) — <em>Use only for offline developer testing</em>.</span>
+                </label>
+            </div>
+
+            <div class="submit-row" style="margin-top: 24px; padding: 16px 0 0 0; border-top: 1px solid #e2e8f0; display: flex; gap: 12px; align-items: center;">
+                <input type="submit" value="Validate & Import Configuration" class="default" style="background: #0f172a; color: #ffffff; padding: 10px 24px; font-weight: 600; border-radius: 4px; cursor: pointer; border: none;" />
+                <a href="{% url 'admin:hospital_hospitalprofile_changelist' %}" style="color: #64748b; text-decoration: none; font-size: 14px;">Cancel and Return</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

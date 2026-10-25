@@ -1,0 +1,16 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:hospital_profile_import_setup' %}" class="addlink" style="background: #0284c7; color: white; border-radius: 4px; font-weight: 600;">
+      {% translate "Import Setup JSON" %}
+    </a>
+  </li>
+  <li>
+    <a href="{% url 'admin:hospital_profile_download_template' %}" style="border-radius: 4px;">
+      {% translate "Download Setup Template" %}
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}

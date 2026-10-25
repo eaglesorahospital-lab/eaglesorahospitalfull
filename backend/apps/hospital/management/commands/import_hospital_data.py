@@ -33,6 +33,110 @@ PLACEHOLDER_PATTERNS = [
 ]
 
 
+STANDARD_SPECIALTIES = [
+    {
+        "name": "Cardiology",
+        "slug": "cardiology",
+        "description": "Comprehensive diagnostic, preventive, and interventional cardiovascular medicine.",
+    },
+    {
+        "name": "Clinical Oncology",
+        "slug": "oncology",
+        "description": "Medical oncology, chemotherapy administration, and precision targeted cancer therapies.",
+    },
+    {
+        "name": "Dermatology",
+        "slug": "dermatology",
+        "description": "Clinical and procedural dermatological care for skin, hair, and nail conditions.",
+    },
+    {
+        "name": "Emergency Medicine",
+        "slug": "emergency-medicine",
+        "description": "24/7 acute trauma resuscitation, triage protocols, and emergency medical response.",
+    },
+    {
+        "name": "Endocrinology & Diabetology",
+        "slug": "endocrinology",
+        "description": "Specialized management of diabetes, metabolic health, thyroid, and hormonal disorders.",
+    },
+    {
+        "name": "Gastroenterology & Hepatology",
+        "slug": "gastroenterology",
+        "description": "Digestive tract health, diagnostic and therapeutic endoscopy, and clinical hepatology.",
+    },
+    {
+        "name": "General & Laparoscopic Surgery",
+        "slug": "general-surgery",
+        "description": "Elective, emergency, and minimally invasive laparoscopic abdominal surgical care.",
+    },
+    {
+        "name": "Internal Medicine",
+        "slug": "internal-medicine",
+        "description": "Comprehensive diagnosis, multisystem disease management, and adult outpatient medicine.",
+    },
+    {
+        "name": "Nephrology & Dialysis",
+        "slug": "nephrology",
+        "description": "Renal care, hemodialysis supervision, chronic kidney disease, and hypertension.",
+    },
+    {
+        "name": "Neurology & Stroke Care",
+        "slug": "neurology",
+        "description": "Comprehensive stroke management, epilepsy diagnosis, and neuromuscular healthcare.",
+    },
+    {
+        "name": "Neurosurgery",
+        "slug": "neurosurgery",
+        "description": "Cranial microsurgery, spine reconstruction, and neuro-trauma surgical interventions.",
+    },
+    {
+        "name": "Obstetrics & Gynaecology",
+        "slug": "obstetrics-gynaecology",
+        "description": "Maternal-fetal medicine, antenatal and postpartum care, and gynaecological health.",
+    },
+    {
+        "name": "Ophthalmology",
+        "slug": "ophthalmology",
+        "description": "Comprehensive vision diagnostics, cataract extraction, and medical eye management.",
+    },
+    {
+        "name": "Orthopaedics & Joint Replacement",
+        "slug": "orthopaedics",
+        "description": "Joint arthroplasty, arthroscopy, spine care, and musculoskeletal trauma management.",
+    },
+    {
+        "name": "Otolaryngology (ENT)",
+        "slug": "ent",
+        "description": "Medical and surgical management of ear, nose, throat, and head-and-neck disorders.",
+    },
+    {
+        "name": "Paediatrics & Neonatology",
+        "slug": "paediatrics",
+        "description": "Specialized infant, child, and adolescent healthcare, newborn care, and immunisations.",
+    },
+    {
+        "name": "Psychiatry & Behavioral Health",
+        "slug": "psychiatry",
+        "description": "Clinical psychiatric evaluation, psychotherapy, and evidence-based mental health care.",
+    },
+    {
+        "name": "Pulmonology & Respiratory Medicine",
+        "slug": "pulmonology",
+        "description": "Diagnosis and management of asthma, COPD, interstitial lung disease, and sleep disorders.",
+    },
+    {
+        "name": "Radiology & Diagnostic Imaging",
+        "slug": "radiology",
+        "description": "Multimodality cross-sectional imaging, diagnostic ultrasound, and interventional radiology.",
+    },
+    {
+        "name": "Urology & Andrology",
+        "slug": "urology",
+        "description": "Surgical and medical management of urinary tract disorders, stone disease, and andrology.",
+    },
+]
+
+
 def parse_time_str(time_str):
     """Parses HH:MM or HH:MM:SS string into a datetime.time object."""
     if isinstance(time_str, time):
@@ -68,11 +172,45 @@ class Command(BaseCommand):
             action='store_true',
             help='Allow import even if placeholder patterns ([REPLACE..., TODO, example.com) are detected.',
         )
+        parser.add_argument(
+            '--seed-specialties',
+            action='store_true',
+            help='Pre-populate the 20 standard medical specialties (Cardiology, Neurology, Oncology, etc.) into PostgreSQL.',
+        )
+
+    def seed_specialties(self, dry_run=False):
+        """Seeds the standard 20 medical specialties into the database safely and idempotently."""
+        stats = {'created': 0, 'updated': 0}
+        self.stdout.write(self.style.NOTICE("\n--- Standard Medical Specialties Catalog ---"))
+        for spec in STANDARD_SPECIALTIES:
+            name = spec['name']
+            slug = spec['slug']
+            desc = spec['description']
+            if dry_run:
+                exists = self._safe_exists(Specialty, slug=slug)
+                state = "EXISTS (will update)" if exists else ("NEW (will create)" if exists is False else "VALID (ready)")
+                self.stdout.write(f"  - {name} ({slug}): {state}")
+            else:
+                _, created = Specialty.objects.update_or_create(
+                    slug=slug,
+                    defaults={'name': name, 'description': desc, 'is_active': True}
+                )
+                if created:
+                    stats['created'] += 1
+                else:
+                    stats['updated'] += 1
+        if not dry_run:
+            self.stdout.write(self.style.SUCCESS(f"Standard Specialties: {stats['created']} created, {stats['updated']} updated."))
+        return stats
 
     def handle(self, *args, **options):
         file_path = options['file']
         dry_run = options['dry_run']
         allow_placeholders = options['allow_placeholders']
+        seed_specialties_flag = options.get('seed_specialties', False)
+
+        default_file_rel = os.path.join('database', 'seeds', 'hospital_setup.json')
+        is_default_file = (options.get('file') == default_file_rel)
 
         # Resolve relative file path from project root
         if not os.path.isabs(file_path):
@@ -81,12 +219,26 @@ class Command(BaseCommand):
             if os.path.exists(candidate_path):
                 file_path = candidate_path
 
-        if not os.path.exists(file_path):
+        file_exists = os.path.exists(file_path)
+
+        # If user passed --seed-specialties and the default JSON file is not present, execute specialty seed and exit
+        if seed_specialties_flag and not file_exists and is_default_file:
+            self.stdout.write(self.style.NOTICE("\n=== EgleSora Hospital Standard Specialties Setup ==="))
+            self.stdout.write(f"Execution mode: {'DRY RUN (Validation only)' if dry_run else 'LIVE SEED'}")
+            self.seed_specialties(dry_run=dry_run)
+            self.stdout.write(self.style.SUCCESS("\n[COMPLETED] Standard specialties setup finished."))
+            return
+
+        if not file_exists:
             raise CommandError(f"Import data file not found at: {file_path}")
 
         self.stdout.write(self.style.NOTICE(f"\n=== EgleSora Hospital Data Importer ==="))
         self.stdout.write(f"Source file: {file_path}")
         self.stdout.write(f"Execution mode: {'DRY RUN (Validation only)' if dry_run else 'LIVE IMPORT'}\n")
+
+        # If seed-specialties is requested alongside a data file, run it
+        if seed_specialties_flag:
+            self.seed_specialties(dry_run=dry_run)
 
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
