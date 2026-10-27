@@ -135,6 +135,7 @@ class DoctorScheduleAdmin(admin.ModelAdmin):
         'is_active',
     )
     list_filter = ('day_of_week', 'is_working_day', 'is_active', 'doctor__department')
+    list_select_related = ('doctor', 'doctor__department')
     search_fields = ('doctor__name',)
     inlines = [ScheduleBreakInline]
     actions = [

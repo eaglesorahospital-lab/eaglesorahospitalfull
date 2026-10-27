@@ -6,10 +6,11 @@ and clinical domain REST APIs.
 
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+import config.throttling  # noqa: F401
 from apps.doctors.urls import specialties_router
 from apps.notifications.urls import audit_router
 
@@ -47,6 +48,7 @@ def api_root(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([])
 def health_check(request):
     """
     Service Health Check Endpoint.

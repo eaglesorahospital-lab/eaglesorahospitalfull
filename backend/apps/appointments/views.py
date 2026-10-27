@@ -1,5 +1,7 @@
+from typing import Any
 from datetime import datetime, time, timedelta
 from rest_framework import viewsets, permissions, status
+from rest_framework.throttling import BaseThrottle
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -69,9 +71,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     ordering_fields = ['appointment_date', 'start_time', 'created_at', 'status']
     ordering = ['-appointment_date', '-start_time']
 
-    def get_throttles(self):
+    def get_throttles(self) -> list[BaseThrottle]:
         if self.action == 'create':
-            return [AppointmentBookingRateThrottle()]
+            throttles: list[BaseThrottle] = [AppointmentBookingRateThrottle()]
+            return throttles
         return super().get_throttles()
 
     def get_queryset(self):
@@ -536,7 +539,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 gender_input = str(patient_data.get('gender') or 'MALE').upper()
                 gender_choice = PatientProfile.Gender.MALE
                 for choice in PatientProfile.Gender.choices:
-                    if choice[0] == gender_input or choice[1].upper() == gender_input:
+                    if choice[0] == gender_input or str(choice[1]).upper() == gender_input:
                         gender_choice = choice[0]
                         break
 

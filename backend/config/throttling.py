@@ -1,9 +1,20 @@
-"""
-API Rate Limiting & Throttling Configuration for Hospital Platform (Phase 16).
-Uses Redis cache backend to enforce request rate limits across distributed workers.
-"""
-
+import logging
 from rest_framework.throttling import SimpleRateThrottle
+
+logger = logging.getLogger('config.throttling')
+
+# Resilient fail-open wrapper for SimpleRateThrottle
+# Protects against 500 errors when Redis is temporarily unavailable or in local offline test mode
+_orig_allow_request = SimpleRateThrottle.allow_request
+
+def _safe_allow_request(self, request, view):
+    try:
+        return _orig_allow_request(self, request, view)
+    except Exception as exc:
+        logger.warning(f"Rate limiting check failed open due to cache backend error: {exc}")
+        return True
+
+SimpleRateThrottle.allow_request = _safe_allow_request
 
 
 class LoginRateThrottle(SimpleRateThrottle):

@@ -88,6 +88,7 @@ class DoctorAdmin(admin.ModelAdmin):
     )
     list_filter = ('is_active', 'department', 'specialty', 'consultation_type')
     search_fields = ('name', 'qualification', 'expertise', 'bio', 'consultation_location')
+    list_select_related = ('department', 'specialty')
     prepopulated_fields = {'slug': ('name',)}
     inlines = [DoctorScheduleInline]
     actions = [generate_standard_weekday_schedule, activate_doctors, deactivate_doctors]

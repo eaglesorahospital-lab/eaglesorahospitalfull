@@ -493,3 +493,98 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
             self.assertTrue(resp['Content-Type'].startswith('text/html'))
             mock_log.assert_called_once()
 
+    def test_admin_appointment_admin_configuration(self):
+        """Verifies AppointmentAdmin has safe configuration: date_hierarchy removed, list_select_related added."""
+        from apps.appointments.admin import AppointmentAdmin
+        from apps.appointments.models import Appointment
+        admin_instance = AppointmentAdmin(Appointment, admin.site)
+        self.assertIsNone(admin_instance.date_hierarchy, "date_hierarchy causes DATE_TRUNC 500 errors on PostgreSQL and must remain None")
+        self.assertIn('patient', admin_instance.list_select_related)
+        self.assertIn('doctor', admin_instance.list_select_related)
+        self.assertIn('department', admin_instance.list_select_related)
+
+    def test_admin_appointment_changelist_render(self):
+        """Regression test: Verifies authenticated staff can load Appointment changelist view without 500."""
+        import datetime
+        from apps.appointments.admin import AppointmentAdmin
+        from apps.appointments.models import Appointment
+        from apps.accounts.models import PatientProfile
+        from apps.doctors.models import Doctor
+        from apps.departments.models import Department
+        from django.test import RequestFactory
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        from django.contrib.admin.views.main import ChangeList
+
+        rf = RequestFactory()
+        req = rf.get('/admin/appointments/appointment/')
+        mock_user = MagicMock(is_staff=True, is_active=True, is_superuser=True)
+        mock_user.has_perm.return_value = True
+        mock_user.has_module_perms.return_value = True
+        req.user = mock_user
+        req.session = {}
+        req._messages = FallbackStorage(req)
+
+        mock_patient = PatientProfile(
+            id=1,
+            first_name='Arjun',
+            last_name='Verma',
+            mrn='MRN-2026-0001',
+        )
+
+        mock_dept = Department(
+            id=1,
+            name='Cardiology',
+            slug='cardiology',
+        )
+
+        mock_doc = Doctor(
+            id=1,
+            name='Dr. Rajesh Kumar',
+            department=mock_dept,
+            specialty_name='Cardiologist',
+        )
+
+        mock_apt = Appointment(
+            id=1,
+            reference='APT-2026-1001',
+            patient=mock_patient,
+            doctor=mock_doc,
+            department=mock_dept,
+            appointment_date=datetime.date(2026, 11, 1),
+            start_time=datetime.time(9, 30),
+            end_time=datetime.time(10, 0),
+            appointment_type='IN_PERSON',
+            status='CONFIRMED',
+        )
+        mock_apt.created_at = datetime.datetime(2026, 10, 27, 10, 0, tzinfo=datetime.timezone.utc)
+
+        mock_qs = MagicMock()
+        mock_qs.ordered = True
+        mock_qs.model = Appointment
+        mock_qs._prefetch_related_lookups = ()
+        mock_qs._clone.return_value = mock_qs
+        mock_qs.count.return_value = 1
+        mock_qs.__len__.return_value = 1
+        mock_qs.__iter__.return_value = iter([mock_apt])
+        mock_qs.__getitem__.side_effect = lambda idx: [mock_apt][idx]
+        mock_qs.filter.return_value = mock_qs
+
+        def fake_get_results(cl_self, request):
+            cl_self.result_count = 1
+            cl_self.full_result_count = 1
+            cl_self.result_list = mock_qs
+            cl_self.can_show_all = True
+            cl_self.multi_page = False
+            cl_self.paginator = MagicMock(count=1, num_pages=1)
+
+        with patch.object(ChangeList, 'get_results', fake_get_results), \
+             patch.object(ChangeList, 'get_filters', return_value=([], False, {}, False, False)):
+            admin_instance = AppointmentAdmin(Appointment, admin.site)
+            resp = admin_instance.changelist_view(req)
+
+        self.assertEqual(resp.status_code, 200)
+        if hasattr(resp, 'render'):
+            resp.render()
+        content_str = resp.content.decode('utf-8')
+        self.assertIn('Select appointment to change', content_str)
+

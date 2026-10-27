@@ -164,10 +164,14 @@ class PatientProfile(models.Model):
 
     @property
     def full_name(self):
-        name = f"{self.first_name} {self.last_name}".strip()
-        if not name and self.user:
-            name = self.user.get_full_name().strip()
-        return name or self.mrn
+        name = f"{self.first_name or ''} {self.last_name or ''}".strip()
+        if not name and getattr(self, 'user_id', None):
+            try:
+                if self.user:
+                    name = self.user.get_full_name().strip()
+            except Exception:
+                pass
+        return name or self.mrn or (f"Patient #{self.pk}" if self.pk else "Patient")
 
     def __str__(self):
-        return f"{self.full_name} ({self.mrn})"
+        return f"{self.full_name} ({self.mrn})" if self.mrn else self.full_name

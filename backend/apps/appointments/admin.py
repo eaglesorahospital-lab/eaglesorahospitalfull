@@ -26,5 +26,5 @@ class AppointmentAdmin(admin.ModelAdmin):
         'reason_for_visit',
     )
     readonly_fields = ('reference', 'created_at', 'updated_at', 'idempotency_key')
-    date_hierarchy = 'appointment_date'
+    list_select_related = ('patient', 'doctor', 'doctor__department', 'department')
     ordering = ('-appointment_date', '-start_time')
