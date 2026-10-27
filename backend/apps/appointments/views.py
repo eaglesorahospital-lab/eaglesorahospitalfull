@@ -48,7 +48,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     lookup_field = 'reference'
     lookup_value_regex = r'[^/]+'
     pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_fields = [
         'status',
         'appointment_type',
@@ -79,7 +79,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if not (user and user.is_authenticated):
+        if not (user and user.is_authenticated) or not isinstance(user, User):
             return Appointment.objects.none()
 
         base_qs = Appointment.objects.select_related(
@@ -125,7 +125,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         Transactional booking with concurrency protection, availability re-check,
         and PostgreSQL row locking.
         """
-        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        data: Any = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
         user = request.user
 
         # Patient resolution: authenticated patients must book for their own profile

@@ -154,16 +154,15 @@ class Command(BaseCommand):
                         "Set INITIAL_ADMIN_PASSWORD environment variable or use --interactive."
                     )
 
-                create_admin_kwargs = {
-                    'email': admin_email,
-                    'password': admin_password,
-                    'first_name': admin_first,
-                    'last_name': admin_last,
-                    'role': User.Role.HOSPITAL_ADMIN,
-                    'is_staff': True,
-                    'is_active': True,
-                }
-                admin_user = User.objects.create_user(**create_admin_kwargs)
+                admin_user = User.objects.create_user(  # type: ignore[call-arg]
+                    email=admin_email,
+                    password=admin_password,
+                    first_name=admin_first,
+                    last_name=admin_last,
+                    role=User.Role.HOSPITAL_ADMIN,
+                    is_staff=True,
+                    is_active=True,
+                )
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"[CREATED] Administrator account created: {admin_email} (Role: {admin_user.role})"
@@ -238,16 +237,15 @@ class Command(BaseCommand):
                     elif len(doctor_password) < 8:
                         raise CommandError("Doctor password must be at least 8 characters.")
                     else:
-                        create_doc_kwargs = {
-                            'email': doctor_email,
-                            'password': doctor_password,
-                            'first_name': doctor_first,
-                            'last_name': doctor_last,
-                            'role': User.Role.DOCTOR_STAFF,
-                            'is_staff': True,
-                            'is_active': True,
-                        }
-                        doctor_user = User.objects.create_user(**create_doc_kwargs)
+                        doctor_user = User.objects.create_user(  # type: ignore[call-arg]
+                            email=doctor_email,
+                            password=doctor_password,
+                            first_name=doctor_first,
+                            last_name=doctor_last,
+                            role=User.Role.DOCTOR_STAFF,
+                            is_staff=True,
+                            is_active=True,
+                        )
                         self.stdout.write(
                             self.style.SUCCESS(
                                 f"[CREATED] Doctor staff account created: {doctor_email} (Role: {doctor_user.role})"

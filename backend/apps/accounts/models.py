@@ -10,13 +10,14 @@ class UserManager(BaseUserManager):
     Custom user manager where email is the unique identifier
     for authentication instead of usernames.
     """
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
+    def create_user(self, email=None, password=None, username=None, **extra_fields):
+        resolved_email = email or username or extra_fields.pop('email', None)
+        if not resolved_email:
             raise ValueError(_('An email address is required.'))
-        email = self.normalize_email(email)
-        extra_fields.setdefault('username', email)
+        resolved_email = self.normalize_email(str(resolved_email))
+        extra_fields.setdefault('username', username or resolved_email)
         extra_fields.setdefault('is_active', True)
-        user = self.model(email=email, **extra_fields)
+        user = self.model(email=resolved_email, **extra_fields)
         if password:
             user.set_password(password)
         else:
