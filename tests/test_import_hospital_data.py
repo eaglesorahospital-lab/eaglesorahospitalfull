@@ -499,12 +499,39 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
         from apps.appointments.models import Appointment
         admin_instance = AppointmentAdmin(Appointment, admin.site)
         self.assertIsNone(admin_instance.date_hierarchy, "date_hierarchy causes DATE_TRUNC 500 errors on PostgreSQL and must remain None")
+        self.assertEqual(admin_instance.show_facets, admin.ShowFacets.NEVER)
         self.assertIn('patient', admin_instance.list_select_related)
         self.assertIn('doctor', admin_instance.list_select_related)
         self.assertIn('department', admin_instance.list_select_related)
 
-    def test_admin_appointment_changelist_render(self):
-        """Regression test: Verifies authenticated staff can load Appointment changelist view without 500."""
+    def test_admin_appointment_safe_display_methods(self):
+        """Verifies custom display methods on AppointmentAdmin safely handle missing/orphaned related objects."""
+        from apps.appointments.admin import AppointmentAdmin
+        from apps.appointments.models import Appointment
+        admin_instance = AppointmentAdmin(Appointment, admin.site)
+
+        # Mock appointment with missing/corrupted foreign keys
+        corrupt_apt = Appointment(id=99, reference='APT-CORRUPT-01')
+        corrupt_apt.patient_id = 9999
+        corrupt_apt.doctor_id = 8888
+        corrupt_apt.department_id = 7777
+
+        # None of these should raise ObjectDoesNotExist or any exception
+        self.assertEqual(admin_instance.get_patient(corrupt_apt), 'Patient #9999')
+        self.assertEqual(admin_instance.get_doctor(corrupt_apt), 'Doctor #8888')
+        self.assertEqual(admin_instance.get_department(corrupt_apt), 'Department #7777')
+
+        # Empty keys return '-'
+        empty_apt = Appointment(id=100, reference='APT-EMPTY-01')
+        empty_apt.patient_id = None
+        empty_apt.doctor_id = None
+        empty_apt.department_id = None
+        self.assertEqual(admin_instance.get_patient(empty_apt), '-')
+        self.assertEqual(admin_instance.get_doctor(empty_apt), '-')
+        self.assertEqual(admin_instance.get_department(empty_apt), '-')
+
+    def test_admin_appointment_changelist_render_normal_and_error_flag(self):
+        """Regression test: Verifies authenticated staff can load Appointment changelist on both / and ?e=1 without 500."""
         import datetime
         from apps.appointments.admin import AppointmentAdmin
         from apps.appointments.models import Appointment
@@ -516,13 +543,9 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
         from django.contrib.admin.views.main import ChangeList
 
         rf = RequestFactory()
-        req = rf.get('/admin/appointments/appointment/')
         mock_user = MagicMock(is_staff=True, is_active=True, is_superuser=True)
         mock_user.has_perm.return_value = True
         mock_user.has_module_perms.return_value = True
-        req.user = mock_user
-        req.session = {}
-        req._messages = FallbackStorage(req)
 
         mock_patient = PatientProfile(
             id=1,
@@ -577,14 +600,27 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
             cl_self.multi_page = False
             cl_self.paginator = MagicMock(count=1, num_pages=1)
 
-        with patch.object(ChangeList, 'get_results', fake_get_results), \
-             patch.object(ChangeList, 'get_filters', return_value=([], False, {}, False, False)):
-            admin_instance = AppointmentAdmin(Appointment, admin.site)
-            resp = admin_instance.changelist_view(req)
+        # Test both normal URL and ?e=1 URL
+        test_paths = [
+            '/admin/appointments/appointment/',
+            '/admin/appointments/appointment/?e=1',
+        ]
 
-        self.assertEqual(resp.status_code, 200)
-        if hasattr(resp, 'render'):
-            resp.render()
-        content_str = resp.content.decode('utf-8')
-        self.assertIn('Select appointment to change', content_str)
+        admin_instance = AppointmentAdmin(Appointment, admin.site)
+
+        for path in test_paths:
+            req = rf.get(path)
+            req.user = mock_user
+            req.session = {}
+            req._messages = FallbackStorage(req)
+
+            with patch.object(ChangeList, 'get_results', fake_get_results), \
+                 patch.object(ChangeList, 'get_filters', return_value=([], False, {}, False, False)):
+                resp = admin_instance.changelist_view(req)
+
+            self.assertEqual(resp.status_code, 200, f"Changelist failed on {path}")
+            if hasattr(resp, 'render'):
+                resp.render()
+            content_str = resp.content.decode('utf-8')
+            self.assertIn('Select appointment to change', content_str)
 

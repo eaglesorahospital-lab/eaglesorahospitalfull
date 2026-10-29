@@ -4,6 +4,7 @@ Provides API root namespace, service health checks, authentication (Phase 12),
 and clinical domain REST APIs.
 """
 
+import os
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -85,7 +86,8 @@ def health_check(request):
 
     response_data = {
         "status": "ok" if is_healthy else "degraded",
-        "service": "hospital-platform-api"
+        "service": "hospital-platform-api",
+        "commit": os.environ.get('RENDER_GIT_COMMIT', 'dev-local'),
     }
     if details:
         response_data["details"] = details

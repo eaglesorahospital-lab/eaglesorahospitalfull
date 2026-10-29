@@ -149,7 +149,13 @@ class Appointment(models.Model):
             raise ValidationError(_('Consultation end time must be after start time.'))
 
     def __str__(self):
-        pat_name = getattr(self.patient, 'full_name', 'Patient') if getattr(self, 'patient_id', None) else 'Unknown Patient'
-        doc_name = getattr(self.doctor, 'name', 'Physician') if getattr(self, 'doctor_id', None) else 'Unassigned Doctor'
+        try:
+            pat_name = self.patient.full_name if getattr(self, 'patient_id', None) and self.patient else 'Patient'
+        except Exception:
+            pat_name = f"Patient #{self.patient_id}" if getattr(self, 'patient_id', None) else 'Patient'
+        try:
+            doc_name = self.doctor.name if getattr(self, 'doctor_id', None) and self.doctor else 'Physician'
+        except Exception:
+            doc_name = f"Doctor #{self.doctor_id}" if getattr(self, 'doctor_id', None) else 'Physician'
         status_disp = self.get_status_display() if hasattr(self, 'get_status_display') else (self.status or 'Unknown')
         return f"{self.reference or 'APT'} - {pat_name} with {doc_name} on {self.appointment_date} ({status_disp})"

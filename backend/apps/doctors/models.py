@@ -179,7 +179,10 @@ class Doctor(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        dept_str = f" - {self.department.name}" if self.department else ""
+        try:
+            dept_str = f" - {self.department.name}" if getattr(self, 'department_id', None) and self.department else ""
+        except Exception:
+            dept_str = ""
         return f"{self.name} ({self.specialty_name or 'General'}){dept_str}"
 
 
