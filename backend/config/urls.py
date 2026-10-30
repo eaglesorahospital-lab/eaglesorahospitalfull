@@ -5,6 +5,8 @@ and clinical domain REST APIs.
 """
 
 import os
+import sys
+import django
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -88,6 +90,8 @@ def health_check(request):
         "status": "ok" if is_healthy else "degraded",
         "service": "hospital-platform-api",
         "commit": os.environ.get('RENDER_GIT_COMMIT', 'dev-local'),
+        "python_version": sys.version.split()[0],
+        "django_version": django.__version__,
     }
     if details:
         response_data["details"] = details

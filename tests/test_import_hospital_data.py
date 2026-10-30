@@ -624,3 +624,47 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
             content_str = resp.content.decode('utf-8')
             self.assertIn('Select appointment to change', content_str)
 
+
+    def test_python_django_runtime_compatibility(self):
+        """Regression test: Verifies Python runtime is < 3.14 and template context copying functions correctly."""
+        import sys
+        from copy import copy
+        from django.template import Context, RequestContext
+        from django.test import RequestFactory
+
+        # Verify running on a Python version supported by Django 5.1
+        self.assertLess(sys.version_info, (3, 14), "Django 5.1 does not support Python 3.14 (causes BaseContext AttributeError)")
+        self.assertGreaterEqual(sys.version_info, (3, 10), "Django 5.1 requires Python 3.10+")
+
+        # BaseContext.__copy__ failed in Python 3.14 with AttributeError: 'super' object has no attribute 'dicts'
+        ctx = Context({'title': 'Test Title', 'user': 'admin'})
+        copied_ctx = copy(ctx)
+        self.assertEqual(copied_ctx['title'], 'Test Title')
+
+        rf = RequestFactory()
+        req = rf.get('/admin/')
+        req_ctx = RequestContext(req, {'key': 'val'})
+        copied_req_ctx = copy(req_ctx)
+        self.assertEqual(copied_req_ctx['key'], 'val')
+
+    def test_runtime_pin_files_exist_and_pin_python_313(self):
+        """Regression test: Verifies .python-version and runtime.txt exist in root and backend to enforce Python 3.13 on Render."""
+        import os
+        from django.conf import settings
+
+        root_dir = settings.BASE_DIR.parent
+        backend_dir = settings.BASE_DIR
+
+        # Check root files
+        root_pv = root_dir / '.python-version'
+        root_rt = root_dir / 'runtime.txt'
+        self.assertTrue(root_pv.exists(), ".python-version must exist in repository root for Render")
+        self.assertTrue(root_rt.exists(), "runtime.txt must exist in repository root for Render/buildpacks")
+        self.assertTrue(root_pv.read_text().strip().startswith('3.13'), f"Root .python-version must pin 3.13.x, got: {root_pv.read_text().strip()}")
+
+        # Check backend files (in case Render Root Directory is configured as 'backend')
+        backend_pv = backend_dir / '.python-version'
+        backend_rt = backend_dir / 'runtime.txt'
+        self.assertTrue(backend_pv.exists(), ".python-version must exist in backend/ for Render")
+        self.assertTrue(backend_rt.exists(), "runtime.txt must exist in backend/ for Render")
+        self.assertTrue(backend_pv.read_text().strip().startswith('3.13'), f"Backend .python-version must pin 3.13.x, got: {backend_pv.read_text().strip()}")
