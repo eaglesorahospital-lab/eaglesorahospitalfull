@@ -623,6 +623,8 @@ class ImportHospitalDataUnitTests(SimpleTestCase):
                 resp.render()
             content_str = resp.content.decode('utf-8')
             self.assertIn('Select appointment to change', content_str)
+            self.assertNotIn('wrong with your database', content_str)
+            self.assertNotIn('Database error', content_str)
 
 
     def test_python_django_runtime_compatibility(self):
