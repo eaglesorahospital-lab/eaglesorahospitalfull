@@ -809,7 +809,11 @@ class SecretsAndPrivacyTests(SecurityHardeningBaseTestCase):
     def test_production_secret_key_validation_valid_succeeds(self):
         """Verify when DEBUG=False, a strong custom secret key is accepted without error (SEC-01)."""
         import importlib
-        with patch.dict(os.environ, {'DJANGO_DEBUG': 'False', 'DJANGO_SECRET_KEY': 'strong-cryptographic-prod-secret-9847129841'}, clear=False):
+        with patch.dict(os.environ, {
+            'DJANGO_DEBUG': 'False',
+            'DJANGO_SECRET_KEY': 'strong-cryptographic-prod-secret-9847129841',
+            'ALLOW_IN_MEMORY_CACHE_FALLBACK': 'True',
+        }, clear=False):
             import config.settings as s
             importlib.reload(s)
             self.assertEqual(s.SECRET_KEY, 'strong-cryptographic-prod-secret-9847129841')
