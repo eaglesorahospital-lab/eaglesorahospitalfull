@@ -101,6 +101,8 @@ def health_check(request):
 
             rf = RequestFactory()
             User = get_user_model()
+            staff_users = list(User.objects.filter(is_staff=True).values('id', 'email', 'role', 'is_superuser', 'is_staff', 'is_active'))
+            audit['staff_users'] = staff_users
             staff_user = User.objects.filter(is_staff=True).first()
             if not staff_user:
                 from unittest.mock import MagicMock
@@ -113,27 +115,36 @@ def health_check(request):
             for path_variant in ['/admin/appointments/appointment/', '/admin/appointments/appointment/?e=1']:
                 req = rf.get(path_variant)
                 req.user = staff_user
-                req.session = {}
+                from django.contrib.sessions.middleware import SessionMiddleware
+                SessionMiddleware(lambda r: None).process_request(req)
                 req._messages = FallbackStorage(req)
                 try:
                     cl = admin_instance.get_changelist_instance(req)
-                    changelist_results[path_variant] = {
+                    res_info = {
                         'status': 'SUCCESS',
                         'result_count': cl.result_count,
                         'full_result_count': cl.full_result_count,
                     }
                     if cl.result_list:
                         sample = list(cl.result_list[:3])
-                        changelist_results[path_variant]['sample_count'] = len(sample)
+                        res_info['sample_count'] = len(sample)
                         if sample:
                             s0 = sample[0]
-                            changelist_results[path_variant]['sample_0'] = {
+                            res_info['sample_0'] = {
                                 'id': s0.pk,
                                 'ref': s0.reference,
                                 'patient': admin_instance.get_patient(s0),
                                 'doctor': admin_instance.get_doctor(s0),
                                 'department': admin_instance.get_department(s0),
                             }
+                    # Test calling changelist_view and render
+                    view_resp = admin_instance.changelist_view(req)
+                    res_info['view_status'] = view_resp.status_code
+                    res_info['template_name'] = str(getattr(view_resp, 'template_name', type(view_resp)))
+                    rendered = view_resp.render()
+                    res_info['rendered_bytes'] = len(rendered.content)
+                    res_info['has_db_error_text'] = (b'wrong with your database' in rendered.content)
+                    changelist_results[path_variant] = res_info
                 except Exception as cl_exc:
                     import traceback
                     inner = getattr(cl_exc, '__cause__', None) or getattr(cl_exc, '__context__', None)
