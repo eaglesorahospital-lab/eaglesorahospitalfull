@@ -62,6 +62,110 @@ def health_check(request):
     details = {}
     is_healthy = True
 
+    if request.query_params.get('audit') == '1':
+        audit = {}
+        try:
+            from django.db import connection
+            from django.db.migrations.recorder import MigrationRecorder
+            from django.db.migrations.executor import MigrationExecutor
+
+            recorder = MigrationRecorder(connection)
+            if recorder.has_table():
+                applied = [f"{app}.{name}" for app, name in recorder.applied_migrations()]
+                audit['applied_migrations_count'] = len(applied)
+                audit['applied_migrations'] = sorted(applied)
+            else:
+                audit['applied_migrations'] = 'django_migrations table does not exist!'
+
+            executor = MigrationExecutor(connection)
+            targets = executor.loader.graph.leaf_nodes()
+            plan = executor.migration_plan(targets)
+            audit['unapplied_migrations'] = [f"{mig.app_label}.{mig.name}" for mig, backward in plan]
+
+            tables = connection.introspection.table_names()
+            audit['tables_count'] = len(tables)
+            audit['has_appointments_table'] = 'appointments_appointment' in tables
+
+            if 'appointments_appointment' in tables:
+                with connection.cursor() as cursor:
+                    desc = connection.introspection.get_table_description(cursor, 'appointments_appointment')
+                    audit['appointment_columns'] = [col.name for col in desc]
+                    cursor.execute("SELECT COUNT(*) FROM appointments_appointment;")
+                    audit['appointment_row_count'] = cursor.fetchone()[0]
+
+            from apps.appointments.models import Appointment
+            from apps.appointments.admin import AppointmentAdmin
+            from django.test import RequestFactory
+            from django.contrib.messages.storage.fallback import FallbackStorage
+            from django.contrib.auth import get_user_model
+
+            rf = RequestFactory()
+            User = get_user_model()
+            staff_user = User.objects.filter(is_staff=True).first()
+            if not staff_user:
+                from unittest.mock import MagicMock
+                staff_user = MagicMock(is_staff=True, is_active=True, is_superuser=True)
+                staff_user.has_perm.return_value = True
+                staff_user.has_module_perms.return_value = True
+
+            admin_instance = AppointmentAdmin(Appointment, admin.site)
+            changelist_results = {}
+            for path_variant in ['/admin/appointments/appointment/', '/admin/appointments/appointment/?e=1']:
+                req = rf.get(path_variant)
+                req.user = staff_user
+                req.session = {}
+                req._messages = FallbackStorage(req)
+                try:
+                    cl = admin_instance.get_changelist_instance(req)
+                    changelist_results[path_variant] = {
+                        'status': 'SUCCESS',
+                        'result_count': cl.result_count,
+                        'full_result_count': cl.full_result_count,
+                    }
+                    if cl.result_list:
+                        sample = list(cl.result_list[:3])
+                        changelist_results[path_variant]['sample_count'] = len(sample)
+                        if sample:
+                            s0 = sample[0]
+                            changelist_results[path_variant]['sample_0'] = {
+                                'id': s0.pk,
+                                'ref': s0.reference,
+                                'patient': admin_instance.get_patient(s0),
+                                'doctor': admin_instance.get_doctor(s0),
+                                'department': admin_instance.get_department(s0),
+                            }
+                except Exception as cl_exc:
+                    import traceback
+                    inner = getattr(cl_exc, '__cause__', None) or getattr(cl_exc, '__context__', None)
+                    changelist_results[path_variant] = {
+                        'status': 'FAILED',
+                        'class': type(cl_exc).__name__,
+                        'message': str(cl_exc),
+                        'args': [str(a) for a in getattr(cl_exc, 'args', ())],
+                        'inner_cause': f"{type(inner).__name__}: {str(inner)}" if inner else None,
+                        'traceback': traceback.format_exc(),
+                    }
+            audit['changelist_probe'] = changelist_results
+
+            # Test simple model query
+            try:
+                audit['direct_query_count'] = Appointment.objects.count()
+            except Exception as dq_exc:
+                import traceback
+                audit['direct_query_error'] = {
+                    'class': type(dq_exc).__name__,
+                    'message': str(dq_exc),
+                    'traceback': traceback.format_exc(),
+                }
+        except Exception as audit_exc:
+            import traceback
+            audit['audit_error'] = {
+                'class': type(audit_exc).__name__,
+                'message': str(audit_exc),
+                'traceback': traceback.format_exc(),
+            }
+        details['audit'] = audit
+
     if request.query_params.get('detailed') == '1' or request.query_params.get('full') == '1':
         # Probe PostgreSQL Database
         try:
