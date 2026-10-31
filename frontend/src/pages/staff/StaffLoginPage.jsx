@@ -73,7 +73,7 @@ export function StaffLoginPage() {
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center min-vh-100 py-5"
+      className="staff-gateway-wrapper d-flex align-items-center justify-content-center min-vh-100 py-5"
       style={{ backgroundColor: 'var(--neu-bg)' }}
     >
       <SEO
@@ -85,7 +85,7 @@ export function StaffLoginPage() {
         {/* Top actions: Brand + ThemeToggle */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2">
-            <div className="hospital-brand-cross-icon neu-raised d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }} aria-hidden="true">
+            <div className="hospital-brand-cross-icon neu-raised d-flex align-items-center justify-content-center" style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }} aria-hidden="true">
               <Activity size={20} className="text-white" />
             </div>
             <span className="fs-5 fw-bold text-body">{HOSPITAL_METADATA.name}</span>
@@ -128,7 +128,7 @@ export function StaffLoginPage() {
                 <input
                   id="staff-email"
                   type="email"
-                  className="form-control bg-transparent border-0 shadow-none ps-0"
+                  className="form-control bg-transparent border-0 shadow-none ps-0" style={{ fontSize: "16px", minHeight: "44px" }}
                   placeholder="staff@eglesorahospital.org"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -148,7 +148,7 @@ export function StaffLoginPage() {
                 <input
                   id="staff-password"
                   type="password"
-                  className="form-control bg-transparent border-0 shadow-none ps-0"
+                  className="form-control bg-transparent border-0 shadow-none ps-0" style={{ fontSize: "16px", minHeight: "44px" }}
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

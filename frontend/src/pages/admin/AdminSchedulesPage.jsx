@@ -792,6 +792,73 @@ export function AdminSchedulesPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Stacked Card List (< 768px) */}
+            <div className="d-md-none p-2 d-flex flex-column gap-3">
+              {daysOfWeek.map((day) => {
+                const config = activeSchedule.weeklySchedule?.[day] || { enabled: false, breaks: [] };
+                return (
+                  <div key={day} className="admin-mobile-card">
+                    <div className="admin-mobile-card-row">
+                      <span className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                        {day}
+                      </span>
+                      <span
+                        className={`neu-badge ${
+                          config.enabled ? 'neu-badge-success' : 'neu-badge-secondary'
+                        }`}
+                      >
+                        {config.enabled ? 'Active OPD' : 'Closed / Off Duty'}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 small">
+                      <span className="text-muted">Shift Hours: </span>
+                      {config.enabled ? (
+                        <strong className="text-body">{config.start} - {config.end}</strong>
+                      ) : (
+                        <span className="text-muted fst-italic">No OPD Scheduled</span>
+                      )}
+                    </div>
+
+                    <div className="mt-1 small">
+                      <span className="text-muted">Midday Breaks: </span>
+                      {config.enabled && config.breaks && config.breaks.length > 0 ? (
+                        <span className="fw-semibold">
+                          {config.breaks.map((b) => `${b.start}-${b.end} (${b.label})`).join(', ')}
+                        </span>
+                      ) : (
+                        <span className="text-muted">None</span>
+                      )}
+                    </div>
+
+                    <div className="admin-mobile-card-actions">
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm"
+                        onClick={() => {
+                          setEditShiftDay(day);
+                          setEditShiftStart(config.start || '09:00');
+                          setEditShiftEnd(config.end || '13:00');
+                          setEditShiftEnabled(config.enabled);
+                        }}
+                      >
+                        <Edit3 size={14} className="me-1" />
+                        Edit Shift
+                      </button>
+                      <button
+                        type="button"
+                        className={`neu-btn neu-btn-sm ${config.enabled ? 'neu-btn-danger' : 'neu-btn-primary'}`}
+                        onClick={() => handleToggleDay(day)}
+                      >
+                        <Power size={14} className="me-1" />
+                        {config.enabled ? 'Mark Off' : 'Activate'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </section>
 
           {/* 7-Day Visual Calendar Grid */}
@@ -1001,15 +1068,15 @@ export function AdminSchedulesPage() {
       {/* Edit Shift Hours Modal */}
       {editShiftDay && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleSaveShift}>
                 <div 
@@ -1022,7 +1089,7 @@ export function AdminSchedulesPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setEditShiftDay(null)}
                   >
                     <X size={16} />
@@ -1091,15 +1158,15 @@ export function AdminSchedulesPage() {
       {/* Add Override Modal */}
       {showOverrideModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleAddOverride}>
                 <div 
@@ -1112,7 +1179,7 @@ export function AdminSchedulesPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => {
                       setShowOverrideModal(false);
                       setModalError(null);

@@ -86,6 +86,28 @@ export function AdminPatientsPage() {
   const [editPatient, setEditPatient] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
 
+  // Lock body scroll and dismiss on Escape for glass modals
+  useEffect(() => {
+    const hasOpenModal = Boolean(viewPatient || editPatient || showAddModal);
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setViewPatient(null);
+          setEditPatient(null);
+          setShowAddModal(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [viewPatient, editPatient, showAddModal]);
+
   // Add Patient Form State
   const [newPatientForm, setNewPatientForm] = useState({
     name: '',
@@ -330,7 +352,8 @@ export function AdminPatientsPage() {
         className="neu-card p-0 mb-4 overflow-hidden" 
         style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
       >
-        <div className="neu-table-container">
+        {/* Desktop Table View */}
+        <div className="neu-table-container d-none d-md-block">
           <table className="neu-table">
             <thead>
               <tr>
@@ -448,20 +471,98 @@ export function AdminPatientsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Stacked Cards View (< 768px) */}
+        <div className="d-md-none p-3 d-flex flex-column gap-3">
+          {isLoading ? (
+            <div className="text-center py-4 text-muted">
+              <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+              <div>Loading patient directory...</div>
+            </div>
+          ) : filteredPatients.length === 0 ? (
+            <div className="text-center py-4 text-muted">
+              <AlertCircle size={28} className="mb-2 text-muted" />
+              <div className="fw-semibold">No patient records match the selected filter.</div>
+            </div>
+          ) : (
+            filteredPatients.map((pat) => (
+              <div key={pat.id} className="admin-mobile-card">
+                <div className="admin-mobile-card-row">
+                  <span 
+                    className="px-2.5 py-1 rounded small fw-bold font-monospace"
+                    style={{ 
+                      background: 'var(--hospital-surface)', 
+                      boxShadow: 'var(--neu-inset)',
+                      fontSize: '0.785rem',
+                      color: 'var(--hospital-medical-blue)'
+                    }}
+                  >
+                    {pat.mrn}
+                  </span>
+                  <AdminStatusBadge status={pat.status || 'Active'} />
+                </div>
+                <div className="mt-2">
+                  <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    {pat.name}
+                  </div>
+                  <span className="small text-muted d-block">
+                    Blood Group: <strong className="text-body">{pat.bloodGroup || 'O+'}</strong> &bull; {pat.gender} {pat.age ? `(${pat.age} yrs)` : ''}
+                  </span>
+                  <span className="small text-muted d-block mt-1">
+                    {pat.contact} &bull; {pat.email}
+                  </span>
+                  <div className="small text-muted mt-2 pt-1 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--glass-border)' }}>
+                    <span>Registered: {pat.registrationDate || '2026-10-08'}</span>
+                    <span className="neu-badge neu-badge-info fw-bold">{pat.appointmentCount || 0} Visits</span>
+                  </div>
+                </div>
+                <div className="admin-mobile-card-actions">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => setViewPatient(pat)}
+                    title="View complete outpatient file"
+                  >
+                    <Eye size={14} className="me-1" />
+                    View File
+                  </button>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => handleOpenEdit(pat)}
+                    title="Edit patient file"
+                  >
+                    <Edit3 size={14} className="me-1" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className={`neu-btn neu-btn-sm ${pat.status === 'Active' ? 'neu-btn-outline text-warning' : 'neu-btn-primary'}`}
+                    onClick={() => handleTogglePatientStatus(pat)}
+                    title={pat.status === 'Active' ? 'Archive patient (safe soft-deactivation)' : 'Restore patient'}
+                  >
+                    <Power size={14} className="me-1" />
+                    {pat.status === 'Active' ? 'Archive' : 'Restore'}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* View Patient Details Modal */}
       {viewPatient && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -476,7 +577,7 @@ export function AdminPatientsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setViewPatient(null)}
                 >
                   <X size={16} />
@@ -552,15 +653,15 @@ export function AdminPatientsPage() {
       {/* Edit Patient File Modal */}
       {editPatient && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleSavePatientEdit}>
                 <div 
@@ -573,7 +674,7 @@ export function AdminPatientsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setEditPatient(null)}
                   >
                     <X size={16} />
@@ -699,15 +800,15 @@ export function AdminPatientsPage() {
       {/* Register New Patient Modal */}
       {showAddModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleAddPatient}>
                 <div 
@@ -720,7 +821,7 @@ export function AdminPatientsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
                   >
                     <X size={16} />

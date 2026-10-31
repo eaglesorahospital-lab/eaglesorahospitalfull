@@ -55,6 +55,25 @@ export function DoctorDashboardPage() {
     fetchDoctorAppointments();
   }, []);
 
+  // Lock body scroll and listen for Escape key when consultation modal is open
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedAppointment) {
+        setSelectedAppointment(null);
+      }
+    };
+    if (selectedAppointment) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedAppointment]);
+
   const todayStr = useMemo(() => {
     const now = new Date();
     return now.toISOString().split('T')[0];
@@ -272,92 +291,159 @@ export function DoctorDashboardPage() {
             <div className="small text-muted mt-1">New outpatient bookings will appear here in real time.</div>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="neu-table w-100">
-              <thead>
-                <tr>
-                  <th>Time Slot</th>
-                  <th>Patient Name & Contact</th>
-                  <th>Reference</th>
-                  <th>Reason for Consultation</th>
-                  <th>Status</th>
-                  <th className="text-end">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {todayAppointments.map((apt) => (
-                  <tr key={apt.reference}>
-                    <td className="fw-bold text-primary font-monospace" style={{ fontSize: '0.85rem' }}>
-                      {apt.time || apt.startTime?.slice(0, 5) || 'OPD'}
-                    </td>
-                    <td>
-                      <div className="fw-semibold text-body">{apt.patientName}</div>
-                      <div className="small text-muted">{apt.patientContact || 'Outpatient'}</div>
-                    </td>
-                    <td>
-                      <span className="small font-monospace px-2 py-0.5 rounded neu-inset text-secondary">
-                        {apt.reference}
-                      </span>
-                    </td>
-                    <td className="small text-muted" style={{ maxWidth: '240px' }}>
-                      <div className="text-truncate">{apt.reasonForVisit || 'General Medical Consultation'}</div>
-                    </td>
-                    <td>
-                      <AdminStatusBadge status={apt.status} />
-                    </td>
-                    <td className="text-end">
-                      <div className="d-inline-flex gap-1.5">
-                        <button
-                          type="button"
-                          className="neu-btn neu-btn-outline neu-btn-sm"
-                          onClick={() => setSelectedAppointment(apt)}
-                          title="View clinical details"
-                        >
-                          <Eye size={12} className="me-1" />
-                          Details
-                        </button>
-                        {apt.status === 'REQUESTED' && (
-                          <button
-                            type="button"
-                            className="neu-btn neu-btn-primary neu-btn-sm"
-                            style={{ background: '#0D47A1', borderColor: '#0D47A1', color: '#fff' }}
-                            onClick={() => handleUpdateStatus(apt, 'CONFIRMED')}
-                            title="Confirm appointment"
-                          >
-                            <Check size={12} className="me-1" />
-                            Confirm
-                          </button>
-                        )}
-                        {apt.status === 'CONFIRMED' && (
-                          <button
-                            type="button"
-                            className="neu-btn neu-btn-outline neu-btn-sm text-primary"
-                            onClick={() => handleUpdateStatus(apt, 'CHECKED_IN')}
-                            title="Mark patient checked in"
-                          >
-                            <Check size={12} className="me-1" />
-                            Check In
-                          </button>
-                        )}
-                        {apt.status === 'CHECKED_IN' && (
-                          <button
-                            type="button"
-                            className="neu-btn neu-btn-primary neu-btn-sm"
-                            style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
-                            onClick={() => handleUpdateStatus(apt, 'COMPLETED')}
-                            title="Mark consultation completed"
-                          >
-                            <Check size={12} className="me-1" />
-                            Complete
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="table-responsive d-none d-md-block">
+              <table className="neu-table w-100">
+                <thead>
+                  <tr>
+                    <th>Time Slot</th>
+                    <th>Patient Name & Contact</th>
+                    <th>Reference</th>
+                    <th>Reason for Consultation</th>
+                    <th>Status</th>
+                    <th className="text-end">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {todayAppointments.map((apt) => (
+                    <tr key={apt.reference}>
+                      <td className="fw-bold text-primary font-monospace" style={{ fontSize: '0.85rem' }}>
+                        {apt.time || apt.startTime?.slice(0, 5) || 'OPD'}
+                      </td>
+                      <td>
+                        <div className="fw-semibold text-body">{apt.patientName}</div>
+                        <div className="small text-muted">{apt.patientContact || 'Outpatient'}</div>
+                      </td>
+                      <td>
+                        <span className="small font-monospace px-2 py-0.5 rounded neu-inset text-secondary">
+                          {apt.reference}
+                        </span>
+                      </td>
+                      <td className="small text-muted" style={{ maxWidth: '240px' }}>
+                        <div className="text-truncate">{apt.reasonForVisit || 'General Medical Consultation'}</div>
+                      </td>
+                      <td>
+                        <AdminStatusBadge status={apt.status} />
+                      </td>
+                      <td className="text-end">
+                        <div className="d-inline-flex gap-1.5">
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-outline neu-btn-sm"
+                            onClick={() => setSelectedAppointment(apt)}
+                            title="View clinical details"
+                          >
+                            <Eye size={12} className="me-1" />
+                            Details
+                          </button>
+                          {apt.status === 'REQUESTED' && (
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-primary neu-btn-sm"
+                              style={{ background: '#0D47A1', borderColor: '#0D47A1', color: '#fff' }}
+                              onClick={() => handleUpdateStatus(apt, 'CONFIRMED')}
+                              title="Confirm appointment"
+                            >
+                              <Check size={12} className="me-1" />
+                              Confirm
+                            </button>
+                          )}
+                          {apt.status === 'CONFIRMED' && (
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-outline neu-btn-sm text-primary"
+                              onClick={() => handleUpdateStatus(apt, 'CHECKED_IN')}
+                              title="Mark patient checked in"
+                            >
+                              <Check size={12} className="me-1" />
+                              Check In
+                            </button>
+                          )}
+                          {apt.status === 'CHECKED_IN' && (
+                            <button
+                              type="button"
+                              className="neu-btn neu-btn-primary neu-btn-sm"
+                              style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
+                              onClick={() => handleUpdateStatus(apt, 'COMPLETED')}
+                              title="Mark consultation completed"
+                            >
+                              <Check size={12} className="me-1" />
+                              Complete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Glass Cards View (< 768px) */}
+            <div className="d-md-none d-flex flex-column gap-3">
+              {todayAppointments.map((apt) => (
+                <div key={apt.reference} className="doctor-mobile-card neu-inset p-3 rounded-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="fw-bold text-primary font-monospace fs-6">
+                      {apt.time || apt.startTime?.slice(0, 5) || 'OPD'}
+                    </span>
+                    <AdminStatusBadge status={apt.status} />
+                  </div>
+                  <div className="fw-bold text-body fs-6">{apt.patientName}</div>
+                  <div className="small text-muted mb-2">
+                    {apt.patientContact || 'Outpatient'} • Ref: <span className="font-monospace text-primary">{apt.reference}</span>
+                  </div>
+                  <div className="small text-body-secondary p-2 rounded-2 neu-inset mb-3" style={{ fontSize: '0.8rem' }}>
+                    {apt.reasonForVisit || 'General Medical Consultation'}
+                  </div>
+                  <div className="d-flex flex-wrap gap-2 pt-1 border-top">
+                    <button
+                      type="button"
+                      className="neu-btn neu-btn-outline neu-btn-sm flex-fill"
+                      onClick={() => setSelectedAppointment(apt)}
+                      title="View clinical details"
+                    >
+                      <Eye size={14} className="me-1" />
+                      Details
+                    </button>
+                    {apt.status === 'REQUESTED' && (
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-primary neu-btn-sm flex-fill"
+                        style={{ background: '#0D47A1', borderColor: '#0D47A1', color: '#fff' }}
+                        onClick={() => handleUpdateStatus(apt, 'CONFIRMED')}
+                      >
+                        <Check size={14} className="me-1" />
+                        Confirm
+                      </button>
+                    )}
+                    {apt.status === 'CONFIRMED' && (
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm text-primary flex-fill"
+                        onClick={() => handleUpdateStatus(apt, 'CHECKED_IN')}
+                      >
+                        <Check size={14} className="me-1" />
+                        Check In
+                      </button>
+                    )}
+                    {apt.status === 'CHECKED_IN' && (
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-primary neu-btn-sm flex-fill"
+                        style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
+                        onClick={() => handleUpdateStatus(apt, 'COMPLETED')}
+                      >
+                        <Check size={14} className="me-1" />
+                        Complete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -471,26 +557,32 @@ export function DoctorDashboardPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
+          style={{ backgroundColor: 'rgba(10, 25, 47, 0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedAppointment(null);
+          }}
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content neu-raised neu-surface rounded-4 p-0 border-0 overflow-hidden">
+            <div className="modal-content neu-raised neu-surface rounded-4 p-0 border-0 overflow-hidden shadow-lg">
               <div className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
                 <h5 className="modal-title fs-6 fw-bold mb-0">Consultation File: {selectedAppointment.reference}</h5>
                 <button
                   type="button"
-                  className="btn btn-sm btn-link text-muted p-0"
+                  className="btn btn-sm btn-link text-muted p-2 d-flex align-items-center justify-content-center"
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
                   onClick={() => setSelectedAppointment(null)}
+                  aria-label="Close modal"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
               <div className="modal-body p-4">
                 <div className="neu-inset p-3 rounded-3 mb-3">
                   <div className="small text-muted mb-0.5">Patient Full Name</div>
                   <div className="fs-6 fw-bold text-body">{selectedAppointment.patientName}</div>
-                  <div className="small text-muted mt-1 d-flex gap-3">
+                  <div className="small text-muted mt-1 d-flex flex-wrap gap-3">
                     <span>Contact: {selectedAppointment.patientContact || 'N/A'}</span>
                     {selectedAppointment.patientEmail && <span>Email: {selectedAppointment.patientEmail}</span>}
                   </div>
@@ -534,6 +626,7 @@ export function DoctorDashboardPage() {
                 <button
                   type="button"
                   className="neu-btn neu-btn-outline neu-btn-sm"
+                  style={{ minHeight: '44px', minWidth: '90px' }}
                   onClick={() => setSelectedAppointment(null)}
                 >
                   Close
@@ -543,7 +636,7 @@ export function DoctorDashboardPage() {
                     <button
                       type="button"
                       className="neu-btn neu-btn-primary neu-btn-sm"
-                      style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
+                      style={{ background: '#16845B', borderColor: '#16845B', color: '#fff', minHeight: '44px' }}
                       onClick={() => handleUpdateStatus(selectedAppointment, 'COMPLETED')}
                     >
                       Mark Completed
@@ -553,6 +646,7 @@ export function DoctorDashboardPage() {
                     <button
                       type="button"
                       className="neu-btn neu-btn-danger neu-btn-sm"
+                      style={{ minHeight: '44px' }}
                       onClick={() => handleUpdateStatus(selectedAppointment, 'CANCELLED')}
                     >
                       Cancel

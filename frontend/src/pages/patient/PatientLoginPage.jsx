@@ -144,9 +144,10 @@ export function PatientLoginPage() {
 
         {/* Tab Segment Controls */}
         <div className="d-flex justify-content-center mb-4">
-          <div className="neu-inset p-1 rounded-pill d-inline-flex gap-1">
+          <div className="neu-inset p-1 rounded-pill d-inline-flex gap-1" style={{ maxWidth: '100%' }}>
             <button
               type="button"
+              style={{ minHeight: '44px' }}
               className={`neu-btn neu-btn-sm rounded-pill px-4 ${mode === 'login' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
               onClick={() => {
                 setMode('login');
@@ -157,6 +158,7 @@ export function PatientLoginPage() {
             </button>
             <button
               type="button"
+              style={{ minHeight: '44px' }}
               className={`neu-btn neu-btn-sm rounded-pill px-4 ${mode === 'register' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
               onClick={() => {
                 setMode('register');
@@ -232,6 +234,7 @@ export function PatientLoginPage() {
               <button
                 type="submit"
                 className="neu-btn neu-btn-primary w-100 py-2 fw-semibold justify-content-center d-flex align-items-center gap-2"
+                style={{ minHeight: '44px' }}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -245,6 +248,7 @@ export function PatientLoginPage() {
                 <button
                   type="button"
                   className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold"
+                  style={{ minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}
                   onClick={() => setMode('register')}
                 >
                   Register here
@@ -255,7 +259,7 @@ export function PatientLoginPage() {
             /* ================= REGISTER FORM ================= */
             <form onSubmit={handleRegister}>
               <div className="row g-2 mb-2">
-                <div className="col-6">
+                <div className="col-12 col-sm-6">
                   <label className="hospital-form-label mb-1" htmlFor="reg-first-name">
                     First Name
                   </label>
@@ -270,7 +274,7 @@ export function PatientLoginPage() {
                     />
                   </div>
                 </div>
-                <div className="col-6">
+                <div className="col-12 col-sm-6">
                   <label className="hospital-form-label mb-1" htmlFor="reg-last-name">
                     Last Name
                   </label>
@@ -306,7 +310,7 @@ export function PatientLoginPage() {
               </div>
 
               <div className="row g-2 mb-2">
-                <div className="col-6">
+                <div className="col-12 col-sm-6">
                   <label className="hospital-form-label mb-1" htmlFor="reg-phone">
                     Mobile Phone
                   </label>
@@ -321,7 +325,7 @@ export function PatientLoginPage() {
                     />
                   </div>
                 </div>
-                <div className="col-6">
+                <div className="col-12 col-sm-6">
                   <label className="hospital-form-label mb-1" htmlFor="reg-gender">
                     Gender
                   </label>
@@ -372,7 +376,7 @@ export function PatientLoginPage() {
               </div>
 
               <div className="row g-2 mb-3">
-                <div className="col-6">
+                <div className="col-12 col-sm-6">
                   <label className="hospital-form-label mb-1" htmlFor="reg-password">
                     Password <span className="text-danger">*</span>
                   </label>
@@ -388,7 +392,7 @@ export function PatientLoginPage() {
                     />
                   </div>
                 </div>
-                <div className="col-6">
+                <div className="col-12 col-sm-6">
                   <label className="hospital-form-label mb-1" htmlFor="reg-password-confirm">
                     Confirm Password <span className="text-danger">*</span>
                   </label>
@@ -409,6 +413,7 @@ export function PatientLoginPage() {
               <button
                 type="submit"
                 className="neu-btn neu-btn-primary w-100 py-2 fw-semibold justify-content-center d-flex align-items-center gap-2"
+                style={{ minHeight: '44px' }}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -422,6 +427,7 @@ export function PatientLoginPage() {
                 <button
                   type="button"
                   className="btn btn-link btn-sm p-0 text-decoration-none fw-semibold"
+                  style={{ minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}
                   onClick={() => setMode('login')}
                 >
                   Sign in here

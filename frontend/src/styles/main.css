@@ -1303,7 +1303,8 @@ select.form-select option {
   }
   .admin-header-btn {
     padding: 0 0.55rem;
-    width: 36px;
+    min-width: 44px;
+    min-height: 44px;
   }
   .admin-header-select {
     min-width: 110px;
@@ -2235,5 +2236,1183 @@ select.form-select option {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
+  }
+}
+
+/* ==============================================================================
+   19. Premium Medical Glassmorphism Design System (Phase 1 Foundation)
+   Translucent Surfaces, Accessible Hit Targets, Mobile Input Standards, Fallbacks
+   ============================================================================== */
+
+/* ------------------------------------------------------------------------------
+   19.1. Reusable Glass Surfaces & Cards
+   ------------------------------------------------------------------------------ */
+.glass-card {
+  background: var(--glass-surface-card);
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow-md);
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  position: relative;
+}
+
+.glass-card-sm {
+  background: var(--glass-surface-card);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: var(--glass-border-subtle);
+  box-shadow: var(--glass-shadow-sm);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.glass-card-interactive {
+  cursor: pointer;
+}
+
+.glass-card-interactive:hover,
+.glass-card:hover {
+  background: var(--glass-surface-card-hover);
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-2px);
+  border-color: rgba(40, 120, 200, 0.40);
+}
+
+.glass-card-accent {
+  border-left: 4px solid var(--hospital-medical-blue);
+}
+
+.glass-panel {
+  background: var(--glass-surface-subtle);
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
+  border: var(--glass-border-subtle);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--glass-shadow-sm);
+}
+
+/* ------------------------------------------------------------------------------
+   19.2. Reusable Glass Buttons
+   ------------------------------------------------------------------------------ */
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--touch-target-min, 44px);
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-stack);
+  font-size: 0.915rem;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.glass-btn:focus-visible {
+  outline: 2px solid var(--hospital-medical-blue);
+  outline-offset: 2px;
+}
+
+.glass-btn-primary {
+  background: linear-gradient(135deg, var(--hospital-primary-navy) 0%, var(--hospital-medical-blue) 100%);
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow: 0 4px 14px rgba(40, 120, 200, 0.28);
+}
+
+.glass-btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(40, 120, 200, 0.40);
+  transform: translateY(-1px);
+  color: #FFFFFF !important;
+}
+
+.glass-btn-secondary {
+  background: var(--glass-surface-subtle);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  color: var(--hospital-primary-navy) !important;
+  border: var(--glass-border-subtle);
+}
+
+.glass-btn-secondary:hover {
+  background: var(--glass-surface-card-hover);
+  border-color: rgba(40, 120, 200, 0.35);
+  transform: translateY(-1px);
+}
+
+.glass-btn-outline {
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  color: var(--hospital-medical-blue) !important;
+  border: 1px solid var(--hospital-medical-blue);
+}
+
+.glass-btn-outline:hover {
+  background: var(--hospital-medical-blue);
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+.glass-btn-cyan {
+  background: linear-gradient(135deg, #188A96 0%, #35B8C9 100%);
+  color: #FFFFFF !important;
+  border: none;
+  box-shadow: 0 4px 14px rgba(53, 184, 201, 0.30);
+}
+
+.glass-btn-cyan:hover {
+  box-shadow: 0 6px 18px rgba(53, 184, 201, 0.45);
+  transform: translateY(-1px);
+  color: #FFFFFF !important;
+}
+
+.glass-btn-icon {
+  width: var(--touch-target-min, 44px);
+  height: var(--touch-target-min, 44px);
+  min-width: var(--touch-target-min, 44px);
+  min-height: var(--touch-target-min, 44px);
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-surface-card);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow-sm);
+  color: var(--hospital-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.glass-btn-icon:hover {
+  background: var(--glass-surface-card-hover);
+  color: var(--hospital-medical-blue);
+  box-shadow: var(--glass-shadow-md);
+  transform: translateY(-1px);
+}
+
+/* ------------------------------------------------------------------------------
+   19.3. Reusable Glass Form Controls
+   ------------------------------------------------------------------------------ */
+.glass-input,
+.glass-select,
+.glass-textarea {
+  display: block;
+  width: 100%;
+  min-height: var(--touch-target-min, 44px);
+  padding: 0.65rem 1.15rem;
+  font-family: var(--font-stack);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--hospital-text);
+  background: var(--glass-surface-input);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.glass-input:hover,
+.glass-select:hover,
+.glass-textarea:hover {
+  border-color: rgba(40, 120, 200, 0.40);
+}
+
+.glass-input:focus,
+.glass-select:focus,
+.glass-textarea:focus {
+  background: var(--glass-surface-input-focus);
+  color: var(--hospital-text);
+  border-color: var(--hospital-medical-blue);
+  box-shadow: 0 0 0 3px rgba(40, 120, 200, 0.20);
+}
+
+.glass-select {
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232878C8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 16px 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------------------
+   19.4. Reusable Glass Modals
+   ------------------------------------------------------------------------------ */
+.glass-modal-backdrop {
+  background-color: rgba(10, 25, 45, 0.62) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.glass-modal {
+  background: var(--glass-surface-modal);
+  backdrop-filter: var(--glass-blur-lg);
+  -webkit-backdrop-filter: var(--glass-blur-lg);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow-lg);
+  overflow: hidden;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.glass-modal-header {
+  padding: 1rem 1.5rem;
+  background: var(--glass-surface-subtle);
+  border-bottom: var(--glass-border-subtle);
+  flex-shrink: 0;
+}
+
+.glass-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.glass-modal-footer {
+  padding: 1rem 1.5rem;
+  background: var(--glass-surface-subtle);
+  border-top: var(--glass-border-subtle);
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------------------
+   19.5. Glass Badges & Status Indicators
+   ------------------------------------------------------------------------------ */
+.glass-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.785rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: var(--radius-pill);
+  background: var(--glass-surface-pill);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  border: var(--glass-border-subtle);
+  letter-spacing: 0.02em;
+}
+
+.glass-badge-blue {
+  background: rgba(40, 120, 200, 0.12);
+  color: var(--hospital-medical-blue);
+  border-color: rgba(40, 120, 200, 0.25);
+}
+
+.glass-badge-cyan {
+  background: rgba(53, 184, 201, 0.12);
+  color: #128290;
+  border-color: rgba(53, 184, 201, 0.30);
+}
+
+.glass-badge-success {
+  background: rgba(22, 132, 91, 0.12);
+  color: var(--status-confirmed-text);
+  border-color: rgba(22, 132, 91, 0.25);
+}
+
+.glass-badge-warning {
+  background: rgba(183, 121, 31, 0.12);
+  color: var(--status-pending-text);
+  border-color: rgba(183, 121, 31, 0.25);
+}
+
+.glass-badge-danger {
+  background: rgba(196, 61, 75, 0.12);
+  color: var(--status-cancelled-text);
+  border-color: rgba(196, 61, 75, 0.25);
+}
+
+/* ------------------------------------------------------------------------------
+   19.6. Mobile Touch Accessibility (WCAG 2.5.5 Target Size)
+   ------------------------------------------------------------------------------ */
+@media (max-width: 767.98px) {
+  /* Enforce 44px minimum height for interactive mobile buttons and links */
+  .glass-btn,
+  .neu-btn,
+  button.btn,
+  a.btn,
+  .hospital-navbar-toggler,
+  .admin-header-btn,
+  .hospital-topbar-value,
+  .hospital-topbar-item {
+    min-height: 44px !important;
+  }
+
+  /* Prevent small button heights in mobile table action bars */
+  .neu-action-btns .neu-btn,
+  .neu-action-btns .glass-btn {
+    min-height: 38px !important;
+    padding: 0.45rem 0.75rem !important;
+    font-size: 0.825rem !important;
+  }
+
+  /* Ensure interactive icons have 44px minimum tap bounds */
+  .neu-btn-icon,
+  .glass-btn-icon {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  /* Prevent iOS Safari 16px auto-zoom on input focus */
+  input.form-control,
+  select.form-select,
+  textarea.form-control,
+  .glass-input,
+  .glass-select,
+  .glass-textarea,
+  .neu-input,
+  .neu-select,
+  .neu-textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ------------------------------------------------------------------------------
+   19.7. Graceful Fallback for Browsers Lacking Backdrop-Filter
+   ------------------------------------------------------------------------------ */
+@supports not (backdrop-filter: blur(1px)) and not (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card,
+  .glass-panel,
+  .glass-modal {
+    background-color: #FFFFFF !important;
+    box-shadow: 0 6px 22px rgba(22, 54, 92, 0.10) !important;
+  }
+
+  .glass-input,
+  .glass-select,
+  .glass-textarea {
+    background-color: #F5F8FC !important;
+  }
+
+  .glass-modal-backdrop {
+    background-color: rgba(10, 25, 45, 0.85) !important;
+  }
+
+  [data-theme="dark"] .glass-card,
+  [data-theme="dark"] .glass-panel,
+  [data-theme="dark"] .glass-modal {
+    background-color: #15273D !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  [data-theme="dark"] .glass-input,
+  [data-theme="dark"] .glass-select,
+  [data-theme="dark"] .glass-textarea {
+    background-color: #112033 !important;
+  }
+}
+
+/* ------------------------------------------------------------------------------
+   19.8. Motion Sensitivity Compliance (WCAG 2.3.3)
+   ------------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .glass-card,
+  .glass-btn,
+  .glass-input,
+  .glass-modal {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* ==============================================================================
+   20. Phase 3: Public Website Glassmorphism Elevation
+   ============================================================================== */
+
+/* 20.1. Public Layout Frosted Surfaces & Hero */
+.hospital-layout-root {
+  background-color: var(--hospital-bg);
+}
+
+.hospital-hero-light {
+  background: linear-gradient(180deg, var(--glass-surface-nav) 0%, var(--hospital-bg) 100%);
+  border-bottom: 1px solid var(--glass-border-subtle);
+  position: relative;
+  overflow: hidden;
+}
+
+.hospital-hero-light::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -60px;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(40, 120, 200, 0.08) 0%, rgba(53, 184, 201, 0.04) 50%, transparent 70%);
+  pointer-events: none;
+}
+
+/* 20.2. Public Glass Cards & Surfaces Elevation */
+.hospital-layout-root .neu-surface,
+.hospital-layout-root .neu-raised,
+.hospital-layout-root .neu-card,
+.hospital-layout-root .neu-raised-card,
+.hospital-layout-root .neu-card-interactive {
+  background-color: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+  border-radius: var(--radius-lg, 16px);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.hospital-layout-root .neu-surface:hover,
+.hospital-layout-root .neu-raised:hover,
+.hospital-layout-root .neu-card:hover,
+.hospital-layout-root .neu-raised-card:hover,
+.hospital-layout-root .hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-md) !important;
+  border-color: rgba(40, 120, 200, 0.35) !important;
+}
+
+/* 20.3. Public Inset & Form Fields */
+.hospital-layout-root .neu-inset,
+.hospital-layout-root .neu-surface-inset {
+  background-color: var(--glass-surface-input) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  box-shadow: inset 0 1px 3px rgba(15, 35, 60, 0.05) !important;
+  border-radius: var(--radius-md, 12px);
+}
+
+.hospital-layout-root .neu-inset:focus-within {
+  border-color: var(--hospital-medical-blue) !important;
+  box-shadow: inset 0 1px 3px rgba(15, 35, 60, 0.05), 0 0 0 3px rgba(40, 120, 200, 0.18) !important;
+}
+
+/* 20.4. Public Buttons Elevation */
+.hospital-layout-root .neu-btn {
+  border-radius: var(--radius-md, 10px);
+  transition: all var(--transition-fast);
+}
+
+.hospital-layout-root .neu-btn-primary {
+  background: linear-gradient(135deg, var(--hospital-primary-navy) 0%, var(--hospital-medical-blue) 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 4px 14px rgba(40, 120, 200, 0.28) !important;
+}
+
+.hospital-layout-root .neu-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(40, 120, 200, 0.42) !important;
+  transform: translateY(-1px);
+}
+
+.hospital-layout-root .neu-btn-secondary {
+  background: var(--glass-surface-subtle) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  color: var(--hospital-primary-navy) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+}
+
+.hospital-layout-root .neu-btn-secondary:hover:not(:disabled) {
+  background: var(--glass-surface-card-hover) !important;
+  border-color: rgba(40, 120, 200, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+.hospital-layout-root .neu-btn-outline {
+  background: rgba(255, 255, 255, 0.40) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  color: var(--hospital-medical-blue) !important;
+  border: 1px solid var(--hospital-medical-blue) !important;
+}
+
+[data-theme="dark"] .hospital-layout-root .neu-btn-outline {
+  background: rgba(22, 38, 58, 0.40) !important;
+}
+
+.hospital-layout-root .neu-btn-outline:hover:not(:disabled) {
+  background: var(--hospital-medical-blue) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+/* 20.5. Doctor & Department Directory Cards Polish */
+.doctor-directory-card,
+.department-card-wrapper {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+  border-radius: var(--radius-lg, 16px);
+}
+
+.doctor-directory-card .doctor-avatar-box {
+  background: var(--glass-surface-input);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+}
+
+/* 20.6. Public Footer & Sticky CTA Glassmorphism */
+.hospital-footer {
+  background: var(--glass-surface-nav);
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border-top: 1px solid var(--glass-border);
+  position: relative;
+  z-index: 10;
+}
+
+.hospital-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+}
+
+.sticky-mobile-cta {
+  background: var(--glass-surface-nav) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px)) !important;
+  border-top: 1px solid var(--glass-border) !important;
+}
+
+.sticky-cta-call {
+  background: var(--glass-surface-subtle) !important;
+  border: 1px solid var(--glass-border) !important;
+}
+
+.sticky-cta-book {
+  background: linear-gradient(135deg, var(--hospital-primary-navy) 0%, var(--hospital-medical-blue) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  box-shadow: 0 4px 12px rgba(40, 120, 200, 0.30) !important;
+}
+
+/* 20.7. Mobile-First Responsiveness & Grid Safety (< 768px) */
+@media (max-width: 767.98px) {
+  /* Reduce blur on mobile for 60fps performance */
+  .hospital-layout-root .neu-surface,
+  .hospital-layout-root .neu-raised,
+  .hospital-layout-root .neu-card,
+  .hospital-layout-root .neu-raised-card,
+  .hospital-footer,
+  .sticky-mobile-cta {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+
+  /* Single-column grid cards padding */
+  .hospital-layout-root .p-4 {
+    padding: 1.15rem !important;
+  }
+
+  /* Responsive date and slot picker buttons on mobile */
+  .date-slot-btn,
+  .time-slot-btn,
+  .filter-chip-btn {
+    min-height: 44px !important;
+  }
+}
+
+
+@media (max-width: 767.98px) {
+  .hospital-layout-root input,
+  .hospital-layout-root select,
+  .hospital-layout-root textarea,
+  .hospital-form-control,
+  .form-control,
+  .form-select {
+    font-size: 16px !important;
+  }
+}
+
+
+/* ==============================================================================
+   21. Phase 4: Patient Portal Glassmorphism Elevation
+   ============================================================================== */
+
+/* 21.1. Patient Portal Container & Identity Strip */
+.patient-dashboard-page,
+.patient-profile-page,
+.appointment-detail-page,
+.patient-login-page {
+  /* Patient Portal page container */
+  position: relative;
+}
+
+/* Patient Identity Strip Frosted Glass Card */
+.patient-portal-nav-wrapper .neu-surface {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+  border-radius: var(--radius-xl, 20px);
+}
+
+/* Patient Navigation Segmented Tabs */
+.patient-portal-nav-wrapper nav.neu-inset {
+  background: var(--glass-surface-input) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  box-shadow: inset 0 1px 3px rgba(15, 35, 60, 0.05) !important;
+}
+
+.patient-portal-nav-wrapper nav.neu-inset a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.patient-portal-nav-wrapper nav.neu-inset a.neu-raised {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+}
+
+/* 21.2. Patient Upcoming Consultation Hero Card */
+.patient-dashboard-page section[aria-label="Next Upcoming Appointment"],
+.patient-dashboard-page .border-primary {
+  background: linear-gradient(135deg, var(--glass-surface-card) 0%, rgba(40, 120, 200, 0.05) 100%) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border: 1px solid var(--glass-border) !important;
+  border-left: 4px solid var(--hospital-medical-blue) !important;
+  box-shadow: var(--glass-shadow-md) !important;
+}
+
+/* 21.3. Patient Appointment Cards */
+.patient-dashboard-page article.neu-surface {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+  border-radius: var(--radius-lg, 16px);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.patient-dashboard-page article.neu-surface:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-md) !important;
+  border-color: rgba(40, 120, 200, 0.35) !important;
+}
+
+/* 21.4. Patient Filter Pills */
+.patient-dashboard-page section[aria-label="Appointment History"] .neu-inset {
+  background: var(--glass-surface-input) !important;
+  border: 1px solid var(--glass-border-subtle) !important;
+}
+
+.patient-dashboard-page section[aria-label="Appointment History"] .neu-btn-primary {
+  background: linear-gradient(135deg, var(--hospital-primary-navy) 0%, var(--hospital-medical-blue) 100%) !important;
+  color: #FFFFFF !important;
+}
+
+/* 21.5. Patient Modals Glassmorphism */
+.patient-dashboard-page .modal,
+.appointment-detail-page .modal {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.patient-dashboard-page .modal .neu-surface,
+.appointment-detail-page .modal .neu-surface {
+  background: var(--glass-surface-modal, #FFFFFF) !important;
+  backdrop-filter: blur(var(--glass-blur-lg, 16px)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg, 16px)) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-lg) !important;
+  border-radius: var(--radius-xl, 20px) !important;
+}
+
+/* 21.6. Patient Login & Register Gateway Card */
+.patient-login-page .neu-surface {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-md) !important;
+  border-radius: var(--radius-xl, 24px);
+}
+
+/* 21.7. Mobile-First Responsiveness for Patient Portal (< 768px) */
+@media (max-width: 767.98px) {
+  /* Reduce blur on mobile for smooth performance */
+  .patient-portal-nav-wrapper .neu-surface,
+  .patient-dashboard-page section,
+  .patient-dashboard-page article,
+  .patient-profile-page .neu-surface,
+  .appointment-detail-page .neu-surface,
+  .patient-login-page .neu-surface {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+
+  /* Identity strip stacks nicely on mobile */
+  .patient-portal-nav-wrapper .neu-surface {
+    padding: 1.15rem !important;
+  }
+
+  /* Navigation tabs fill full width on small screens */
+  .patient-portal-nav-wrapper nav.neu-inset {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .patient-portal-nav-wrapper nav.neu-inset a {
+    flex: 1 1 auto;
+    text-align: center;
+    justify-content: center;
+    min-height: 44px !important;
+  }
+
+  /* Action buttons min height */
+  .patient-dashboard-page .neu-btn,
+  .patient-profile-page .neu-btn,
+  .appointment-detail-page .neu-btn,
+  .patient-login-page .neu-btn {
+    min-height: 44px !important;
+  }
+
+  /* Filter pill buttons on mobile */
+  .patient-dashboard-page section[aria-label="Appointment History"] .neu-inset {
+    display: flex;
+    overflow-x: auto;
+    padding: 0.35rem !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .patient-dashboard-page section[aria-label="Appointment History"] .neu-btn {
+    min-height: 38px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+/* ------------------------------------------------------------------------------
+   22. Phase 5 Doctor Portal Glassmorphism Elevation & Mobile-First Adaptation
+   ------------------------------------------------------------------------------ */
+
+/* 22.1. Doctor Portal Container Surfaces */
+.doctor-dashboard-view,
+.doctor-appointments-view,
+.doctor-history-view,
+.doctor-patients-view,
+.doctor-schedule-view,
+.doctor-notifications-view,
+.doctor-profile-view {
+  min-width: 0;
+}
+
+/* 22.2. Doctor Glass Cards */
+.doctor-dashboard-view .neu-card,
+.doctor-appointments-view .neu-card,
+.doctor-history-view .neu-card,
+.doctor-patients-view .neu-card,
+.doctor-schedule-view .neu-card,
+.doctor-notifications-view .neu-card,
+.doctor-profile-view .neu-card {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-sm) !important;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+}
+
+.doctor-dashboard-view .neu-card:hover,
+.doctor-appointments-view .neu-card:hover,
+.doctor-history-view .neu-card:hover,
+.doctor-patients-view .neu-card:hover,
+.doctor-schedule-view .neu-card:hover,
+.doctor-notifications-view .neu-card:hover,
+.doctor-profile-view .neu-card:hover {
+  border-color: rgba(40, 120, 200, 0.3) !important;
+}
+
+/* 22.3. Doctor Inset Panels */
+.doctor-dashboard-view .neu-inset,
+.doctor-appointments-view .neu-inset,
+.doctor-history-view .neu-inset,
+.doctor-patients-view .neu-inset,
+.doctor-schedule-view .neu-inset,
+.doctor-notifications-view .neu-inset,
+.doctor-profile-view .neu-inset {
+  background: var(--glass-surface-input) !important;
+  backdrop-filter: blur(var(--glass-blur-sm, 6px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 6px));
+  border: 1px solid var(--glass-border-subtle) !important;
+  box-shadow: none !important;
+}
+
+/* 22.4. Doctor Inputs & Selects */
+.doctor-dashboard-view input,
+.doctor-dashboard-view select,
+.doctor-dashboard-view textarea,
+.doctor-appointments-view input,
+.doctor-appointments-view select,
+.doctor-appointments-view textarea,
+.doctor-history-view input,
+.doctor-history-view select,
+.doctor-history-view textarea,
+.doctor-patients-view input,
+.doctor-patients-view select,
+.doctor-schedule-view input,
+.doctor-schedule-view select,
+.doctor-notifications-view input,
+.doctor-notifications-view select,
+.doctor-profile-view input,
+.doctor-profile-view select,
+.doctor-profile-view textarea,
+.staff-auth-card input {
+  font-size: 16px !important;
+  min-height: 44px;
+  background: var(--glass-surface-input) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--hospital-text) !important;
+  border-radius: var(--radius-md, 10px);
+}
+
+.doctor-dashboard-view input:focus,
+.doctor-appointments-view input:focus,
+.doctor-history-view input:focus,
+.doctor-patients-view input:focus,
+.doctor-schedule-view input:focus,
+.doctor-notifications-view input:focus,
+.doctor-profile-view input:focus {
+  border-color: var(--hospital-medical-blue) !important;
+  box-shadow: 0 0 0 3px rgba(40, 120, 200, 0.2) !important;
+  outline: none;
+}
+
+/* 22.5. Doctor Interactive Touch Targets */
+.doctor-dashboard-view .neu-btn,
+.doctor-appointments-view .neu-btn,
+.doctor-history-view .neu-btn,
+.doctor-patients-view .neu-btn,
+.doctor-schedule-view .neu-btn,
+.doctor-notifications-view .neu-btn,
+.doctor-profile-view .neu-btn,
+.staff-auth-card .btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.doctor-dashboard-view .neu-btn-sm,
+.doctor-appointments-view .neu-btn-sm,
+.doctor-history-view .neu-btn-sm,
+.doctor-patients-view .neu-btn-sm,
+.doctor-schedule-view .neu-btn-sm,
+.doctor-notifications-view .neu-btn-sm,
+.doctor-profile-view .neu-btn-sm {
+  min-height: 40px;
+  padding: 0.45rem 0.95rem;
+}
+
+/* 22.6. Doctor Modals Glassmorphism */
+.doctor-dashboard-view .modal,
+.doctor-appointments-view .modal,
+.doctor-history-view .modal,
+.doctor-patients-view .modal,
+.doctor-schedule-view .modal,
+.doctor-notifications-view .modal {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(10, 25, 47, 0.7) !important;
+}
+
+.doctor-dashboard-view .modal-content,
+.doctor-appointments-view .modal-content,
+.doctor-history-view .modal-content,
+.doctor-patients-view .modal-content,
+.doctor-schedule-view .modal-content,
+.doctor-notifications-view .modal-content {
+  background: var(--glass-surface-modal, #FFFFFF) !important;
+  backdrop-filter: blur(var(--glass-blur-lg, 16px)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg, 16px)) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-lg) !important;
+  border-radius: var(--radius-xl, 20px) !important;
+}
+
+/* 22.7. Staff & Invitation Gateway Cards */
+.staff-gateway-wrapper .neu-surface,
+.invitation-gateway-wrapper .neu-surface {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-md) !important;
+  border-radius: var(--radius-xl, 24px);
+}
+
+/* 22.8. Mobile-First Responsiveness for Doctor Portal (< 768px) */
+@media (max-width: 767.98px) {
+  /* Reduce blur on mobile for smooth performance */
+  .doctor-dashboard-view .neu-card,
+  .doctor-appointments-view .neu-card,
+  .doctor-history-view .neu-card,
+  .doctor-patients-view .neu-card,
+  .doctor-schedule-view .neu-card,
+  .doctor-notifications-view .neu-card,
+  .doctor-profile-view .neu-card,
+  .doctor-dashboard-view .modal-content,
+  .doctor-appointments-view .modal-content,
+  .doctor-history-view .modal-content,
+  .doctor-patients-view .modal-content,
+  .doctor-schedule-view .modal-content,
+  .doctor-notifications-view .modal-content,
+  .staff-gateway-wrapper .neu-surface,
+  .invitation-gateway-wrapper .neu-surface {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+
+  /* Full-width interactive touch buttons on mobile */
+  .doctor-dashboard-view .neu-btn,
+  .doctor-appointments-view .neu-btn,
+  .doctor-history-view .neu-btn,
+  .doctor-patients-view .neu-btn,
+  .doctor-schedule-view .neu-btn,
+  .doctor-notifications-view .neu-btn,
+  .doctor-profile-view .neu-btn {
+    min-height: 44px !important;
+  }
+
+  /* Stacked doctor card styling for mobile */
+  .doctor-mobile-card {
+    background: var(--glass-surface-card) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--radius-lg, 16px);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+    box-shadow: var(--glass-shadow-sm) !important;
+  }
+}
+
+/* ==========================================================================
+   23. PHASE 6 — ADMIN PORTAL GLASSMORPHISM ELEVATION & MOBILE-FIRST TRANSFORMATION
+   ========================================================================== */
+
+/* 23.1. Admin Top Header Glass & Touch Target Upgrades */
+.hospital-admin-header {
+  backdrop-filter: blur(var(--glass-blur-md, 12px)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px)) !important;
+}
+
+.admin-header-btn {
+  min-height: 44px;
+}
+
+.admin-header-btn-icon {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* 23.2. Admin Sidebar Touch Targets & Glass Polish */
+.admin-sidebar-link {
+  min-height: 44px;
+}
+
+.admin-sidebar-header .btn-close {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* 23.3. Admin Portal View Surfaces */
+.admin-dashboard-view .neu-card,
+.admin-patients-view .neu-card,
+.admin-doctors-view .neu-card,
+.admin-appointments-view .neu-card,
+.admin-schedules-view .neu-card,
+.admin-departments-view .neu-card,
+.admin-content-view .neu-card,
+.admin-notifications-view .neu-card,
+.admin-administrators-view .neu-card,
+.admin-audit-view .neu-card {
+  background: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow-md) !important;
+}
+
+/* 23.4. Admin Action Buttons & Touch Targets */
+.admin-dashboard-view .neu-btn,
+.admin-patients-view .neu-btn,
+.admin-doctors-view .neu-btn,
+.admin-appointments-view .neu-btn,
+.admin-schedules-view .neu-btn,
+.admin-departments-view .neu-btn,
+.admin-content-view .neu-btn,
+.admin-notifications-view .neu-btn,
+.admin-administrators-view .neu-btn,
+.admin-audit-view .neu-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-dashboard-view .neu-btn-icon,
+.admin-patients-view .neu-btn-icon,
+.admin-doctors-view .neu-btn-icon,
+.admin-appointments-view .neu-btn-icon,
+.admin-schedules-view .neu-btn-icon,
+.admin-departments-view .neu-btn-icon,
+.admin-content-view .neu-btn-icon,
+.admin-notifications-view .neu-btn-icon,
+.admin-administrators-view .neu-btn-icon,
+.admin-audit-view .neu-btn-icon {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 23.5. Admin Mobile Stacked Card (< 768px) */
+.admin-mobile-card {
+  background: var(--glass-surface-card) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-lg, 16px);
+  padding: var(--space-4, 1rem);
+  margin-bottom: var(--space-3, 0.75rem);
+  box-shadow: var(--glass-shadow-sm) !important;
+}
+
+.admin-mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-mobile-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.admin-mobile-card-actions .neu-btn {
+  flex: 1 1 auto;
+  min-height: 44px;
+}
+
+/* 23.6. Mobile-First Responsiveness for Admin Portal (< 768px) */
+@media (max-width: 767.98px) {
+  /* Reduce blur on mobile for smooth 60fps performance */
+  .admin-dashboard-view .neu-card,
+  .admin-patients-view .neu-card,
+  .admin-doctors-view .neu-card,
+  .admin-appointments-view .neu-card,
+  .admin-schedules-view .neu-card,
+  .admin-departments-view .neu-card,
+  .admin-content-view .neu-card,
+  .admin-notifications-view .neu-card,
+  .admin-administrators-view .neu-card,
+  .admin-audit-view .neu-card,
+  .admin-dashboard-view .modal-content,
+  .admin-patients-view .modal-content,
+  .admin-doctors-view .modal-content,
+  .admin-appointments-view .modal-content,
+  .admin-schedules-view .modal-content,
+  .admin-departments-view .modal-content,
+  .admin-content-view .modal-content,
+  .admin-notifications-view .modal-content,
+  .admin-administrators-view .modal-content,
+  .admin-audit-view .modal-content {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+
+  /* Accessible mobile inputs (16px minimum to prevent auto-zoom) */
+  .admin-main-content input,
+  .admin-main-content select,
+  .admin-main-content textarea,
+  .admin-main-content .neu-input,
+  .admin-main-content .neu-select,
+  .admin-main-content .form-control,
+  .modal-content input,
+  .modal-content select,
+  .modal-content textarea,
+  .modal-content .neu-input,
+  .modal-content .neu-select,
+  .modal-content .form-control {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  /* Responsive header buttons & theme toggle */
+  .admin-header-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0 0.5rem !important;
+  }
+
+  .admin-header-controls .neu-theme-toggle-compact {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  /* Full-width interactive touch buttons on mobile */
+  .admin-dashboard-view .neu-btn,
+  .admin-patients-view .neu-btn,
+  .admin-doctors-view .neu-btn,
+  .admin-appointments-view .neu-btn,
+  .admin-schedules-view .neu-btn,
+  .admin-departments-view .neu-btn,
+  .admin-content-view .neu-btn,
+  .admin-notifications-view .neu-btn,
+  .admin-administrators-view .neu-btn,
+  .admin-audit-view .neu-btn,
+  .admin-mobile-card-actions .neu-btn,
+  .admin-dashboard-view .neu-btn-icon,
+  .admin-patients-view .neu-btn-icon,
+  .admin-doctors-view .neu-btn-icon,
+  .admin-appointments-view .neu-btn-icon,
+  .admin-schedules-view .neu-btn-icon,
+  .admin-departments-view .neu-btn-icon,
+  .admin-content-view .neu-btn-icon,
+  .admin-notifications-view .neu-btn-icon,
+  .admin-administrators-view .neu-btn-icon,
+  .admin-audit-view .neu-btn-icon {
+    min-height: 44px !important;
   }
 }

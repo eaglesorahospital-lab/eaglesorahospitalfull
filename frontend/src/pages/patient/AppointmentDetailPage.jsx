@@ -79,6 +79,23 @@ export function AppointmentDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [feedbackNotice, setFeedbackNotice] = useState(null);
 
+  // Accessible Escape key and body scroll lock for cancellation modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showCancelModal) {
+        setShowCancelModal(false);
+      }
+    };
+    if (showCancelModal) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [showCancelModal]);
+
   const breadcrumbs = [
     { label: t('nav.home'), to: '/' },
     { label: t('nav.patientPortal'), to: '/my-appointments' },
@@ -101,7 +118,7 @@ export function AppointmentDetailPage() {
             <p className="text-muted small mx-auto mb-4" style={{ maxWidth: '480px' }}>
               Please sign in to verify your identity and view the full details of appointment reference <strong>{reference}</strong>.
             </p>
-            <Link to="/patient/login" className="neu-btn neu-btn-primary px-4 py-2">
+            <Link to="/patient/login" className="neu-btn neu-btn-primary px-4 py-2" style={{ minHeight: '44px' }}>
               Sign In to Patient Portal
             </Link>
           </div>
@@ -145,7 +162,7 @@ export function AppointmentDetailPage() {
               title="Appointment Not Found or Access Denied"
               message={`We could not locate any consultation booking matching reference "${reference}" associated with your account.`}
               action={
-                <Link to="/my-appointments" className="neu-btn neu-btn-primary">
+                <Link to="/my-appointments" className="neu-btn neu-btn-primary" style={{ minHeight: '44px' }}>
                   Return to Appointments
                 </Link>
               }
@@ -195,6 +212,7 @@ export function AppointmentDetailPage() {
               className="btn btn-sm btn-link text-muted p-0"
               onClick={() => setFeedbackNotice(null)}
               aria-label="Close"
+              style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <X size={16} />
             </button>
@@ -298,7 +316,7 @@ export function AppointmentDetailPage() {
           {/* Action Buttons */}
           <div className="d-flex flex-column flex-sm-row gap-2 pt-3 border-top justify-content-between align-items-stretch align-items-sm-center">
             <Link to="/my-appointments" className="text-decoration-none">
-              <button type="button" className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1">
+              <button type="button" className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100 w-sm-auto" style={{ minHeight: '44px' }}>
                 <ArrowLeft size={14} />
                 <span>Back to Dashboard</span>
               </button>
@@ -306,12 +324,18 @@ export function AppointmentDetailPage() {
 
             {isActionable && (
               <div className="d-flex flex-column flex-sm-row gap-2">
-                <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={handleReschedule}>
+                <button
+                  type="button"
+                  className="neu-btn neu-btn-outline neu-btn-sm justify-content-center"
+                  style={{ minHeight: '44px' }}
+                  onClick={handleReschedule}
+                >
                   {t('patient.reschedule')}
                 </button>
                 <button
                   type="button"
-                  className="neu-btn neu-btn-outline text-danger neu-btn-sm"
+                  className="neu-btn neu-btn-outline text-danger neu-btn-sm justify-content-center"
+                  style={{ minHeight: '44px' }}
                   onClick={() => setShowCancelModal(true)}
                 >
                   {t('patient.cancel')}
@@ -324,13 +348,16 @@ export function AppointmentDetailPage() {
         {/* Cancellation Modal */}
         {showCancelModal && (
           <div
-            className="modal show d-block"
-            style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)' }}
+            className="modal show d-block glass-modal-backdrop"
+            style={{ backgroundColor: 'rgba(15, 23, 42, 0.65)' }}
             role="dialog"
             aria-modal="true"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowCancelModal(false);
+            }}
           >
-            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '440px' }}>
-              <div className="neu-raised neu-surface rounded-4 overflow-hidden border-0">
+            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '460px' }}>
+              <div className="glass-modal neu-raised neu-surface rounded-4 overflow-hidden border-0 shadow-lg">
                 <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
                   <h5 className="modal-title fs-6 fw-bold text-danger mb-0 d-flex align-items-center gap-2">
                     <AlertTriangle size={18} />
@@ -341,6 +368,7 @@ export function AppointmentDetailPage() {
                     className="btn btn-sm btn-link text-muted p-0"
                     onClick={() => setShowCancelModal(false)}
                     aria-label="Close"
+                    style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >
                     <X size={18} />
                   </button>
@@ -356,10 +384,20 @@ export function AppointmentDetailPage() {
                   </div>
                 </div>
                 <div className="p-3 border-top d-flex justify-content-end gap-2">
-                  <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={() => setShowCancelModal(false)}>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    style={{ minHeight: '44px' }}
+                    onClick={() => setShowCancelModal(false)}
+                  >
                     {t('patient.keepAppointment')}
                   </button>
-                  <button type="button" className="neu-btn neu-btn-outline text-danger neu-btn-sm px-3" onClick={handleConfirmCancel}>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline text-danger neu-btn-sm px-3"
+                    style={{ minHeight: '44px' }}
+                    onClick={handleConfirmCancel}
+                  >
                     {t('patient.confirmCancel')}
                   </button>
                 </div>

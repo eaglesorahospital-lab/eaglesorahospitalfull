@@ -55,6 +55,25 @@ export function DoctorHistoryPage() {
     fetchHistory();
   }, []);
 
+  // Lock body scroll and listen for Escape key when modal is open
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedAppointment) {
+        setSelectedAppointment(null);
+      }
+    };
+    if (selectedAppointment) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedAppointment]);
+
   const todayStr = useMemo(() => {
     return new Date().toISOString().split('T')[0];
   }, []);
@@ -196,7 +215,8 @@ export function DoctorHistoryPage() {
               <Search size={16} className="position-absolute start-0 top-50 translate-middle-y ms-3 text-muted" />
               <input
                 type="text"
-                className="neu-input ps-5"
+                className="neu-input ps-5 w-100"
+                style={{ fontSize: '16px', minHeight: '44px' }}
                 placeholder="Search history by patient name, MRN, reference, diagnosis reason..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -205,7 +225,8 @@ export function DoctorHistoryPage() {
           </div>
           <div className="col-12 col-md-5">
             <select
-              className="neu-input"
+              className="neu-input w-100"
+              style={{ fontSize: '16px', minHeight: '44px' }}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -218,7 +239,7 @@ export function DoctorHistoryPage() {
         </div>
       </div>
 
-      {/* History Table */}
+      {/* History Table & Mobile Cards */}
       <div className="neu-card rounded-4 p-0 overflow-hidden mb-4">
         {isLoading ? (
           <div className="text-center py-5">
@@ -226,7 +247,7 @@ export function DoctorHistoryPage() {
             <p className="text-muted small mb-0">Retrieving consultation history records...</p>
           </div>
         ) : filteredHistory.length === 0 ? (
-          <div className="text-center py-5">
+          <div className="text-center py-5 p-4">
             <History size={32} className="text-muted mb-2 opacity-50" />
             <h6 className="fw-bold text-body">No historical records found</h6>
             <p className="text-muted small mb-0">
@@ -236,71 +257,108 @@ export function DoctorHistoryPage() {
             </p>
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead style={{ background: 'var(--neu-inset-bg)', fontSize: '0.78rem' }}>
-                <tr>
-                  <th className="ps-4 py-3 text-muted text-uppercase fw-semibold">Reference</th>
-                  <th className="py-3 text-muted text-uppercase fw-semibold">Patient Information</th>
-                  <th className="py-3 text-muted text-uppercase fw-semibold">Encounter Date & Time</th>
-                  <th className="py-3 text-muted text-uppercase fw-semibold">Clinical Reason</th>
-                  <th className="py-3 text-muted text-uppercase fw-semibold">Status</th>
-                  <th className="pe-4 py-3 text-end text-muted text-uppercase fw-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y" style={{ fontSize: '0.85rem' }}>
-                {filteredHistory.map((apt) => (
-                  <tr key={apt.id || apt.reference}>
-                    <td className="ps-4 py-3">
-                      <span className="fw-bold text-primary">{apt.reference}</span>
-                      <span className="d-block text-muted small" style={{ fontSize: '0.72rem' }}>
-                        {apt.appointmentType || 'In-Person OPD'}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <div className="fw-semibold text-body">{apt.patientName}</div>
-                      <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
-                        MRN: {apt.patientMrn || 'N/A'} • {apt.patientPhone || apt.patientEmail || ''}
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <div className="d-flex align-items-center gap-1.5 text-body">
-                        <Calendar size={13} className="text-primary" />
-                        <span>{apt.date}</span>
-                      </div>
-                      <div className="d-flex align-items-center gap-1 text-muted small" style={{ fontSize: '0.75rem' }}>
-                        <Clock size={12} />
-                        <span>{apt.startTime} - {apt.endTime}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 text-body" style={{ maxWidth: '240px' }}>
-                      <div className="text-truncate">{apt.reasonForVisit || 'General Clinical Review'}</div>
-                      {apt.notes && (
-                        <div className="text-muted small text-truncate" style={{ fontSize: '0.75rem' }}>
-                          Note: {apt.notes}
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3">
-                      <AdminStatusBadge status={apt.status} />
-                    </td>
-                    <td className="pe-4 py-3 text-end">
-                      <button
-                        type="button"
-                        className="neu-btn neu-btn-outline neu-btn-sm py-1 px-2.5 d-inline-flex align-items-center gap-1"
-                        style={{ fontSize: '0.78rem' }}
-                        onClick={() => handleOpenDetail(apt)}
-                        title="View consultation details and notes"
-                      >
-                        <Eye size={13} />
-                        <span>Review</span>
-                      </button>
-                    </td>
+          <>
+            {/* Desktop Table (>= 768px) */}
+            <div className="table-responsive d-none d-md-block">
+              <table className="table table-hover align-middle mb-0">
+                <thead style={{ background: 'var(--neu-inset-bg)', fontSize: '0.78rem' }}>
+                  <tr>
+                    <th className="ps-4 py-3 text-muted text-uppercase fw-semibold">Reference</th>
+                    <th className="py-3 text-muted text-uppercase fw-semibold">Patient Information</th>
+                    <th className="py-3 text-muted text-uppercase fw-semibold">Encounter Date & Time</th>
+                    <th className="py-3 text-muted text-uppercase fw-semibold">Clinical Reason</th>
+                    <th className="py-3 text-muted text-uppercase fw-semibold">Status</th>
+                    <th className="pe-4 py-3 text-end text-muted text-uppercase fw-semibold">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y" style={{ fontSize: '0.85rem' }}>
+                  {filteredHistory.map((apt) => (
+                    <tr key={apt.id || apt.reference}>
+                      <td className="ps-4 py-3">
+                        <span className="fw-bold text-primary">{apt.reference}</span>
+                        <span className="d-block text-muted small" style={{ fontSize: '0.72rem' }}>
+                          {apt.appointmentType || 'In-Person OPD'}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <div className="fw-semibold text-body">{apt.patientName}</div>
+                        <div className="text-muted small" style={{ fontSize: '0.75rem' }}>
+                          MRN: {apt.patientMrn || 'N/A'} • {apt.patientPhone || apt.patientEmail || ''}
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <div className="d-flex align-items-center gap-1.5 text-body">
+                          <Calendar size={13} className="text-primary" />
+                          <span>{apt.date}</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-1 text-muted small" style={{ fontSize: '0.75rem' }}>
+                          <Clock size={12} />
+                          <span>{apt.startTime} - {apt.endTime}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-body" style={{ maxWidth: '240px' }}>
+                        <div className="text-truncate">{apt.reasonForVisit || 'General Clinical Review'}</div>
+                        {apt.notes && (
+                          <div className="text-muted small text-truncate" style={{ fontSize: '0.75rem' }}>
+                            Note: {apt.notes}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3">
+                        <AdminStatusBadge status={apt.status} />
+                      </td>
+                      <td className="pe-4 py-3 text-end">
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm py-1 px-2.5 d-inline-flex align-items-center gap-1"
+                          style={{ fontSize: '0.78rem' }}
+                          onClick={() => handleOpenDetail(apt)}
+                          title="View consultation details and notes"
+                        >
+                          <Eye size={13} />
+                          <span>Review</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Glass Cards (< 768px) */}
+            <div className="d-md-none p-3 d-flex flex-column gap-3">
+              {filteredHistory.map((apt) => (
+                <div key={apt.id || apt.reference} className="doctor-mobile-card neu-inset p-3 rounded-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="fw-bold text-primary font-monospace fs-6">{apt.reference}</span>
+                    <AdminStatusBadge status={apt.status} />
+                  </div>
+                  <div className="fw-bold text-body fs-6">{apt.patientName}</div>
+                  <div className="small text-muted mb-2">
+                    MRN: {apt.patientMrn || 'N/A'} • {apt.appointmentType || 'In-Person OPD'}
+                  </div>
+                  <div className="d-flex align-items-center gap-2 small text-body mb-2">
+                    <Calendar size={13} className="text-primary flex-shrink-0" />
+                    <span>{apt.date}</span>
+                    <span className="text-muted">({apt.startTime} - {apt.endTime})</span>
+                  </div>
+                  <div className="small text-body-secondary p-2 rounded-2 neu-inset mb-3" style={{ fontSize: '0.8rem' }}>
+                    <div className="fw-medium mb-0.5">{apt.reasonForVisit || 'General Clinical Review'}</div>
+                    {apt.notes && <div className="text-muted fst-italic">Note: {apt.notes}</div>}
+                  </div>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm w-100 d-flex align-items-center justify-content-center gap-1.5"
+                    style={{ minHeight: '44px' }}
+                    onClick={() => handleOpenDetail(apt)}
+                  >
+                    <Eye size={14} />
+                    <span>Review Encounter & Notes</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -309,11 +367,15 @@ export function DoctorHistoryPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
+          style={{ backgroundColor: 'rgba(10, 25, 47, 0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedAppointment(null);
+          }}
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content neu-raised neu-surface rounded-4 p-4 border-0">
+            <div className="modal-content neu-raised neu-surface rounded-4 p-4 border-0 shadow-lg">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <div className="d-flex align-items-center gap-2">
                   <div className="p-2 rounded-circle neu-inset text-primary">
@@ -326,8 +388,10 @@ export function DoctorHistoryPage() {
                 </div>
                 <button
                   type="button"
-                  className="btn btn-sm btn-link text-muted p-0"
+                  className="btn btn-sm btn-link text-muted p-2 d-flex align-items-center justify-content-center"
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
                   onClick={() => setSelectedAppointment(null)}
+                  aria-label="Close modal"
                 >
                   <X size={20} />
                 </button>
@@ -377,7 +441,8 @@ export function DoctorHistoryPage() {
                   Doctor's Clinical Notes & Diagnoses
                 </label>
                 <textarea
-                  className="neu-input"
+                  className="neu-input w-100"
+                  style={{ fontSize: '16px', minHeight: '100px' }}
                   rows="4"
                   placeholder="Record symptoms, observations, clinical diagnosis, prescriptions, and follow-up guidance..."
                   value={consultationNote}
@@ -389,6 +454,7 @@ export function DoctorHistoryPage() {
                 <button
                   type="button"
                   className="neu-btn neu-btn-outline"
+                  style={{ minHeight: '44px', minWidth: '90px' }}
                   onClick={() => setSelectedAppointment(null)}
                 >
                   Close
@@ -396,6 +462,7 @@ export function DoctorHistoryPage() {
                 <button
                   type="button"
                   className="neu-btn neu-btn-primary d-flex align-items-center gap-1.5"
+                  style={{ minHeight: '44px' }}
                   onClick={handleSaveNote}
                   disabled={isSavingNote}
                 >

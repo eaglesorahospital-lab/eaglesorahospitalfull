@@ -130,6 +130,7 @@ export function PatientProfilePage() {
               className="btn btn-sm btn-link text-muted p-0"
               onClick={() => setFeedbackNotice(null)}
               aria-label="Close"
+              style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <X size={16} />
             </button>
@@ -152,11 +153,11 @@ export function PatientProfilePage() {
             <p className="text-muted small mx-auto mb-4" style={{ maxWidth: '520px' }}>
               Your medical and demographic records are strictly isolated and protected. Please sign in to your verified patient account to access your medical file.
             </p>
-            <div className="d-flex justify-content-center gap-3">
-              <Link to="/patient/login" className="neu-btn neu-btn-primary px-4 py-2">
+            <div className="d-flex flex-column flex-sm-row justify-content-center gap-3">
+              <Link to="/patient/login" className="neu-btn neu-btn-primary px-4 py-2" style={{ minHeight: '44px' }}>
                 Sign In to Patient Portal
               </Link>
-              <Link to="/patient/login?mode=register" className="neu-btn neu-btn-outline px-4 py-2">
+              <Link to="/patient/login?mode=register" className="neu-btn neu-btn-outline px-4 py-2" style={{ minHeight: '44px' }}>
                 Register New Patient
               </Link>
             </div>
@@ -183,13 +184,14 @@ export function PatientProfilePage() {
               {!isEditing && (
                 <button
                   type="button"
-                  className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1"
+                  className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100 w-sm-auto"
+                  style={{ minHeight: '44px' }}
                   onClick={() => {
                     setIsEditing(true);
                     setFeedbackNotice(null);
                   }}
                 >
-                  <Edit3 size={14} />
+                  <Edit3 size={15} />
                   <span>{t('patient.editProfile')}</span>
                 </button>
               )}
@@ -368,10 +370,10 @@ export function PatientProfilePage() {
                   </div>
 
                   <div className="col-12 d-flex flex-wrap gap-2 pt-3 border-top mt-3">
-                    <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSaving}>
+                    <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" style={{ minHeight: '44px' }} disabled={isSaving}>
                       {isSaving ? 'Saving to Database...' : t('patient.saveChanges')}
                     </button>
-                    <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" onClick={handleCancelEdit} disabled={isSaving}>
+                    <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" style={{ minHeight: '44px' }} onClick={handleCancelEdit} disabled={isSaving}>
                       {t('patient.cancelEdit')}
                     </button>
                   </div>

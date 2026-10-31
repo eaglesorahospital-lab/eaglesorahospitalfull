@@ -87,7 +87,7 @@ export function StaffSetPasswordPage() {
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center min-vh-100 py-5"
+      className="staff-gateway-wrapper d-flex align-items-center justify-content-center min-vh-100 py-5"
       style={{ backgroundColor: 'var(--neu-bg)' }}
     >
       <div className="container" style={{ maxWidth: '500px' }}>
@@ -96,7 +96,7 @@ export function StaffSetPasswordPage() {
           <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2">
             <div
               className="hospital-brand-cross-icon neu-raised d-flex align-items-center justify-content-center"
-              style={{ width: '36px', height: '36px' }}
+              style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
               aria-hidden="true"
             >
               <Activity size={20} className="text-white" />

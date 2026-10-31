@@ -137,6 +137,42 @@ export function AdminAppointmentsPage() {
   const [rescheduleDate, setRescheduleDate] = useState('2026-11-20');
   const [rescheduleTime, setRescheduleTime] = useState('11:00 AM');
 
+  // Lock body scroll and dismiss on Escape for glass modals
+  useEffect(() => {
+    const hasOpenModal = Boolean(
+      viewAppointment ||
+      statusModalAppointment ||
+      cancelModalAppointment ||
+      rescheduleModalAppointment ||
+      assignModalAppointment
+    );
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setViewAppointment(null);
+          setStatusModalAppointment(null);
+          setCancelModalAppointment(null);
+          setRescheduleModalAppointment(null);
+          setAssignModalAppointment(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [
+    viewAppointment,
+    statusModalAppointment,
+    cancelModalAppointment,
+    rescheduleModalAppointment,
+    assignModalAppointment
+  ]);
+
   const breadcrumbs = [
     { label: 'Admin', to: '/admin' },
     { label: 'Appointment Registry' },
@@ -698,18 +734,120 @@ export function AdminAppointmentsPage() {
           </table>
         </div>
 
+        {/* Mobile Stacked Card List (< 768px) */}
+        <div className="d-md-none p-3 d-flex flex-column gap-3">
+          {isLoading ? (
+            <div className="text-center py-4 text-muted">
+              <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+              <div>Loading clinical appointment registry...</div>
+            </div>
+          ) : filteredAppointments.length === 0 ? (
+            <div className="text-center py-4 text-muted">
+              <AlertCircle size={28} className="mb-2 text-muted" />
+              <div className="fw-semibold">No appointments match the selected filters.</div>
+            </div>
+          ) : (
+            filteredAppointments.map((apt) => (
+              <div key={apt.reference} className="admin-mobile-card">
+                <div className="admin-mobile-card-row">
+                  <span 
+                    className="px-2.5 py-1 rounded small fw-bold font-monospace"
+                    style={{ 
+                      background: 'var(--hospital-surface)', 
+                      boxShadow: 'var(--neu-inset)',
+                      fontSize: '0.785rem',
+                      color: 'var(--hospital-medical-blue)'
+                    }}
+                  >
+                    {apt.reference}
+                  </span>
+                  <AdminStatusBadge status={apt.status} />
+                </div>
+
+                <div className="mt-2">
+                  <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    {apt.patientName}
+                  </div>
+                  <span className="small text-muted d-block">{apt.patientContact}</span>
+                </div>
+
+                <div className="small mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--glass-border)' }}>
+                  <div>
+                    <div className="fw-semibold text-primary">{apt.doctorName}</div>
+                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>{apt.specialty}</span>
+                  </div>
+                  <div className="text-end">
+                    <div className="fw-semibold text-body">{apt.time}</div>
+                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>{apt.date}</span>
+                  </div>
+                </div>
+
+                <div className="admin-mobile-card-actions">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => setViewAppointment(apt)}
+                    title="View clinical details"
+                  >
+                    <Eye size={14} className="me-1" />
+                    Details
+                  </button>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => handleOpenStatusModal(apt)}
+                    title="Update triage & status"
+                  >
+                    <Edit3 size={14} className="me-1" />
+                    Status
+                  </button>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => handleOpenRescheduleModal(apt)}
+                    title="Reschedule visit"
+                  >
+                    <CalendarClock size={14} className="me-1" />
+                    Reschedule
+                  </button>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => handleOpenAssignModal(apt)}
+                    title="Assign/Reassign doctor"
+                  >
+                    <UserCheck size={14} className="me-1" />
+                    Doctor
+                  </button>
+                  {apt.status !== 'CANCELLED' && (
+                    <button
+                      type="button"
+                      className="neu-btn neu-btn-danger neu-btn-sm"
+                      onClick={() => setCancelModalAppointment(apt)}
+                      title="Cancel appointment"
+                    >
+                      <X size={14} className="me-1" />
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
       {/* View Appointment Details Modal */}
       {viewAppointment && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -724,7 +862,7 @@ export function AdminAppointmentsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setViewAppointment(null)}
                 >
                   <X size={16} />
@@ -810,15 +948,15 @@ export function AdminAppointmentsPage() {
       {/* Change Status Modal */}
       {statusModalAppointment && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleApplyStatusChange}>
                 <div 
@@ -831,7 +969,7 @@ export function AdminAppointmentsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setStatusModalAppointment(null)}
                   >
                     <X size={16} />
@@ -895,15 +1033,15 @@ export function AdminAppointmentsPage() {
       {/* Cancel Confirmation Modal */}
       {cancelModalAppointment && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -913,7 +1051,7 @@ export function AdminAppointmentsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setCancelModalAppointment(null)}
                 >
                   <X size={16} />
@@ -963,15 +1101,15 @@ export function AdminAppointmentsPage() {
       {/* Reschedule Modal */}
       {rescheduleModalAppointment && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleConfirmReschedule}>
                 <div 
@@ -984,7 +1122,7 @@ export function AdminAppointmentsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setRescheduleModalAppointment(null)}
                   >
                     <X size={16} />
@@ -1042,16 +1180,15 @@ export function AdminAppointmentsPage() {
       {/* Assign / Reassign Consultant Modal */}
       {assignModalAppointment && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleAssignDoctor}>
                 <div 
@@ -1082,7 +1219,7 @@ export function AdminAppointmentsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setAssignModalAppointment(null)}
                     disabled={isAssignSubmitting}
                   >

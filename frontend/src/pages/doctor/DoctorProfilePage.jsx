@@ -183,11 +183,12 @@ export function DoctorProfilePage() {
               )}
 
               <label
-                className="position-absolute bottom-0 end-0 p-2 rounded-circle neu-raised cursor-pointer"
-                style={{ background: '#0D47A1', color: '#ffffff', cursor: 'pointer' }}
+                className="position-absolute bottom-0 end-0 rounded-circle neu-raised d-flex align-items-center justify-content-center cursor-pointer shadow"
+                style={{ background: '#0D47A1', color: '#ffffff', cursor: 'pointer', width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
                 title="Upload new profile photograph"
+                aria-label="Upload new profile photograph"
               >
-                <Upload size={14} />
+                <Upload size={18} />
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -254,7 +255,8 @@ export function DoctorProfilePage() {
                   <MapPin size={16} className="position-absolute start-0 top-50 translate-middle-y ms-3 text-muted" />
                   <input
                     type="text"
-                    className="neu-input ps-5"
+                    className="neu-input ps-5 w-100"
+                    style={{ fontSize: '16px', minHeight: '44px' }}
                     placeholder="e.g. OPD Wing B, 2nd Floor, Suite 204"
                     value={formData.consultation_location}
                     onChange={(e) => setFormData({ ...formData, consultation_location: e.target.value })}
@@ -266,7 +268,8 @@ export function DoctorProfilePage() {
                 <label className="neu-form-label">Clinical Expertise & Special Interests</label>
                 <input
                   type="text"
-                  className="neu-input"
+                  className="neu-input w-100"
+                  style={{ fontSize: '16px', minHeight: '44px' }}
                   placeholder="e.g. Stroke Care, Epilepsy, Neuro-Rehab, Migraine"
                   value={formData.expertise}
                   onChange={(e) => setFormData({ ...formData, expertise: e.target.value })}
@@ -279,7 +282,8 @@ export function DoctorProfilePage() {
               <div className="mb-4">
                 <label className="neu-form-label">Professional Biography & Background</label>
                 <textarea
-                  className="neu-input"
+                  className="neu-input w-100"
+                  style={{ fontSize: '16px', minHeight: '100px' }}
                   rows={4}
                   placeholder="Brief clinical background, academic affiliations, and patient care philosophy..."
                   value={formData.bio}
@@ -291,6 +295,7 @@ export function DoctorProfilePage() {
                 <button
                   type="submit"
                   className="neu-btn neu-btn-primary neu-btn-sm"
+                  style={{ minHeight: '44px' }}
                   disabled={isSubmittingProfile}
                 >
                   {isSubmittingProfile ? 'Saving Changes...' : 'Save Profile Changes'}
@@ -327,7 +332,8 @@ export function DoctorProfilePage() {
                 </label>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  className="neu-input"
+                  className="neu-input w-100"
+                  style={{ fontSize: '16px', minHeight: '44px' }}
                   placeholder="Enter current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
@@ -342,7 +348,8 @@ export function DoctorProfilePage() {
                   </label>
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    className="neu-input"
+                    className="neu-input w-100"
+                    style={{ fontSize: '16px', minHeight: '44px' }}
                     placeholder="Min 8 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -355,7 +362,8 @@ export function DoctorProfilePage() {
                   </label>
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    className="neu-input"
+                    className="neu-input w-100"
+                    style={{ fontSize: '16px', minHeight: '44px' }}
                     placeholder="Re-type new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -364,10 +372,11 @@ export function DoctorProfilePage() {
                 </div>
               </div>
 
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <button
                   type="button"
-                  className="btn btn-link btn-sm text-muted p-0 text-decoration-none"
+                  className="btn btn-link btn-sm text-muted p-0 text-decoration-none d-flex align-items-center"
+                  style={{ minHeight: '44px' }}
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? 'Hide password characters' : 'Show password characters'}
@@ -376,6 +385,7 @@ export function DoctorProfilePage() {
                 <button
                   type="submit"
                   className="neu-btn neu-btn-primary neu-btn-sm"
+                  style={{ minHeight: '44px' }}
                   disabled={isSubmittingPassword}
                 >
                   {isSubmittingPassword ? 'Updating...' : 'Update Password'}

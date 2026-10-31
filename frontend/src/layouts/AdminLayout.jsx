@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { X, LogOut, ShieldCheck } from 'lucide-react';
 import AdminHeader from '../components/admin/AdminHeader';
 import AdminSidebar from '../components/admin/AdminSidebar';
@@ -8,12 +8,13 @@ import authService from '../services/authService';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 
 /**
- * Hospital Platform — Admin Layout Foundation (Neumorphic Redesign)
+ * Hospital Platform — Admin Layout Foundation (Glassmorphism Phase 2)
  * Dedicated administration layout with role-aware sidebar, top navigation,
- * responsive mobile navigation, and SimpleJWT session controls.
+ * responsive mobile navigation drawer, Escape key dismiss, and SimpleJWT session controls.
  */
 export function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     currentRoleId,
     currentRole,
@@ -38,6 +39,33 @@ export function AdminLayout() {
       }
     }
   }, [staffUser, navigate]);
+
+  // Close sidebar drawer on route navigation
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Handle Escape key to dismiss drawer and lock body scroll on mobile
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (isSidebarOpen) setIsSidebarOpen(false);
+        if (showLogoutModal) setShowLogoutModal(false);
+      }
+    };
+
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSidebarOpen, showLogoutModal]);
 
   const handleConfirmedLogout = async () => {
     setShowLogoutModal(false);
@@ -65,12 +93,13 @@ export function AdminLayout() {
           onCloseSidebar={() => setIsSidebarOpen(false)}
         />
 
-        {/* Sidebar Overlay on Mobile */}
+        {/* Sidebar Overlay on Mobile with Frosted Glass Backdrop */}
         {isSidebarOpen && (
           <div
-            className="admin-sidebar-backdrop d-lg-none"
+            className="admin-sidebar-backdrop glass-modal-backdrop d-lg-none"
             onClick={() => setIsSidebarOpen(false)}
             aria-hidden="true"
+            style={{ zIndex: 1035 }}
           />
         )}
 
@@ -84,11 +113,13 @@ export function AdminLayout() {
 
       {/* Admin Minimal Footer */}
       <footer 
-        className="py-2 px-4 small d-flex flex-wrap justify-content-between align-items-center"
+        className="py-2.5 px-4 small d-flex flex-wrap justify-content-between align-items-center"
         style={{ 
-          background: 'var(--hospital-primary-navy)', 
-          color: 'rgba(255, 255, 255, 0.7)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'rgba(10, 27, 46, 0.94)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          color: 'rgba(255, 255, 255, 0.75)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.10)',
           fontSize: '0.8rem'
         }}
       >
@@ -101,20 +132,19 @@ export function AdminLayout() {
       {/* Real Sign Out Modal */}
       {showLogoutModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
         >
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '440px' }}>
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
-                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                style={{ background: 'var(--glass-surface-subtle)', borderColor: 'var(--hospital-border-light)' }}
               >
                 <div className="d-flex align-items-center gap-2">
                   <LogOut size={18} color="var(--neu-error)" />
@@ -124,38 +154,41 @@ export function AdminLayout() {
                 </div>
                 <button
                   type="button"
-                  className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  className="glass-btn-icon"
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
                   onClick={() => setShowLogoutModal(false)}
+                  aria-label="Close dialog"
                 >
                   <X size={16} />
                 </button>
               </div>
-              <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+              <div className="modal-body p-4">
                 <p className="mb-3">
                   Are you sure you wish to sign out of the Eagle Sora Hospital staff workspace?
                 </p>
                 <div 
-                  className="p-3 neu-card-sm small text-muted"
-                  style={{ borderRadius: '14px', background: 'var(--hospital-surface)' }}
+                  className="p-3 glass-card-sm small text-muted"
+                  style={{ borderRadius: '14px', background: 'var(--glass-surface-subtle)' }}
                 >
                   Your JWT access session will be terminated and credentials securely cleared from browser memory.
                 </div>
               </div>
               <div 
                 className="modal-footer px-4 py-3 border-top"
-                style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                style={{ background: 'var(--glass-surface-subtle)', borderColor: 'var(--hospital-border-light)' }}
               >
                 <button
                   type="button"
-                  className="neu-btn neu-btn-outline neu-btn-sm"
+                  className="glass-btn glass-btn-secondary"
+                  style={{ minHeight: '44px' }}
                   onClick={() => setShowLogoutModal(false)}
                 >
                   Stay Signed In
                 </button>
                 <button
                   type="button"
-                  className="neu-btn neu-btn-danger neu-btn-sm"
+                  className="glass-btn glass-btn-primary"
+                  style={{ minHeight: '44px', background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)' }}
                   onClick={handleConfirmedLogout}
                 >
                   Sign Out Now

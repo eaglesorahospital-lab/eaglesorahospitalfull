@@ -110,6 +110,29 @@ export function AdminDoctorsPage() {
   const [isUploadingEditPhoto, setIsUploadingEditPhoto] = useState(false);
   const [isDeletingEditPhoto, setIsDeletingEditPhoto] = useState(false);
 
+  // Lock body scroll and dismiss on Escape for glass modals
+  useEffect(() => {
+    const hasOpenModal = Boolean(viewDoctor || editDoctor || showAddModal || createdCredentials);
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setViewDoctor(null);
+          setEditDoctor(null);
+          setShowAddModal(false);
+          setCreatedCredentials(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [viewDoctor, editDoctor, showAddModal, createdCredentials]);
+
   const breadcrumbs = [
     { label: 'Admin', to: '/admin' },
     { label: 'Doctor Directory & Credentialing' },
@@ -1028,21 +1051,173 @@ export function AdminDoctorsPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Stacked Card List (< 768px) */}
+            <div className="d-md-none p-3 d-flex flex-column gap-3">
+              {isLoading ? (
+                <div className="text-center py-4 text-muted">
+                  <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+                  <div>Loading doctor directory...</div>
+                </div>
+              ) : filteredDoctors.length === 0 ? (
+                <div className="text-center py-4 text-muted">
+                  <AlertCircle size={28} className="mb-2 text-muted" />
+                  <div className="fw-semibold">No doctor records match the selected criteria.</div>
+                </div>
+              ) : (
+                filteredDoctors.map((doc) => (
+                  <div key={doc.id} className="admin-mobile-card">
+                    <div className="d-flex align-items-center gap-3 mb-2">
+                      {doc.photo || doc.photo_url || doc.image_url ? (
+                        <img 
+                          src={doc.photo || doc.photo_url || doc.image_url} 
+                          alt={`Portrait of ${doc.name}`}
+                          width="44"
+                          height="44"
+                          loading="lazy"
+                          style={{ 
+                            width: '44px', 
+                            height: '44px', 
+                            borderRadius: '12px', 
+                            objectFit: 'cover',
+                            flexShrink: 0,
+                            boxShadow: 'var(--neu-shadow-sm)'
+                          }} 
+                        />
+                      ) : (
+                        <div 
+                          className="d-flex align-items-center justify-content-center"
+                          style={{ 
+                            width: '44px', 
+                            height: '44px', 
+                            borderRadius: '12px', 
+                            background: 'var(--hospital-surface)', 
+                            boxShadow: 'var(--neu-inset)', 
+                            color: 'var(--hospital-medical-blue)',
+                            flexShrink: 0
+                          }}
+                        >
+                          <Stethoscope size={20} />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-grow-1">
+                        <div className="fw-bold fs-6 text-truncate" style={{ color: 'var(--hospital-primary-navy)' }}>
+                          {doc.name}
+                        </div>
+                        <div className="small text-muted text-truncate">{doc.email || 'No email registered'}</div>
+                      </div>
+                    </div>
+
+                    <div className="admin-mobile-card-row">
+                      <div>
+                        <div className="fw-semibold text-primary small">{doc.specialty}</div>
+                        <span className="small text-muted">{doc.departmentName}</span>
+                      </div>
+                      <div className="text-end">
+                        <AdminStatusBadge status={doc.is_active ? 'Active' : 'Inactive'} />
+                      </div>
+                    </div>
+
+                    <div className="small text-muted mt-2 pt-2 border-top d-flex justify-content-between" style={{ borderColor: 'var(--glass-border)' }}>
+                      <span>Experience: <strong>{doc.experience} Years</strong></span>
+                      <span>Slot: <strong>{doc.consultation?.duration || '30 mins'}</strong></span>
+                    </div>
+
+                    <div className="small text-muted mt-1 d-flex justify-content-between align-items-center">
+                      <span>Onboarding:</span>
+                      <AdminStatusBadge status={doc.invitationStatus || doc.invitation_status || 'UNINVITED'} />
+                    </div>
+
+                    <div className="admin-mobile-card-actions">
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm"
+                        onClick={() => setViewDoctor(doc)}
+                        title="View credentials & clinical profile"
+                      >
+                        <Eye size={14} className="me-1" />
+                        Details
+                      </button>
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm"
+                        onClick={() => setEditDoctor(doc)}
+                        title="Edit profile"
+                      >
+                        <Edit3 size={14} className="me-1" />
+                        Edit
+                      </button>
+                      {(() => {
+                        const invStatus = doc.invitationStatus || doc.invitation_status || 'UNINVITED';
+                        const isInvLoading = invitationLoadingId === doc.id;
+                        if (invStatus === 'ACCEPTED') return null;
+                        if (invStatus === 'PENDING' || invStatus === 'INVITATION_PENDING') {
+                          return (
+                            <>
+                              <button
+                                type="button"
+                                className="neu-btn neu-btn-outline neu-btn-sm"
+                                onClick={() => handleResendInvitation(doc)}
+                                disabled={isInvLoading || isSubmitting}
+                              >
+                                <RefreshCw size={14} className="me-1" />
+                                Resend
+                              </button>
+                              <button
+                                type="button"
+                                className="neu-btn neu-btn-outline neu-btn-sm text-danger"
+                                onClick={() => handleRevokeInvitation(doc)}
+                                disabled={isInvLoading || isSubmitting}
+                              >
+                                <Ban size={14} className="me-1" />
+                                Revoke
+                              </button>
+                            </>
+                          );
+                        }
+                        return (
+                          <button
+                            type="button"
+                            className="neu-btn neu-btn-outline neu-btn-sm text-primary"
+                            onClick={() => handleInviteDoctor(doc)}
+                            disabled={isInvLoading || isSubmitting}
+                          >
+                            <Send size={14} className="me-1" />
+                            Invite
+                          </button>
+                        );
+                      })()}
+                      <button
+                        type="button"
+                        className={`neu-btn neu-btn-sm ${
+                          doc.status === 'Active' || doc.is_active ? 'neu-btn-danger' : 'neu-btn-primary'
+                        }`}
+                        onClick={() => handleToggleStatus(doc)}
+                        disabled={isSubmitting || invitationLoadingId === doc.id}
+                      >
+                        <Power size={14} className="me-1" />
+                        {doc.status === 'Active' || doc.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
         </>
       )}
 
       {/* View Doctor Details Modal */}
       {viewDoctor && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -1057,7 +1232,7 @@ export function AdminDoctorsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setViewDoctor(null)}
                 >
                   <X size={16} />
@@ -1223,15 +1398,15 @@ export function AdminDoctorsPage() {
       {/* Edit Doctor Modal */}
       {editDoctor && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleSaveEdit}>
                 <div 
@@ -1244,7 +1419,7 @@ export function AdminDoctorsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={handleCloseEditModal}
                   >
                     <X size={16} />
@@ -1483,16 +1658,15 @@ export function AdminDoctorsPage() {
       {/* Add New Doctor Modal */}
       {showAddModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleAddDoctor} noValidate>
                 <div 
@@ -1523,7 +1697,7 @@ export function AdminDoctorsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
                     disabled={isSubmitting}
                   >
@@ -1933,8 +2107,8 @@ export function AdminDoctorsPage() {
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -1963,7 +2137,7 @@ export function AdminDoctorsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setCreatedCredentials(null)}
                 >
                   <X size={16} />

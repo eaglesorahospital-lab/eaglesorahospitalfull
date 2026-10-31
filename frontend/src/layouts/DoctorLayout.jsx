@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -24,6 +24,7 @@ import { HOSPITAL_METADATA } from '../data/navigation';
 
 export function DoctorLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [doctorProfile, setDoctorProfile] = useState(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -40,6 +41,7 @@ export function DoctorLayout() {
     }
   }, [currentUser, navigate]);
 
+  // Fetch doctor profile on mount
   useEffect(() => {
     let isMounted = true;
     setIsLoadingProfile(true);
@@ -61,6 +63,33 @@ export function DoctorLayout() {
     };
   }, []);
 
+  // Close sidebar drawer on route navigation
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Handle Escape key to dismiss drawer and lock body scroll on mobile
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (isSidebarOpen) setIsSidebarOpen(false);
+        if (showLogoutModal) setShowLogoutModal(false);
+      }
+    };
+
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSidebarOpen, showLogoutModal]);
+
   const handleConfirmedLogout = async () => {
     setShowLogoutModal(false);
     await authService.logout();
@@ -79,48 +108,62 @@ export function DoctorLayout() {
 
   return (
     <div className="hospital-layout-root admin-root-container min-vh-100 d-flex flex-column">
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar with Frosted Glass Header */}
       <header
-        className="d-flex align-items-center justify-content-between px-3 px-md-4 py-2.5 neu-raised"
+        className="d-flex align-items-center justify-content-between px-3 px-md-4 py-2.5"
         style={{
-          background: 'var(--hospital-primary-navy)',
+          background: 'rgba(10, 27, 46, 0.94)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           color: '#ffffff',
           zIndex: 1020,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: 'var(--glass-shadow-sm)'
         }}
       >
-        <div className="d-flex align-items-center gap-3">
+        <div className="d-flex align-items-center gap-2.5">
           <button
             type="button"
-            className="btn btn-link text-white p-0 d-lg-none"
+            className="glass-btn-icon text-white d-lg-none"
             onClick={() => setIsSidebarOpen((prev) => !prev)}
             aria-label="Toggle navigation drawer"
+            style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.15)' }}
           >
             <Menu size={22} />
           </button>
 
           <Link to="/doctor" className="d-flex align-items-center gap-2 text-decoration-none text-white">
             <div
-              className="d-flex align-items-center justify-content-center rounded-circle"
-              style={{ width: '34px', height: '34px', background: 'var(--hospital-medical-blue)' }}
+              className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+              style={{ width: '38px', height: '38px', background: 'var(--hospital-medical-blue)', boxShadow: '0 4px 12px rgba(40, 120, 200, 0.3)' }}
             >
-              <Stethoscope size={18} className="text-white" />
+              <Stethoscope size={20} className="text-white" />
             </div>
             <div>
               <span className="fw-bold fs-6 d-block lh-1 text-white">{HOSPITAL_METADATA.name}</span>
-              <span className="badge mt-1" style={{ background: '#16845B', fontSize: '0.65rem', letterSpacing: '0.5px' }}>
-                DOCTOR ADMIN PANEL
+              <span 
+                className="badge mt-1 text-uppercase" 
+                style={{ 
+                  background: 'rgba(22, 132, 91, 0.25)', 
+                  border: '1px solid rgba(22, 132, 91, 0.45)',
+                  color: '#34D399',
+                  fontSize: '0.65rem', 
+                  letterSpacing: '0.5px' 
+                }}
+              >
+                DOCTOR WORKSPACE
               </span>
             </div>
           </Link>
         </div>
 
         {/* Right Header items */}
-        <div className="d-flex align-items-center gap-3">
+        <div className="d-flex align-items-center gap-2.5">
           <Link
             to="/doctor/notifications"
-            className="btn btn-link text-white p-1 text-decoration-none position-relative d-flex align-items-center"
+            className="glass-btn-icon text-white p-0 text-decoration-none position-relative d-flex align-items-center justify-content-center"
             title="Clinical Notifications"
+            style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px', background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.15)' }}
           >
             <Bell size={18} />
           </Link>
@@ -140,15 +183,15 @@ export function DoctorLayout() {
               <img
                 src={doctorProfile.photo}
                 alt={`Portrait of ${doctorProfile.name}`}
-                width="38"
-                height="38"
-                className="rounded-circle border border-2 border-white"
-                style={{ width: '38px', height: '38px', objectFit: 'cover' }}
+                width="40"
+                height="40"
+                className="rounded-circle border border-2 border-white flex-shrink-0"
+                style={{ width: '40px', height: '40px', objectFit: 'cover' }}
               />
             ) : (
               <div
-                className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-                style={{ width: '38px', height: '38px', background: '#0D47A1' }}
+                className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
+                style={{ width: '40px', height: '40px', background: '#0D47A1' }}
               >
                 {(doctorProfile?.name || currentUser?.name || 'DR')
                   .split(' ')
@@ -162,12 +205,18 @@ export function DoctorLayout() {
 
           <button
             type="button"
-            className="btn btn-outline-light btn-sm d-flex align-items-center gap-1.5 py-1 px-2.5 rounded-pill"
-            style={{ fontSize: '0.8rem' }}
+            className="glass-btn text-white btn-sm d-flex align-items-center gap-1.5 px-3 rounded-pill"
+            style={{ 
+              minHeight: '40px', 
+              fontSize: '0.8rem',
+              background: 'rgba(239, 68, 68, 0.18)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              color: '#FCA5A5'
+            }}
             onClick={() => setShowLogoutModal(true)}
             title="Sign out of portal"
           >
-            <LogOut size={14} />
+            <LogOut size={15} />
             <span className="d-none d-md-inline">Sign Out</span>
           </button>
         </div>
@@ -177,23 +226,29 @@ export function DoctorLayout() {
       <div className="admin-body-wrapper d-flex flex-grow-1">
         {/* Sidebar */}
         <aside
-          className={`admin-sidebar neu-card d-flex flex-column py-3 px-2 ${
+          className={`admin-sidebar glass-card d-flex flex-column py-3 px-2 ${
             isSidebarOpen ? 'show' : ''
           }`}
           style={{
             width: '240px',
             flexShrink: 0,
-            background: 'var(--neu-bg)',
-            borderRight: '1px solid var(--hospital-border)',
+            background: 'var(--glass-surface-card)',
+            backdropFilter: 'var(--glass-blur-lg)',
+            WebkitBackdropFilter: 'var(--glass-blur-lg)',
+            borderRight: 'var(--glass-border-subtle)',
+            borderRadius: 0,
+            boxShadow: 'var(--glass-shadow-sm)',
             transition: 'transform 0.25s ease',
           }}
         >
           <div className="d-flex align-items-center justify-content-between px-3 mb-3 d-lg-none">
-            <span className="fw-bold small text-muted text-uppercase">Navigation</span>
+            <span className="fw-bold small text-muted text-uppercase">Doctor Menu</span>
             <button
               type="button"
-              className="btn btn-sm btn-link text-muted p-0"
+              className="glass-btn-icon"
+              style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
               onClick={() => setIsSidebarOpen(false)}
+              aria-label="Close navigation drawer"
             >
               <X size={18} />
             </button>
@@ -209,15 +264,15 @@ export function DoctorLayout() {
                   end={item.end}
                   onClick={() => setIsSidebarOpen(false)}
                   className={({ isActive }) =>
-                    `nav-link d-flex align-items-center gap-2.5 px-3 py-2.5 rounded-3 fw-medium text-decoration-none transition-all ${
+                    `nav-link d-flex align-items-center gap-2.5 px-3 py-2.5 rounded-3 fw-semibold text-decoration-none transition-all ${
                       isActive
-                        ? 'neu-inset text-primary fw-bold'
-                        : 'text-body-secondary neu-hover-raised'
+                        ? 'glass-btn-primary shadow-sm text-white'
+                        : 'text-body hover-bg-subtle'
                     }`
                   }
-                  style={{ fontSize: '0.875rem' }}
+                  style={{ minHeight: '44px', fontSize: '0.875rem' }}
                 >
-                  <Icon size={17} />
+                  <Icon size={18} />
                   <span>{item.label}</span>
                 </NavLink>
               );
@@ -225,7 +280,10 @@ export function DoctorLayout() {
           </nav>
 
           {/* Quick Doctor Summary in Sidebar */}
-          <div className="neu-inset p-3 rounded-3 mt-auto mb-2">
+          <div 
+            className="p-3 rounded-3 mt-auto mb-2 glass-card-sm"
+            style={{ background: 'var(--glass-surface-subtle)', border: 'var(--glass-border-subtle)' }}
+          >
             <div className="small fw-semibold text-body mb-0.5">Clinical Suite</div>
             <div className="small text-muted" style={{ fontSize: '0.78rem' }}>
               {doctorProfile?.consultation_location || 'OPD Clinic Wing'}
@@ -239,14 +297,15 @@ export function DoctorLayout() {
         {/* Mobile Backdrop */}
         {isSidebarOpen && (
           <div
-            className="admin-sidebar-backdrop d-lg-none"
+            className="admin-sidebar-backdrop glass-modal-backdrop d-lg-none"
             onClick={() => setIsSidebarOpen(false)}
             aria-hidden="true"
+            style={{ zIndex: 1035 }}
           />
         )}
 
         {/* Main Content View */}
-        <main className="admin-main-content flex-grow-1 p-3 p-md-4" style={{ backgroundColor: 'var(--neu-bg)' }}>
+        <main className="admin-main-content flex-grow-1 p-3 p-md-4">
           <ErrorBoundary>
             <Outlet context={{ doctorProfile, setDoctorProfile, isLoadingProfile }} />
           </ErrorBoundary>
@@ -255,11 +314,13 @@ export function DoctorLayout() {
 
       {/* Footer */}
       <footer
-        className="py-2 px-4 small d-flex flex-wrap justify-content-between align-items-center"
+        className="py-2.5 px-4 small d-flex flex-wrap justify-content-between align-items-center"
         style={{
-          background: 'var(--hospital-primary-navy)',
-          color: 'rgba(255, 255, 255, 0.7)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'rgba(10, 27, 46, 0.94)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          color: 'rgba(255, 255, 255, 0.75)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.10)',
           fontSize: '0.8rem',
         }}
       >
@@ -272,19 +333,19 @@ export function DoctorLayout() {
       {/* Logout Modal */}
       {showLogoutModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
-          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '400px' }}>
-            <div className="modal-content neu-raised neu-surface rounded-4 p-4 border-0">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
+            <div className="modal-content glass-modal rounded-4 p-4 border-0">
               <div className="text-center mb-3">
                 <div
-                  className="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-3 neu-inset text-danger"
-                  style={{ width: '56px', height: '56px' }}
+                  className="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-3 text-danger"
+                  style={{ width: '56px', height: '56px', background: 'rgba(239, 68, 68, 0.15)' }}
                 >
-                  <LogOut size={24} />
+                  <LogOut size={26} />
                 </div>
                 <h5 className="h5 fw-bold text-body mb-1">Sign Out of Doctor Portal?</h5>
                 <p className="text-muted small mb-0">
@@ -294,14 +355,16 @@ export function DoctorLayout() {
               <div className="d-flex gap-2">
                 <button
                   type="button"
-                  className="neu-btn neu-btn-outline w-50"
+                  className="glass-btn glass-btn-secondary w-50"
+                  style={{ minHeight: '44px' }}
                   onClick={() => setShowLogoutModal(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="neu-btn neu-btn-danger w-50"
+                  className="glass-btn glass-btn-primary w-50"
+                  style={{ minHeight: '44px', background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)' }}
                   onClick={handleConfirmedLogout}
                 >
                   Sign Out

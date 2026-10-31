@@ -388,6 +388,9 @@ export function AdminAdministratorsPage() {
               </div>
             </div>
           ) : (
+            <>
+            {/* Desktop Table View */}
+            <div className="d-none d-md-block">
             <table className="neu-table">
               <thead>
                 <tr>
@@ -505,6 +508,92 @@ export function AdminAdministratorsPage() {
                 })}
               </tbody>
             </table>
+            </div>
+
+            {/* Mobile Stacked Card List (< 768px) */}
+            <div className="d-md-none p-3 d-flex flex-column gap-3">
+              {filteredAdmins.map((admin) => {
+                const isSelf = staffUser && (staffUser.id === admin.id || staffUser.email === admin.email);
+                const isSuper = admin.role === 'SUPER_ADMIN' || admin.is_superuser;
+                const canToggle = !isSelf && !isSuper;
+
+                return (
+                  <div key={admin.id} className="admin-mobile-card">
+                    <div className="d-flex align-items-center gap-3 mb-2">
+                      <div
+                        className="d-flex align-items-center justify-content-center fw-bold"
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '12px',
+                          background: 'var(--hospital-surface)',
+                          boxShadow: 'var(--neu-inset)',
+                          color: isSuper ? 'var(--hospital-blue)' : 'var(--hospital-cyan)',
+                          flexShrink: 0,
+                          fontSize: '0.9rem',
+                        }}
+                      >
+                        {admin.full_name
+                          ? admin.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+                          : 'AD'}
+                      </div>
+                      <div className="min-w-0 flex-grow-1">
+                        <div className="fw-bold fs-6 text-truncate" style={{ color: 'var(--hospital-primary-navy)' }}>
+                          {admin.full_name || 'Administrator'}
+                          {isSelf && (
+                            <span className="badge bg-primary-subtle text-primary ms-2" style={{ fontSize: '0.65rem' }}>
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <div className="small text-muted text-truncate">{admin.email}</div>
+                      </div>
+                    </div>
+
+                    <div className="admin-mobile-card-row">
+                      <div>
+                        {admin.role === 'SUPER_ADMIN' ? (
+                          <span className="neu-badge neu-badge-primary">Super Administrator</span>
+                        ) : (
+                          <span className="neu-badge neu-badge-info">Hospital Administrator</span>
+                        )}
+                      </div>
+                      <div>
+                        <AdminStatusBadge status={admin.is_active ? 'ACTIVE' : 'INACTIVE'} />
+                      </div>
+                    </div>
+
+                    <div className="small text-muted mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--glass-border)' }}>
+                      <span>
+                        {admin.is_staff ? (
+                          <span className="neu-badge neu-badge-success">Staff Enabled</span>
+                        ) : (
+                          <span className="neu-badge neu-badge-secondary">No Staff Access</span>
+                        )}
+                      </span>
+                      <span>
+                        Joined: {admin.date_joined ? new Date(admin.date_joined).toLocaleDateString() : '—'}
+                      </span>
+                    </div>
+
+                    {canToggle && (
+                      <div className="admin-mobile-card-actions">
+                        <button
+                          type="button"
+                          className={`neu-btn neu-btn-sm ${admin.is_active ? 'neu-btn-danger' : 'neu-btn-primary'}`}
+                          onClick={() => setToggleTarget(admin)}
+                          title={admin.is_active ? 'Deactivate account' : 'Activate account'}
+                        >
+                          <Power size={14} className="me-1" />
+                          {admin.is_active ? 'Deactivate Account' : 'Activate Account'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
         </div>
       </div>
@@ -512,16 +601,15 @@ export function AdminAdministratorsPage() {
       {/* Create Administrator Modal */}
       {showAddModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -538,7 +626,7 @@ export function AdminAdministratorsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setShowAddModal(false)}
                   disabled={submitting}
                 >
@@ -718,16 +806,15 @@ export function AdminAdministratorsPage() {
       {/* Toggle Status Confirmation Modal */}
       {toggleTarget && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
           aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -739,7 +826,7 @@ export function AdminAdministratorsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setToggleTarget(null)}
                   disabled={toggling}
                 >

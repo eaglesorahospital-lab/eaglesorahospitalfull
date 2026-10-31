@@ -70,6 +70,7 @@ export function AdminContentPage() {
     emergency_info: '',
   });
 
+
   // --- Website Sections State ---
   const [sectionsList, setSectionsList] = useState(INITIAL_CONTENT_SECTIONS);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,6 +78,27 @@ export function AdminContentPage() {
   const [viewSection, setViewSection] = useState(null);
   const [editSection, setEditSection] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
+
+  // Lock body scroll and dismiss on Escape for glass modals
+  useEffect(() => {
+    const hasOpenModal = Boolean(viewSection || editSection);
+    if (hasOpenModal) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setViewSection(null);
+          setEditSection(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [viewSection, editSection]);
 
   const breadcrumbs = [
     { label: 'Admin', to: '/admin' },
@@ -559,7 +581,8 @@ export function AdminContentPage() {
             className="neu-card p-0 mb-4 overflow-hidden" 
             style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
           >
-            <div className="neu-table-container">
+            {/* Desktop Table View */}
+            <div className="neu-table-container d-none d-md-block">
               <table className="neu-table">
                 <thead>
                   <tr>
@@ -648,6 +671,82 @@ export function AdminContentPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Stacked Card List (< 768px) */}
+            <div className="d-md-none p-3 d-flex flex-column gap-3">
+              {filteredSections.length === 0 ? (
+                <div className="text-center py-4 text-muted">
+                  No content sections found matching your filter criteria.
+                </div>
+              ) : (
+                filteredSections.map((sec) => (
+                  <div key={sec.id} className="admin-mobile-card">
+                    <div className="admin-mobile-card-row">
+                      <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                        {sec.title}
+                      </div>
+                      <AdminStatusBadge status={sec.status} />
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <span 
+                        className="px-2 py-0.5 rounded small font-monospace d-inline-block"
+                        style={{ 
+                          background: 'var(--hospital-surface)', 
+                          boxShadow: 'var(--neu-inset)',
+                          fontSize: '0.72rem',
+                          color: 'var(--hospital-blue)'
+                        }}
+                      >
+                        {sec.sectionKey}
+                      </span>
+                      <span className="neu-badge neu-badge-info">{sec.category}</span>
+                    </div>
+
+                    <div className="small text-muted mb-2">
+                      {sec.summary}
+                    </div>
+
+                    <div className="small text-muted pt-2 border-top d-flex justify-content-between" style={{ borderColor: 'var(--glass-border)' }}>
+                      <span>Last Revision:</span>
+                      <span className="font-monospace">{sec.lastUpdated}</span>
+                    </div>
+
+                    <div className="admin-mobile-card-actions">
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm"
+                        onClick={() => setViewSection(sec)}
+                        title="Preview section content"
+                      >
+                        <Eye size={14} className="me-1" />
+                        Preview
+                      </button>
+                      <button
+                        type="button"
+                        className="neu-btn neu-btn-outline neu-btn-sm"
+                        onClick={() => handleOpenEdit(sec)}
+                        title="Edit section content"
+                      >
+                        <Edit3 size={14} className="me-1" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className={`neu-btn neu-btn-sm ${
+                          sec.status === 'Published' ? 'neu-btn-outline' : 'neu-btn-primary'
+                        }`}
+                        onClick={() => handleToggleStatus(sec.id)}
+                        title={sec.status === 'Published' ? 'Set as Draft' : 'Publish Section'}
+                      >
+                        <Power size={14} className="me-1" />
+                        {sec.status === 'Published' ? 'Unpublish' : 'Publish'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -655,15 +754,15 @@ export function AdminContentPage() {
       {/* Preview Section Modal */}
       {viewSection && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -680,7 +779,7 @@ export function AdminContentPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setViewSection(null)}
                 >
                   <X size={16} />
@@ -739,15 +838,15 @@ export function AdminContentPage() {
       {/* Edit Section Modal */}
       {editSection && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleSaveEdit}>
                 <div 

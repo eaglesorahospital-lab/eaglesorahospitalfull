@@ -60,12 +60,13 @@ export function PatientNav() {
         </div>
 
         {/* Primary Action Buttons */}
-        <div className="d-flex align-items-center gap-2 flex-shrink-0">
+        <div className="d-flex align-items-center gap-2 flex-shrink-0 w-100 w-sm-auto justify-content-end">
           <Link
             to="/appointments/book"
             className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center justify-content-center gap-1 text-nowrap px-3 py-2"
+            style={{ minHeight: '44px' }}
           >
-            <Plus size={14} />
+            <Plus size={15} />
             <span>{t('nav.bookConsultation')}</span>
           </Link>
 
@@ -73,16 +74,18 @@ export function PatientNav() {
             <button
               type="button"
               className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1 px-3 py-2 text-danger"
+              style={{ minHeight: '44px' }}
               onClick={handleLogout}
               title="Sign out of patient portal"
             >
-              <LogOut size={14} />
+              <LogOut size={15} />
               <span>Sign Out</span>
             </button>
           ) : (
             <Link
               to="/patient/login"
               className="neu-btn neu-btn-secondary neu-btn-sm d-inline-flex align-items-center gap-1 px-3 py-2"
+              style={{ minHeight: '44px' }}
             >
               <span>Sign In</span>
             </Link>
@@ -95,8 +98,9 @@ export function PatientNav() {
         <NavLink
           to="/my-appointments"
           end
+          style={{ minHeight: '44px' }}
           className={({ isActive }) =>
-            `text-decoration-none px-3 py-1-5 rounded-pill small fw-semibold d-inline-flex align-items-center justify-content-center gap-2 transition-all ${
+            `text-decoration-none px-3 py-2 rounded-pill small fw-semibold d-inline-flex align-items-center justify-content-center gap-2 transition-all ${
               isActive
                 ? 'neu-raised text-primary'
                 : 'text-muted hover-text-primary'
@@ -110,8 +114,9 @@ export function PatientNav() {
 
         <NavLink
           to="/profile"
+          style={{ minHeight: '44px' }}
           className={({ isActive }) =>
-            `text-decoration-none px-3 py-1-5 rounded-pill small fw-semibold d-inline-flex align-items-center justify-content-center gap-2 transition-all ${
+            `text-decoration-none px-3 py-2 rounded-pill small fw-semibold d-inline-flex align-items-center justify-content-center gap-2 transition-all ${
               isActive
                 ? 'neu-raised text-primary'
                 : 'text-muted hover-text-primary'

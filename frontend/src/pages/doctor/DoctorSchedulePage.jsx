@@ -82,6 +82,25 @@ export function DoctorSchedulePage() {
       });
   }, [doctorIdentifier, selectedInspectDate]);
 
+  // Lock body scroll and listen for Escape key when leave modal is open
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showLeaveModal) {
+        setShowLeaveModal(false);
+      }
+    };
+    if (showLeaveModal) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showLeaveModal]);
+
   const handleRequestLeave = async (e) => {
     e.preventDefault();
     if (!leaveForm.start_date || !leaveForm.end_date || !leaveForm.reason) {
@@ -139,10 +158,11 @@ export function DoctorSchedulePage() {
             View active weekly OPD shifts, manage leaves, and preview real-time patient booking slots.
           </p>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap gap-2">
           <button
             type="button"
             className="neu-btn neu-btn-outline neu-btn-sm d-flex align-items-center gap-1.5"
+            style={{ minHeight: '44px' }}
             onClick={loadScheduleData}
             disabled={isLoading}
           >
@@ -152,6 +172,7 @@ export function DoctorSchedulePage() {
           <button
             type="button"
             className="neu-btn neu-btn-primary neu-btn-sm d-flex align-items-center gap-1.5"
+            style={{ minHeight: '44px' }}
             onClick={() => setShowLeaveModal(true)}
           >
             <Plus size={14} />
@@ -195,36 +216,61 @@ export function DoctorSchedulePage() {
                 <div className="small text-muted mt-1">Consultation Slot Duration: {doctorProfile?.consultation_duration_minutes || 30} minutes</div>
               </div>
             ) : (
-              <div className="table-responsive">
-                <table className="neu-table w-100">
-                  <thead>
-                    <tr>
-                      <th>Day</th>
-                      <th>Working Hours</th>
-                      <th>Slot Length</th>
-                      <th>Capacity</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {schedules.map((sch) => (
-                      <tr key={sch.id}>
-                        <td className="fw-semibold">{sch.day_of_week}</td>
-                        <td className="font-monospace text-primary">
-                          {sch.start_time?.slice(0, 5)} – {sch.end_time?.slice(0, 5)}
-                        </td>
-                        <td>{sch.slot_duration_minutes} mins</td>
-                        <td>{sch.capacity} patient/slot</td>
-                        <td>
-                          <span className={`badge ${sch.is_working_day ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '0.72rem' }}>
-                            {sch.is_working_day ? 'Active OPD' : 'Off'}
-                          </span>
-                        </td>
+              <>
+                {/* Desktop Shifts Table (>= 768px) */}
+                <div className="table-responsive d-none d-md-block">
+                  <table className="neu-table w-100">
+                    <thead>
+                      <tr>
+                        <th>Day</th>
+                        <th>Working Hours</th>
+                        <th>Slot Length</th>
+                        <th>Capacity</th>
+                        <th>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {schedules.map((sch) => (
+                        <tr key={sch.id}>
+                          <td className="fw-semibold">{sch.day_of_week}</td>
+                          <td className="font-monospace text-primary">
+                            {sch.start_time?.slice(0, 5)} – {sch.end_time?.slice(0, 5)}
+                          </td>
+                          <td>{sch.slot_duration_minutes} mins</td>
+                          <td>{sch.capacity} patient/slot</td>
+                          <td>
+                            <span className={`badge ${sch.is_working_day ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '0.72rem' }}>
+                              {sch.is_working_day ? 'Active OPD' : 'Off'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Stacked Shift Cards (< 768px) */}
+                <div className="d-md-none d-flex flex-column gap-2.5">
+                  {schedules.map((sch) => (
+                    <div key={sch.id} className="doctor-mobile-card neu-inset p-3 rounded-3">
+                      <div className="d-flex justify-content-between align-items-center mb-1.5">
+                        <span className="fw-bold text-body fs-6">{sch.day_of_week}</span>
+                        <span className={`badge ${sch.is_working_day ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '0.72rem' }}>
+                          {sch.is_working_day ? 'Active OPD' : 'Off'}
+                        </span>
+                      </div>
+                      <div className="d-flex align-items-center gap-1.5 font-monospace text-primary fw-semibold small mb-1">
+                        <Clock size={13} />
+                        <span>{sch.start_time?.slice(0, 5)} – {sch.end_time?.slice(0, 5)}</span>
+                      </div>
+                      <div className="small text-muted d-flex justify-content-between">
+                        <span>Slot: {sch.slot_duration_minutes} mins</span>
+                        <span>Capacity: {sch.capacity} patient/slot</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -257,11 +303,13 @@ export function DoctorSchedulePage() {
                     </div>
                     <button
                       type="button"
-                      className="neu-btn neu-btn-danger neu-btn-sm p-1.5"
+                      className="neu-btn neu-btn-danger neu-btn-sm d-flex align-items-center justify-content-center"
+                      style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', borderRadius: '10px' }}
                       onClick={() => handleDeleteLeave(leave.id)}
                       title="Cancel this leave"
+                      aria-label="Cancel this leave"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 ))}
@@ -282,8 +330,8 @@ export function DoctorSchedulePage() {
             <label className="neu-form-label mb-0 small">Inspect Date:</label>
             <input
               type="date"
-              className="neu-input py-1 px-2.5 small"
-              style={{ width: '160px' }}
+              className="neu-input py-1 px-2.5"
+              style={{ width: '170px', fontSize: '16px', minHeight: '44px' }}
               value={selectedInspectDate}
               onChange={(e) => setSelectedInspectDate(e.target.value)}
             />
@@ -307,12 +355,13 @@ export function DoctorSchedulePage() {
               return (
                 <div
                   key={index}
-                  className={`px-3 py-1.5 rounded-3 font-monospace small ${
+                  className={`px-3 py-2 rounded-3 font-monospace small d-inline-flex align-items-center ${
                     isAvailable ? 'neu-raised text-success fw-bold' : 'neu-inset text-muted'
                   }`}
                   style={{
                     background: isAvailable ? 'rgba(22, 132, 91, 0.08)' : 'var(--hospital-surface)',
                     border: isAvailable ? '1px solid rgba(22, 132, 91, 0.25)' : '1px solid var(--hospital-border)',
+                    minHeight: '38px'
                   }}
                 >
                   {slot.start_time || slot.time || slot}
@@ -329,20 +378,26 @@ export function DoctorSchedulePage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
+          style={{ backgroundColor: 'rgba(10, 25, 47, 0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLeaveModal(false);
+          }}
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content neu-raised neu-surface rounded-4 p-0 border-0 overflow-hidden">
+            <div className="modal-content neu-raised neu-surface rounded-4 p-0 border-0 overflow-hidden shadow-lg">
               <form onSubmit={handleRequestLeave}>
                 <div className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
                   <h5 className="modal-title fs-6 fw-bold mb-0">Record Leave / Unavailable Period</h5>
                   <button
                     type="button"
-                    className="btn btn-sm btn-link text-muted p-0"
+                    className="btn btn-sm btn-link text-muted p-2 d-flex align-items-center justify-content-center"
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
                     onClick={() => setShowLeaveModal(false)}
+                    aria-label="Close modal"
                   >
-                    <X size={18} />
+                    <X size={20} />
                   </button>
                 </div>
                 <div className="modal-body p-4">
@@ -352,7 +407,8 @@ export function DoctorSchedulePage() {
                     </label>
                     <input
                       type="date"
-                      className="neu-input"
+                      className="neu-input w-100"
+                      style={{ fontSize: '16px', minHeight: '44px' }}
                       value={leaveForm.start_date}
                       onChange={(e) => setLeaveForm({ ...leaveForm, start_date: e.target.value })}
                       required
@@ -364,7 +420,8 @@ export function DoctorSchedulePage() {
                     </label>
                     <input
                       type="date"
-                      className="neu-input"
+                      className="neu-input w-100"
+                      style={{ fontSize: '16px', minHeight: '44px' }}
                       value={leaveForm.end_date}
                       onChange={(e) => setLeaveForm({ ...leaveForm, end_date: e.target.value })}
                       required
@@ -376,7 +433,8 @@ export function DoctorSchedulePage() {
                     </label>
                     <input
                       type="text"
-                      className="neu-input"
+                      className="neu-input w-100"
+                      style={{ fontSize: '16px', minHeight: '44px' }}
                       placeholder="e.g. Annual Leave, Medical Conference, Emergency"
                       value={leaveForm.reason}
                       onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
@@ -388,6 +446,7 @@ export function DoctorSchedulePage() {
                   <button
                     type="button"
                     className="neu-btn neu-btn-outline neu-btn-sm"
+                    style={{ minHeight: '44px', minWidth: '90px' }}
                     onClick={() => setShowLeaveModal(false)}
                   >
                     Cancel
@@ -395,6 +454,7 @@ export function DoctorSchedulePage() {
                   <button
                     type="submit"
                     className="neu-btn neu-btn-primary neu-btn-sm"
+                    style={{ minHeight: '44px' }}
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Recording...' : 'Confirm Leave'}

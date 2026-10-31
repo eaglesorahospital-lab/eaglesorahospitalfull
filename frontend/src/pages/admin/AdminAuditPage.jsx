@@ -70,8 +70,28 @@ export function AdminAuditPage() {
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [resultFilter, setResultFilter] = useState('ALL');
 
+
   // Modal state
   const [viewAuditLog, setViewAuditLog] = useState(null);
+
+  // Lock body scroll and dismiss on Escape for glass modals
+  useEffect(() => {
+    if (viewAuditLog) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setViewAuditLog(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [viewAuditLog]);
 
   const breadcrumbs = [
     { label: 'Admin', to: '/admin' },
@@ -200,7 +220,8 @@ export function AdminAuditPage() {
         className="neu-card p-0 mb-4 overflow-hidden" 
         style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
       >
-        <div className="neu-table-container">
+        {/* Desktop Table View */}
+        <div className="neu-table-container d-none d-md-block">
           <table className="neu-table">
             <thead>
               <tr>
@@ -282,20 +303,83 @@ export function AdminAuditPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Stacked Card List (< 768px) */}
+        <div className="d-md-none p-3 d-flex flex-column gap-3">
+          {isLoading ? (
+            <div className="text-center py-4 text-muted">
+              <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+              <div>Loading audit records from PostgreSQL database...</div>
+            </div>
+          ) : filteredAuditLogs.length === 0 ? (
+            <div className="text-center py-4 text-muted">
+              <AlertCircle size={28} className="mb-2 text-muted" />
+              <div className="fw-semibold">No audit records match the selected filter criteria.</div>
+            </div>
+          ) : (
+            filteredAuditLogs.map((log) => (
+              <div key={log.id} className="admin-mobile-card">
+                <div className="admin-mobile-card-row">
+                  <span 
+                    className="px-2 py-0.5 rounded small font-monospace fw-bold"
+                    style={{ 
+                      background: 'var(--hospital-surface)', 
+                      boxShadow: 'var(--neu-inset)', 
+                      fontSize: '0.72rem',
+                      color: 'var(--hospital-blue)' 
+                    }}
+                  >
+                    {log.action}
+                  </span>
+                  <AdminStatusBadge status={log.result} />
+                </div>
+
+                <div className="mt-2">
+                  <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    {log.actor}
+                  </div>
+                  <div className="small text-muted mt-0.5">
+                    Role: <span className="neu-badge neu-badge-secondary">{log.role}</span> &bull; Target: <span className="font-monospace">{log.resourceId}</span>
+                  </div>
+                  <div className="small text-muted mt-1">
+                    Resource: <strong className="text-body">{log.resource}</strong>
+                  </div>
+                </div>
+
+                <div className="small text-muted mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--glass-border)' }}>
+                  <span>Recorded:</span>
+                  <span className="font-monospace">{log.timestamp}</span>
+                </div>
+
+                <div className="admin-mobile-card-actions">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => setViewAuditLog(log)}
+                    title="Inspect immutable audit entry"
+                  >
+                    <Eye size={14} className="me-1" />
+                    Inspect Details
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Inspect Audit Log Modal */}
       {viewAuditLog && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -310,7 +394,7 @@ export function AdminAuditPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setViewAuditLog(null)}
                 >
                   <X size={16} />

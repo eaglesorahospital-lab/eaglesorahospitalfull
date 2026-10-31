@@ -134,7 +134,7 @@ export function AcceptInvitationPage() {
 
   return (
     <div
-      className="d-flex align-items-center justify-content-center min-vh-100 py-5"
+      className="invitation-gateway-wrapper d-flex align-items-center justify-content-center min-vh-100 py-5"
       style={{ backgroundColor: 'var(--neu-bg)' }}
     >
       <div className="container" style={{ maxWidth: '520px' }}>
@@ -143,7 +143,7 @@ export function AcceptInvitationPage() {
           <Link to="/" className="text-decoration-none d-inline-flex align-items-center gap-2">
             <div
               className="hospital-brand-cross-icon neu-raised d-flex align-items-center justify-content-center"
-              style={{ width: '36px', height: '36px' }}
+              style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
               aria-hidden="true"
             >
               <Activity size={20} className="text-white" />
@@ -285,7 +285,7 @@ export function AcceptInvitationPage() {
                     <input
                       id="doc-new-pass"
                       type={showPassword ? 'text' : 'password'}
-                      className="form-control neu-input pe-5"
+                      className="form-control neu-input pe-5 w-100" style={{ fontSize: "16px", minHeight: "44px" }}
                       placeholder="Minimum 8 characters with numbers & symbols"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -295,7 +295,7 @@ export function AcceptInvitationPage() {
                     />
                     <button
                       type="button"
-                      className="btn position-absolute end-0 top-50 translate-middle-y text-muted border-0 bg-transparent p-2 me-1"
+                      className="btn position-absolute end-0 top-50 translate-middle-y text-muted border-0 bg-transparent p-0 d-flex align-items-center justify-content-center me-1" style={{ width: "44px", height: "44px", minWidth: "44px", minHeight: "44px" }}
                       onClick={() => setShowPassword(!showPassword)}
                       tabIndex="-1"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -345,7 +345,8 @@ export function AcceptInvitationPage() {
                   <input
                     id="doc-confirm-pass"
                     type={showPassword ? 'text' : 'password'}
-                    className={`form-control neu-input ${
+                    style={{ fontSize: "16px", minHeight: "44px" }}
+                    className={`form-control neu-input w-100 ${
                       confirmPassword && password !== confirmPassword ? 'border-danger' : ''
                     }`}
                     placeholder="Repeat your password"
@@ -363,7 +364,7 @@ export function AcceptInvitationPage() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="btn neu-btn-primary w-100 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2"
+                  className="btn neu-btn-primary w-100 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2" style={{ minHeight: "44px" }}
                   disabled={isSubmitting || submitSuccess || !password || password !== confirmPassword}
                 >
                   {isSubmitting ? (

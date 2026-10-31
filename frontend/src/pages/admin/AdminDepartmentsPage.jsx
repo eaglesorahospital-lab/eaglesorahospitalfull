@@ -407,20 +407,109 @@ export function AdminDepartmentsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Stacked Card List (< 768px) */}
+        <div className="d-md-none p-3 d-flex flex-column gap-3">
+          {isLoading ? (
+            <div className="text-center py-4 text-muted">
+              <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+              <div>Loading department directory...</div>
+            </div>
+          ) : filteredDepartments.length === 0 ? (
+            <div className="text-center py-4 text-muted">
+              <AlertCircle size={28} className="mb-2 text-muted" />
+              <div className="fw-semibold">No departments match your search criteria.</div>
+            </div>
+          ) : (
+            filteredDepartments.map((dept) => (
+              <div key={dept.id || dept.slug} className="admin-mobile-card">
+                <div className="d-flex align-items-center gap-3 mb-2">
+                  <div 
+                    className="d-flex align-items-center justify-content-center"
+                    style={{ 
+                      width: '44px', 
+                      height: '44px', 
+                      borderRadius: '12px', 
+                      background: 'var(--hospital-surface)', 
+                      boxShadow: 'var(--neu-inset)', 
+                      color: 'var(--hospital-cyan)',
+                      flexShrink: 0
+                    }}
+                  >
+                    <Building2 size={20} />
+                  </div>
+                  <div className="min-w-0 flex-grow-1">
+                    <div className="fw-bold fs-6 text-truncate" style={{ color: 'var(--hospital-primary-navy)' }}>
+                      {dept.name}
+                    </div>
+                    <div className="small text-muted">{dept.contact?.phone || 'Direct line active'}</div>
+                  </div>
+                </div>
+
+                <div className="admin-mobile-card-row">
+                  <div>
+                    <div className="fw-semibold text-primary small">{dept.specialty}</div>
+                    <span className="small text-muted">{dept.contact?.location || 'Main Hospital Wing'}</span>
+                  </div>
+                  <div className="text-end">
+                    <AdminStatusBadge status={dept.status || 'Active'} />
+                  </div>
+                </div>
+
+                <div className="small text-muted mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--glass-border)' }}>
+                  <span>Hours: <strong>{dept.opdHours || '09:00 - 16:00'}</strong></span>
+                  <span className="neu-badge neu-badge-info fw-bold">{dept.doctorIds?.length || 0} Faculty</span>
+                </div>
+
+                <div className="admin-mobile-card-actions">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => setViewDepartment(dept)}
+                    title="View departmental clinical profile"
+                  >
+                    <Eye size={14} className="me-1" />
+                    Details
+                  </button>
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => handleOpenEdit(dept)}
+                    title="Edit department"
+                  >
+                    <Edit3 size={14} className="me-1" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className={`neu-btn neu-btn-sm ${
+                      dept.status === 'Active' ? 'neu-btn-danger' : 'neu-btn-primary'
+                    }`}
+                    onClick={() => handleToggleStatus(dept.id || dept.slug)}
+                    title={dept.status === 'Active' ? 'Deactivate wing' : 'Activate wing'}
+                  >
+                    <Power size={14} className="me-1" />
+                    {dept.status === 'Active' ? 'Deactivate' : 'Activate'}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* View Department Details Modal */}
       {viewDepartment && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -435,7 +524,7 @@ export function AdminDepartmentsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setViewDepartment(null)}
                 >
                   <X size={16} />
@@ -498,15 +587,15 @@ export function AdminDepartmentsPage() {
       {/* Edit Department Modal */}
       {editDepartment && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleSaveEdit}>
                 <div 
@@ -519,7 +608,7 @@ export function AdminDepartmentsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setEditDepartment(null)}
                   >
                     <X size={16} />
@@ -600,15 +689,15 @@ export function AdminDepartmentsPage() {
       {/* Add Department Modal */}
       {showAddModal && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <form onSubmit={handleAddDepartment}>
                 <div 
@@ -621,7 +710,7 @@ export function AdminDepartmentsPage() {
                   <button
                     type="button"
                     className="neu-btn-icon"
-                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
                   >
                     <X size={16} />

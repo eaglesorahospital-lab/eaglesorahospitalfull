@@ -45,6 +45,25 @@ export function DoctorPatientsPage() {
     fetchDoctorPatients();
   }, []);
 
+  // Lock body scroll and listen for Escape key when dossier modal is open
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && selectedPatient) {
+        setSelectedPatient(null);
+      }
+    };
+    if (selectedPatient) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedPatient]);
+
   const filteredPatients = useMemo(() => {
     return patients.filter((p) => {
       const name = `${p.first_name || ''} ${p.last_name || ''} ${p.full_name || ''}`.toLowerCase();
@@ -92,7 +111,8 @@ export function DoctorPatientsPage() {
               <Search size={16} className="position-absolute start-0 top-50 translate-middle-y ms-3 text-muted" />
               <input
                 type="text"
-                className="neu-input ps-5"
+                className="neu-input ps-5 w-100"
+                style={{ fontSize: '16px', minHeight: '44px' }}
                 placeholder="Search by patient MRN, full name, mobile number, or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -112,7 +132,7 @@ export function DoctorPatientsPage() {
           <div>Retrieving clinical patient directory...</div>
         </div>
       ) : filteredPatients.length === 0 ? (
-        <div className="text-center py-5 text-muted neu-card rounded-4">
+        <div className="text-center py-5 text-muted neu-card rounded-4 p-4">
           <Users size={32} className="mb-2 text-muted" />
           <div className="fw-semibold">No patient records found.</div>
           <div className="small text-muted mt-1">Patients will automatically appear here once scheduled for consultations.</div>
@@ -170,6 +190,7 @@ export function DoctorPatientsPage() {
                     <button
                       type="button"
                       className="neu-btn neu-btn-outline neu-btn-sm"
+                      style={{ minHeight: '44px' }}
                       onClick={() => setSelectedPatient(p)}
                     >
                       View Dossier
@@ -187,11 +208,15 @@ export function DoctorPatientsPage() {
         <div
           className="modal show d-block"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
+          style={{ backgroundColor: 'rgba(10, 25, 47, 0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedPatient(null);
+          }}
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content neu-raised neu-surface rounded-4 p-4 border-0">
+            <div className="modal-content neu-raised neu-surface rounded-4 p-4 border-0 shadow-lg">
               <div className="d-flex justify-content-between align-items-start mb-3">
                 <div>
                   <span className="badge" style={{ background: 'var(--hospital-primary-navy)', fontSize: '0.75rem' }}>
@@ -203,10 +228,12 @@ export function DoctorPatientsPage() {
                 </div>
                 <button
                   type="button"
-                  className="btn btn-sm btn-link text-muted p-0"
+                  className="btn btn-sm btn-link text-muted p-2 d-flex align-items-center justify-content-center"
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px' }}
                   onClick={() => setSelectedPatient(null)}
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <span className="fs-5">✕</span>
                 </button>
               </div>
 
@@ -245,6 +272,7 @@ export function DoctorPatientsPage() {
               <button
                 type="button"
                 className="neu-btn neu-btn-primary w-100"
+                style={{ minHeight: '44px' }}
                 onClick={() => setSelectedPatient(null)}
               >
                 Close Dossier

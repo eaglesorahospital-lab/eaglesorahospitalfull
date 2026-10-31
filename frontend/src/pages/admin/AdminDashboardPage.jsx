@@ -226,7 +226,8 @@ export function AdminDashboardPage() {
               </Link>
             </div>
 
-            <div className="neu-table-container">
+            {/* Desktop Table View */}
+            <div className="neu-table-container d-none d-md-block">
               <table className="neu-table" style={{ minWidth: '640px' }}>
                 <thead>
                   <tr>
@@ -274,6 +275,44 @@ export function AdminDashboardPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Stacked Card List (< 768px) */}
+            <div className="d-md-none d-flex flex-column gap-3">
+              {todayAppointments.map((apt) => (
+                <div key={apt.reference} className="admin-mobile-card">
+                  <div className="admin-mobile-card-row">
+                    <span 
+                      className="px-2.5 py-1 rounded small fw-bold font-monospace"
+                      style={{ 
+                        background: 'var(--hospital-surface)', 
+                        boxShadow: 'var(--neu-inset)',
+                        fontSize: '0.785rem',
+                        color: 'var(--hospital-medical-blue)'
+                      }}
+                    >
+                      {apt.reference}
+                    </span>
+                    <AdminStatusBadge status={apt.status} />
+                  </div>
+                  <div className="mt-2">
+                    <div className="fw-bold" style={{ color: 'var(--hospital-primary-navy)' }}>
+                      {apt.patientName}
+                    </div>
+                    <span className="small text-muted d-block">{apt.patientContact}</span>
+                  </div>
+                  <div className="small mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--glass-border)' }}>
+                    <div>
+                      <div className="fw-semibold text-primary">{apt.doctorName}</div>
+                      <span className="text-muted" style={{ fontSize: '0.75rem' }}>{apt.specialty}</span>
+                    </div>
+                    <div className="text-end">
+                      <div className="fw-semibold text-body">{apt.time}</div>
+                      <span className="text-muted" style={{ fontSize: '0.75rem' }}>{apt.date}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

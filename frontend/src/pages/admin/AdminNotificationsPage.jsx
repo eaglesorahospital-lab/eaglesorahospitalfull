@@ -72,9 +72,29 @@ export function AdminNotificationsPage() {
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
+
   // Modals & notices
   const [viewNotif, setViewNotif] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
+
+  // Lock body scroll and dismiss on Escape for glass modals
+  useEffect(() => {
+    if (viewNotif) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setViewNotif(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [viewNotif]);
 
   const breadcrumbs = [
     { label: 'Admin', to: '/admin' },
@@ -256,7 +276,8 @@ export function AdminNotificationsPage() {
         className="neu-card p-0 mb-4 overflow-hidden" 
         style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
       >
-        <div className="neu-table-container">
+        {/* Desktop Table View */}
+        <div className="neu-table-container d-none d-md-block">
           <table className="neu-table">
             <thead>
               <tr>
@@ -356,20 +377,94 @@ export function AdminNotificationsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Stacked Card List (< 768px) */}
+        <div className="d-md-none p-3 d-flex flex-column gap-3">
+          {isLoading ? (
+            <div className="text-center py-4 text-muted">
+              <RotateCw size={24} className="spin-anim mb-2 text-primary" />
+              <div>Loading communication logs from database...</div>
+            </div>
+          ) : filteredNotifications.length === 0 ? (
+            <div className="text-center py-4 text-muted">
+              <AlertCircle size={28} className="mb-2 text-muted" />
+              <div className="fw-semibold">No notification dispatch records match the selected filter.</div>
+            </div>
+          ) : (
+            filteredNotifications.map((n) => (
+              <div key={n.id} className="admin-mobile-card">
+                <div className="admin-mobile-card-row">
+                  <span 
+                    className="px-2.5 py-1 rounded small font-monospace fw-bold"
+                    style={{ 
+                      background: 'var(--hospital-surface)', 
+                      boxShadow: 'var(--neu-inset)', 
+                      fontSize: '0.785rem',
+                      color: 'var(--hospital-medical-blue)'
+                    }}
+                  >
+                    {n.id}
+                  </span>
+                  <AdminStatusBadge status={n.status} />
+                </div>
+
+                <div className="mt-2">
+                  <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    {n.type}
+                  </div>
+                  <div className="small text-muted mt-0.5">
+                    Channel: <span className="neu-badge neu-badge-info">{n.channel}</span> &bull; Ref: <span className="font-monospace">{n.relatedRef}</span>
+                  </div>
+                  <div className="small text-muted text-break mt-1">
+                    To: <strong className="text-body">{n.recipient}</strong>
+                  </div>
+                </div>
+
+                <div className="small text-muted mt-2 pt-2 border-top d-flex justify-content-between" style={{ borderColor: 'var(--glass-border)' }}>
+                  <span>Dispatched:</span>
+                  <span className="font-monospace">{n.sentAt}</span>
+                </div>
+
+                <div className="admin-mobile-card-actions">
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => setViewNotif(n)}
+                    title="View dispatch payload"
+                  >
+                    <Eye size={14} className="me-1" />
+                    Payload
+                  </button>
+                  {n.status !== 'Sent' && n.status !== 'Delivered' && (
+                    <button
+                      type="button"
+                      className="neu-btn neu-btn-primary neu-btn-sm"
+                      onClick={() => handleResend(n.id)}
+                      title="Retry message dispatch"
+                    >
+                      <Send size={14} className="me-1" />
+                      Retry
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* View Notification Payload Modal */}
       {viewNotif && (
         <div
-          className="modal show d-block"
+          className="modal show d-block glass-modal-backdrop"
           tabIndex="-1"
-          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
           role="dialog"
+          aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content neu-card p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+              className="modal-content glass-modal neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -384,7 +479,7 @@ export function AdminNotificationsPage() {
                 <button
                   type="button"
                   className="neu-btn-icon"
-                  style={{ width: '32px', height: '32px', padding: 0 }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setViewNotif(null)}
                 >
                   <X size={16} />
