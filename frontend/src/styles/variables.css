@@ -218,32 +218,63 @@
   --neu-btn-blue: 0 4px 14px rgba(0, 0, 0, 0.45), -2px -2px 6px rgba(58, 142, 229, 0.25);
 
   /* ----------------------------------------------------------------------------
-     4.1. Dark Mode Glassmorphism Tokens (Phase 1)
+     4.1. Dark Mode Glassmorphism Tokens (Phase 1 & Dedicated Dark Mode Elevation)
      ---------------------------------------------------------------------------- */
   --glass-bg-canvas: #091422;
   --glass-bg-gradient: radial-gradient(at 0% 0%, rgba(40, 120, 200, 0.16) 0px, transparent 60%),
                        radial-gradient(at 100% 100%, rgba(53, 184, 201, 0.12) 0px, transparent 60%),
                        #091422;
 
-  --glass-surface-card: rgba(18, 36, 58, 0.72);
-  --glass-surface-card-hover: rgba(25, 48, 77, 0.85);
-  --glass-surface-subtle: rgba(14, 28, 46, 0.65);
-  --glass-surface-nav: rgba(10, 20, 32, 0.88);
-  --glass-surface-modal: rgba(15, 30, 48, 0.95);
-  --glass-surface-input: rgba(14, 28, 46, 0.75);
-  --glass-surface-input-focus: rgba(20, 42, 68, 0.95);
-  --glass-surface-pill: rgba(25, 48, 77, 0.65);
+  --glass-surface-card: rgba(18, 34, 54, 0.78);
+  --glass-surface-card-hover: rgba(26, 48, 76, 0.90);
+  --glass-surface-subtle: rgba(14, 28, 46, 0.70);
+  --glass-surface-nav: rgba(10, 20, 32, 0.92);
+  --glass-surface-modal: rgba(15, 30, 48, 0.96);
+  --glass-surface-input: rgba(14, 28, 46, 0.85);
+  --glass-surface-input-focus: rgba(20, 42, 68, 0.98);
+  --glass-surface-pill: rgba(25, 48, 77, 0.75);
 
-  --glass-border: 1px solid rgba(255, 255, 255, 0.10);
-  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.06);
-  --glass-border-focus: 1px solid #3A8EE5;
-  --glass-border-accent: 1px solid rgba(53, 184, 201, 0.35);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.14);
+  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-border-focus: 1px solid #3884D8;
+  --glass-border-accent: 1px solid rgba(53, 184, 201, 0.40);
 
-  --glass-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.35);
-  --glass-shadow-md: 0 8px 26px rgba(0, 0, 0, 0.45);
-  --glass-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
-  --glass-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.50);
-  --glass-shadow-glow: 0 0 24px rgba(53, 184, 201, 0.30);
+  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.40);
+  --glass-shadow-md: 0 8px 30px rgba(0, 0, 0, 0.50);
+  --glass-shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.65);
+  --glass-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.55);
+  --glass-shadow-glow: 0 0 28px rgba(53, 184, 201, 0.35);
+
+  /* Bootstrap Theme Tokens Interoperability (Dark Mode) */
+  --bs-body-color: #E8F0F8;
+  --bs-body-color-rgb: 232, 240, 248;
+  --bs-body-bg: #091422;
+  --bs-body-bg-rgb: 9, 20, 34;
+  --bs-emphasis-color: #FFFFFF;
+  --bs-emphasis-color-rgb: 255, 255, 255;
+  --bs-secondary-color: #95A9C0;
+  --bs-secondary-color-rgb: 149, 169, 192;
+  --bs-secondary-bg: #15273D;
+  --bs-tertiary-color: #6A829E;
+  --bs-tertiary-color-rgb: 106, 130, 158;
+  --bs-tertiary-bg: #112033;
+  --bs-heading-color: #F1F6FC;
+  --bs-link-color: #3884D8;
+  --bs-link-hover-color: #5AA1ED;
+  --bs-border-color: rgba(255, 255, 255, 0.12);
+  --bs-border-color-translucent: rgba(255, 255, 255, 0.08);
+  --bs-card-bg: rgba(18, 34, 54, 0.78);
+  --bs-card-border-color: rgba(255, 255, 255, 0.12);
+  --bs-card-color: #E8F0F8;
+  --bs-modal-bg: rgba(15, 30, 48, 0.96);
+  --bs-modal-border-color: rgba(255, 255, 255, 0.14);
+  --bs-modal-color: #E8F0F8;
+  --bs-dropdown-bg: #112033;
+  --bs-dropdown-color: #E8F0F8;
+  --bs-dropdown-link-color: #E8F0F8;
+  --bs-dropdown-link-hover-color: #FFFFFF;
+  --bs-dropdown-link-hover-bg: #1B324F;
+  --bs-dropdown-border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* ------------------------------------------------------------------------------

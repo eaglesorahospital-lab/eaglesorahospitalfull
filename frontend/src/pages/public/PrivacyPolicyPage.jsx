@@ -54,7 +54,7 @@ export function PrivacyPolicyPage() {
               </div>
               <p className="text-muted" style={{ lineHeight: '1.7' }}>
                 {HOSPITAL_METADATA.legalName} ("{HOSPITAL_METADATA.name}", "we", "our", or "us") operates the outpatient
-                consultation portal and healthcare services available at <code>https://eglesorahospital.netlify.app</code>. We are
+                consultation portal and healthcare services available at <code>https://eaglesora-hospital-frontend.onrender.com</code>. We are
                 dedicated to safeguarding the personal and clinical information of patients, visitors, medical consultants, and administrative staff.
               </p>
 

@@ -5,7 +5,7 @@ import authService from '../../services/authService';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import ThemeToggle from '../../components/common/ThemeToggle';
 import SEO from '../../components/common/SEO';
-import { Activity, ShieldCheck, Mail, Lock, User, Phone, MapPin, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Activity, ShieldCheck, Mail, Lock, User, Phone, MapPin, Calendar, AlertTriangle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { sanitizeRedirectUrl } from '../../utils/urlSecurity';
 
 /**
@@ -24,6 +24,9 @@ export function PatientLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegPasswordConfirm, setShowRegPasswordConfirm] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -220,7 +223,7 @@ export function PatientLoginPage() {
                   </span>
                   <input
                     id="patient-login-pass"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     className="form-control bg-transparent border-0 shadow-none ps-0"
                     placeholder="••••••••"
                     value={password}
@@ -228,6 +231,16 @@ export function PatientLoginPage() {
                     autoComplete="current-password"
                     required
                   />
+                  <button
+                    type="button"
+                    className="btn btn-link text-muted pe-2 p-0 text-decoration-none d-flex align-items-center justify-content-center"
+                    style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px' }}
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
@@ -380,32 +393,52 @@ export function PatientLoginPage() {
                   <label className="hospital-form-label mb-1" htmlFor="reg-password">
                     Password <span className="text-danger">*</span>
                   </label>
-                  <div className="neu-inset rounded-3 p-1">
+                  <div className="neu-inset rounded-3 p-1 d-flex align-items-center gap-1">
                     <input
                       id="reg-password"
-                      type="password"
+                      type={showRegPassword ? 'text' : 'password'}
                       className="form-control bg-transparent border-0 shadow-none"
                       placeholder="Min 8 chars"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
+                    <button
+                      type="button"
+                      className="btn btn-link text-muted pe-2 p-0 text-decoration-none d-flex align-items-center justify-content-center"
+                      style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+                      onClick={() => setShowRegPassword(!showRegPassword)}
+                      aria-label={showRegPassword ? 'Hide password' : 'Show password'}
+                      title={showRegPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showRegPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
                   </div>
                 </div>
                 <div className="col-12 col-sm-6">
                   <label className="hospital-form-label mb-1" htmlFor="reg-password-confirm">
                     Confirm Password <span className="text-danger">*</span>
                   </label>
-                  <div className="neu-inset rounded-3 p-1">
+                  <div className="neu-inset rounded-3 p-1 d-flex align-items-center gap-1">
                     <input
                       id="reg-password-confirm"
-                      type="password"
+                      type={showRegPasswordConfirm ? 'text' : 'password'}
                       className="form-control bg-transparent border-0 shadow-none"
                       placeholder="Re-enter"
                       value={passwordConfirm}
                       onChange={(e) => setPasswordConfirm(e.target.value)}
                       required
                     />
+                    <button
+                      type="button"
+                      className="btn btn-link text-muted pe-2 p-0 text-decoration-none d-flex align-items-center justify-content-center"
+                      style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px' }}
+                      onClick={() => setShowRegPasswordConfirm(!showRegPasswordConfirm)}
+                      aria-label={showRegPasswordConfirm ? 'Hide password' : 'Show password'}
+                      title={showRegPasswordConfirm ? 'Hide password' : 'Show password'}
+                    >
+                      {showRegPasswordConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
                   </div>
                 </div>
               </div>

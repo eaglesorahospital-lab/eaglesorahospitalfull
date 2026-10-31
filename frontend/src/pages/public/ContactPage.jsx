@@ -3,6 +3,7 @@ import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import FormField from '../../components/common/FormField';
 import SEO from '../../components/common/SEO';
+import CopyButton from '../../components/common/CopyButton';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import { PhoneCall, Mail, Clock, MapPin, AlertTriangle, Send, CheckCircle2, Building2 } from 'lucide-react';
 
@@ -110,6 +111,9 @@ export function ContactPage() {
                   <PhoneCall size={18} />
                   <span>{HOSPITAL_METADATA.emergencyPhone}</span>
                 </a>
+                <div className="mt-2">
+                  <CopyButton text={HOSPITAL_METADATA.emergencyPhone} label="Copy Emergency Line" showText={true} />
+                </div>
               </div>
               <div className="small text-muted">
                 Trauma bay entrance located on the East Gate of the medical campus.
@@ -133,6 +137,9 @@ export function ContactPage() {
                 <a href={`tel:${HOSPITAL_METADATA.generalPhone}`} className="text-decoration-none text-body fw-medium">
                   {HOSPITAL_METADATA.generalPhone}
                 </a>
+                <span className="ms-2">
+                  <CopyButton text={HOSPITAL_METADATA.generalPhone} size={12} title="Copy phone number" />
+                </span>
               </div>
               <div className="mb-3 small">
                 <strong className="text-body">Email:</strong>{' '}

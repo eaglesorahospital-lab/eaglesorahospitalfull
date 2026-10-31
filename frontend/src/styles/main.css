@@ -3416,3 +3416,954 @@ select.form-select option {
     min-height: 44px !important;
   }
 }
+
+
+/* ==============================================================================
+   24. DEDICATED DARK MODE MEDICAL GLASSMORPHISM ELEVATION & ACCESSIBILITY
+   ============================================================================== */
+
+/* 24.1. Universal Typography & Bootstrap Utility Contrast in Dark Mode */
+[data-theme="dark"],
+.theme-dark {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body,
+.theme-dark body,
+[data-theme="dark"] #root,
+.theme-dark #root {
+  background-color: var(--hospital-bg);
+  color: var(--hospital-text);
+}
+
+/* Force Bootstrap text utilities to high-contrast dark theme tokens */
+[data-theme="dark"] .text-body,
+.theme-dark .text-body,
+[data-theme="dark"] .text-dark,
+.theme-dark .text-dark,
+[data-theme="dark"] .text-black,
+.theme-dark .text-black {
+  color: var(--hospital-text) !important;
+}
+
+[data-theme="dark"] .text-body-secondary,
+.theme-dark .text-body-secondary,
+[data-theme="dark"] .text-secondary,
+.theme-dark .text-secondary,
+[data-theme="dark"] .text-muted,
+.theme-dark .text-muted {
+  color: var(--hospital-text-muted) !important;
+}
+
+[data-theme="dark"] .text-body-tertiary,
+.theme-dark .text-body-tertiary {
+  color: var(--hospital-text-light) !important;
+}
+
+[data-theme="dark"] .text-body-emphasis,
+.theme-dark .text-body-emphasis {
+  color: #FFFFFF !important;
+}
+
+/* Headings in Dark Mode */
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3,
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+.theme-dark h1, .theme-dark h2, .theme-dark h3,
+.theme-dark h4, .theme-dark h5, .theme-dark h6 {
+  color: var(--hospital-text);
+}
+
+/* Links in Dark Mode */
+[data-theme="dark"] a:not(.btn):not(.glass-btn):not(.neu-btn):not(.hospital-nav-link):not(.admin-sidebar-link):not(.dropdown-item),
+.theme-dark a:not(.btn):not(.glass-btn):not(.neu-btn):not(.hospital-nav-link):not(.admin-sidebar-link):not(.dropdown-item) {
+  color: var(--hospital-primary-light);
+}
+
+[data-theme="dark"] a:not(.btn):not(.glass-btn):not(.neu-btn):not(.hospital-nav-link):not(.admin-sidebar-link):not(.dropdown-item):hover,
+.theme-dark a:not(.btn):not(.glass-btn):not(.neu-btn):not(.hospital-nav-link):not(.admin-sidebar-link):not(.dropdown-item):hover {
+  color: #FFFFFF;
+}
+
+/* Background Utility Classes */
+[data-theme="dark"] .bg-white,
+.theme-dark .bg-white,
+[data-theme="dark"] .bg-light,
+.theme-dark .bg-light {
+  background-color: var(--hospital-surface) !important;
+  color: var(--hospital-text) !important;
+}
+
+[data-theme="dark"] .bg-body,
+.theme-dark .bg-body,
+[data-theme="dark"] .bg-body-secondary,
+.theme-dark .bg-body-secondary,
+[data-theme="dark"] .bg-body-tertiary,
+.theme-dark .bg-body-tertiary {
+  background-color: var(--hospital-surface-subtle) !important;
+  color: var(--hospital-text) !important;
+}
+
+/* Border utilities in Dark Mode */
+[data-theme="dark"] .border,
+.theme-dark .border,
+[data-theme="dark"] .border-top,
+.theme-dark .border-top,
+[data-theme="dark"] .border-bottom,
+.theme-dark .border-bottom,
+[data-theme="dark"] .border-start,
+.theme-dark .border-start,
+[data-theme="dark"] .border-end,
+.theme-dark .border-end {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 24.2. Glass Surfaces & Cards in Dark Mode */
+[data-theme="dark"] .glass-card,
+.theme-dark .glass-card,
+[data-theme="dark"] .glass-panel,
+.theme-dark .glass-panel,
+[data-theme="dark"] .glass-card-sm,
+.theme-dark .glass-card-sm,
+[data-theme="dark"] .neu-surface,
+.theme-dark .neu-surface,
+[data-theme="dark"] .neu-raised,
+.theme-dark .neu-raised,
+[data-theme="dark"] .neu-card,
+.theme-dark .neu-card,
+[data-theme="dark"] .neu-raised-card,
+.theme-dark .neu-raised-card,
+[data-theme="dark"] .hospital-layout-root .neu-surface,
+.theme-dark .hospital-layout-root .neu-surface,
+[data-theme="dark"] .hospital-layout-root .neu-raised,
+.theme-dark .hospital-layout-root .neu-raised,
+[data-theme="dark"] .hospital-layout-root .neu-card,
+.theme-dark .hospital-layout-root .neu-card,
+[data-theme="dark"] .hospital-layout-root .neu-raised-card,
+.theme-dark .hospital-layout-root .neu-raised-card {
+  background-color: var(--glass-surface-card) !important;
+  backdrop-filter: blur(var(--glass-blur-md, 12px));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+  color: var(--hospital-text);
+}
+
+[data-theme="dark"] .glass-card:hover,
+.theme-dark .glass-card:hover,
+[data-theme="dark"] .glass-card-interactive:hover,
+.theme-dark .glass-card-interactive:hover,
+[data-theme="dark"] .neu-card-interactive:hover,
+.theme-dark .neu-card-interactive:hover,
+[data-theme="dark"] .hospital-layout-root .neu-surface:hover,
+.theme-dark .hospital-layout-root .neu-surface:hover,
+[data-theme="dark"] .hospital-layout-root .neu-raised:hover,
+.theme-dark .hospital-layout-root .neu-raised:hover,
+[data-theme="dark"] .hospital-layout-root .neu-card:hover,
+.theme-dark .hospital-layout-root .neu-card:hover,
+[data-theme="dark"] .hospital-layout-root .neu-raised-card:hover,
+.theme-dark .hospital-layout-root .neu-raised-card:hover,
+[data-theme="dark"] .hover-lift:hover,
+.theme-dark .hover-lift:hover {
+  background-color: var(--glass-surface-card-hover) !important;
+  border-color: rgba(56, 132, 216, 0.45) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.60), 0 0 20px rgba(53, 184, 201, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+/* Inset Tracks & Containers in Dark Mode */
+[data-theme="dark"] .neu-inset,
+.theme-dark .neu-inset,
+[data-theme="dark"] .neu-surface-inset,
+.theme-dark .neu-surface-inset,
+[data-theme="dark"] .hospital-layout-root .neu-inset,
+.theme-dark .hospital-layout-root .neu-inset,
+[data-theme="dark"] .hospital-layout-root .neu-surface-inset,
+.theme-dark .hospital-layout-root .neu-surface-inset {
+  background-color: var(--glass-surface-input) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* 24.3. Interactive Buttons in Dark Mode */
+[data-theme="dark"] .glass-btn-primary,
+.theme-dark .glass-btn-primary,
+[data-theme="dark"] .neu-btn-primary,
+.theme-dark .neu-btn-primary,
+[data-theme="dark"] .hospital-btn-primary,
+.theme-dark .hospital-btn-primary {
+  background: linear-gradient(135deg, #1A4D80 0%, #3884D8 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(56, 132, 216, 0.35) !important;
+}
+
+[data-theme="dark"] .glass-btn-primary:hover:not(:disabled),
+.theme-dark .glass-btn-primary:hover:not(:disabled),
+[data-theme="dark"] .neu-btn-primary:hover:not(:disabled),
+.theme-dark .neu-btn-primary:hover:not(:disabled),
+[data-theme="dark"] .hospital-btn-primary:hover:not(:disabled),
+.theme-dark .hospital-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #225C98 0%, #4A96EC 100%) !important;
+  box-shadow: 0 6px 22px rgba(56, 132, 216, 0.50), 0 0 16px rgba(53, 184, 201, 0.30) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .glass-btn-secondary,
+.theme-dark .glass-btn-secondary,
+[data-theme="dark"] .neu-btn-secondary,
+.theme-dark .neu-btn-secondary {
+  background-color: var(--glass-surface-subtle) !important;
+  color: #35B8C9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .glass-btn-secondary:hover:not(:disabled),
+.theme-dark .glass-btn-secondary:hover:not(:disabled),
+[data-theme="dark"] .neu-btn-secondary:hover:not(:disabled),
+.theme-dark .neu-btn-secondary:hover:not(:disabled) {
+  background-color: var(--glass-surface-card-hover) !important;
+  border-color: rgba(53, 184, 201, 0.45) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.40) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .glass-btn-outline,
+.theme-dark .glass-btn-outline,
+[data-theme="dark"] .neu-btn-outline,
+.theme-dark .neu-btn-outline {
+  background-color: rgba(22, 38, 58, 0.45) !important;
+  color: #5AA1ED !important;
+  border: 1px solid #3884D8 !important;
+}
+
+[data-theme="dark"] .glass-btn-outline:hover:not(:disabled),
+.theme-dark .glass-btn-outline:hover:not(:disabled),
+[data-theme="dark"] .neu-btn-outline:hover:not(:disabled),
+.theme-dark .neu-btn-outline:hover:not(:disabled) {
+  background-color: #3884D8 !important;
+  color: #FFFFFF !important;
+  border-color: #5AA1ED !important;
+  box-shadow: 0 4px 16px rgba(56, 132, 216, 0.40) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .glass-btn-icon,
+.theme-dark .glass-btn-icon,
+[data-theme="dark"] .neu-btn-icon,
+.theme-dark .neu-btn-icon {
+  background-color: var(--glass-surface-card) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: var(--hospital-text) !important;
+}
+
+[data-theme="dark"] .glass-btn-icon:hover,
+.theme-dark .glass-btn-icon:hover,
+[data-theme="dark"] .neu-btn-icon:hover,
+.theme-dark .neu-btn-icon:hover {
+  background-color: var(--glass-surface-card-hover) !important;
+  border-color: #35B8C9 !important;
+  color: #35B8C9 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.40) !important;
+  transform: translateY(-1px);
+}
+
+/* 24.4. Form Controls, Inputs, Selects & Placeholders in Dark Mode */
+[data-theme="dark"] input.form-control,
+.theme-dark input.form-control,
+[data-theme="dark"] select.form-select,
+.theme-dark select.form-select,
+[data-theme="dark"] textarea.form-control,
+.theme-dark textarea.form-control,
+[data-theme="dark"] .glass-input,
+.theme-dark .glass-input,
+[data-theme="dark"] .glass-select,
+.theme-dark .glass-select,
+[data-theme="dark"] .glass-textarea,
+.theme-dark .glass-textarea,
+[data-theme="dark"] .neu-input,
+.theme-dark .neu-input,
+[data-theme="dark"] .neu-select,
+.theme-dark .neu-select,
+[data-theme="dark"] .neu-textarea,
+.theme-dark .neu-textarea,
+[data-theme="dark"] .hospital-form-control,
+.theme-dark .hospital-form-control,
+[data-theme="dark"] .hospital-form-select,
+.theme-dark .hospital-form-select,
+[data-theme="dark"] .staff-auth-card input,
+.theme-dark .staff-auth-card input {
+  background-color: #112033 !important;
+  color: #E8F0F8 !important;
+  border: 1px solid #233B57 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] input.form-control:hover,
+.theme-dark input.form-control:hover,
+[data-theme="dark"] select.form-select:hover,
+.theme-dark select.form-select:hover,
+[data-theme="dark"] textarea.form-control:hover,
+.theme-dark textarea.form-control:hover,
+[data-theme="dark"] .glass-input:hover,
+.theme-dark .glass-input:hover,
+[data-theme="dark"] .glass-select:hover,
+.theme-dark .glass-select:hover,
+[data-theme="dark"] .neu-input:hover,
+.theme-dark .neu-input:hover,
+[data-theme="dark"] .neu-select:hover,
+.theme-dark .neu-select:hover {
+  border-color: #3884D8 !important;
+}
+
+[data-theme="dark"] input.form-control:focus,
+.theme-dark input.form-control:focus,
+[data-theme="dark"] select.form-select:focus,
+.theme-dark select.form-select:focus,
+[data-theme="dark"] textarea.form-control:focus,
+.theme-dark textarea.form-control:focus,
+[data-theme="dark"] .glass-input:focus,
+.theme-dark .glass-input:focus,
+[data-theme="dark"] .glass-select:focus,
+.theme-dark .glass-select:focus,
+[data-theme="dark"] .glass-textarea:focus,
+.theme-dark .glass-textarea:focus,
+[data-theme="dark"] .neu-input:focus,
+.theme-dark .neu-input:focus,
+[data-theme="dark"] .neu-select:focus,
+.theme-dark .neu-select:focus,
+[data-theme="dark"] .neu-textarea:focus,
+.theme-dark .neu-textarea:focus {
+  background-color: #142840 !important;
+  color: #FFFFFF !important;
+  border-color: #3A8EE5 !important;
+  box-shadow: 0 0 0 3px rgba(58, 142, 229, 0.28), inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  outline: none !important;
+}
+
+/* Explicit placeholder visibility (WCAG AA) */
+[data-theme="dark"] input::placeholder,
+.theme-dark input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+.theme-dark textarea::placeholder,
+[data-theme="dark"] .glass-input::placeholder,
+.theme-dark .glass-input::placeholder,
+[data-theme="dark"] .neu-input::placeholder,
+.theme-dark .neu-input::placeholder {
+  color: #95A9C0 !important;
+  opacity: 0.85 !important;
+}
+
+/* Native select options styling */
+[data-theme="dark"] select option,
+.theme-dark select option {
+  background-color: #112033 !important;
+  color: #E8F0F8 !important;
+}
+
+/* Select Chevron for Dark Mode */
+[data-theme="dark"] select.glass-select,
+.theme-dark select.glass-select,
+[data-theme="dark"] select.neu-select,
+.theme-dark select.neu-select,
+[data-theme="dark"] select.form-select,
+.theme-dark select.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2335B8C9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 1rem center !important;
+  background-size: 16px 16px !important;
+}
+
+/* Disabled input states */
+[data-theme="dark"] input:disabled,
+.theme-dark input:disabled,
+[data-theme="dark"] select:disabled,
+.theme-dark select:disabled,
+[data-theme="dark"] textarea:disabled,
+.theme-dark textarea:disabled {
+  background-color: rgba(14, 28, 46, 0.45) !important;
+  color: rgba(149, 169, 192, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  cursor: not-allowed;
+}
+
+/* Form check input (checkboxes & radios) */
+[data-theme="dark"] .form-check-input,
+.theme-dark .form-check-input {
+  background-color: #112033;
+  border-color: #233B57;
+}
+
+[data-theme="dark"] .form-check-input:checked,
+.theme-dark .form-check-input:checked {
+  background-color: #3884D8;
+  border-color: #3884D8;
+}
+
+/* Form labels */
+[data-theme="dark"] .form-label,
+.theme-dark .form-label,
+[data-theme="dark"] label,
+.theme-dark label {
+  color: #E8F0F8;
+}
+
+/* 24.5. Navigation, Topbar, Drawers & Footer in Dark Mode */
+[data-theme="dark"] .hospital-topbar,
+.theme-dark .hospital-topbar {
+  background-color: rgba(8, 16, 26, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .hospital-navbar,
+.theme-dark .hospital-navbar {
+  background-color: rgba(10, 20, 32, 0.92) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+[data-theme="dark"] .hospital-nav-link,
+.theme-dark .hospital-nav-link {
+  color: #E8F0F8 !important;
+}
+
+[data-theme="dark"] .hospital-nav-link:hover,
+.theme-dark .hospital-nav-link:hover {
+  color: #35B8C9 !important;
+  background-color: rgba(53, 184, 201, 0.12) !important;
+}
+
+[data-theme="dark"] .hospital-nav-link.active,
+.theme-dark .hospital-nav-link.active,
+[data-theme="dark"] .active-nav-link,
+.theme-dark .active-nav-link {
+  color: #FFFFFF !important;
+  background-color: rgba(56, 132, 216, 0.25) !important;
+  border: 1px solid rgba(56, 132, 216, 0.45) !important;
+}
+
+/* Mobile Drawer / Offcanvas */
+[data-theme="dark"] .offcanvas,
+.theme-dark .offcanvas,
+[data-theme="dark"] .hospital-mobile-drawer,
+.theme-dark .hospital-mobile-drawer,
+[data-theme="dark"] .hospital-navbar-collapse {
+  background-color: rgba(10, 20, 32, 0.96) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #E8F0F8;
+}
+
+/* Public Footer in Dark Mode */
+[data-theme="dark"] .hospital-footer,
+.theme-dark .hospital-footer {
+  background-color: rgba(8, 16, 26, 0.96) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+[data-theme="dark"] .hospital-footer-title,
+.theme-dark .hospital-footer-title {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .hospital-footer-links a,
+.theme-dark .hospital-footer-links a {
+  color: #95A9C0 !important;
+}
+
+[data-theme="dark"] .hospital-footer-links a:hover,
+.theme-dark .hospital-footer-links a:hover {
+  color: #35B8C9 !important;
+}
+
+[data-theme="dark"] .sticky-mobile-cta,
+.theme-dark .sticky-mobile-cta {
+  background-color: rgba(10, 20, 32, 0.94) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* 24.6. Tables, Rows & Headers in Dark Mode */
+[data-theme="dark"] .table,
+.theme-dark .table,
+[data-theme="dark"] .neu-table,
+.theme-dark .neu-table,
+[data-theme="dark"] .admin-table,
+.theme-dark .admin-table,
+[data-theme="dark"] .hospital-table,
+.theme-dark .hospital-table,
+[data-theme="dark"] .glass-table,
+.theme-dark .glass-table {
+  --bs-table-bg: transparent;
+  --bs-table-color: #E8F0F8;
+  --bs-table-hover-bg: rgba(56, 132, 216, 0.08);
+  --bs-table-border-color: rgba(255, 255, 255, 0.08);
+  color: #E8F0F8 !important;
+}
+
+[data-theme="dark"] .table th,
+.theme-dark .table th,
+[data-theme="dark"] .neu-table th,
+.theme-dark .neu-table th,
+[data-theme="dark"] .admin-table th,
+.theme-dark .admin-table th,
+[data-theme="dark"] .hospital-table th,
+.theme-dark .hospital-table th {
+  background-color: rgba(14, 28, 46, 0.92) !important;
+  color: #35B8C9 !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.14) !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .table td,
+.theme-dark .table td,
+[data-theme="dark"] .neu-table td,
+.theme-dark .neu-table td,
+[data-theme="dark"] .admin-table td,
+.theme-dark .admin-table td,
+[data-theme="dark"] .hospital-table td,
+.theme-dark .hospital-table td {
+  color: #E8F0F8 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .table tr:hover td,
+.theme-dark .table tr:hover td,
+[data-theme="dark"] .neu-table tr:hover td,
+.theme-dark .neu-table tr:hover td,
+[data-theme="dark"] .admin-table tr:hover td,
+.theme-dark .admin-table tr:hover td {
+  background-color: rgba(56, 132, 216, 0.08) !important;
+}
+
+/* 24.7. Mobile Stacked Cards in Dark Mode */
+[data-theme="dark"] .admin-mobile-card,
+.theme-dark .admin-mobile-card,
+[data-theme="dark"] .patient-mobile-card,
+.theme-dark .patient-mobile-card,
+[data-theme="dark"] .doctor-mobile-card,
+.theme-dark .doctor-mobile-card {
+  background-color: var(--glass-surface-card) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+  color: var(--hospital-text);
+}
+
+[data-theme="dark"] .admin-mobile-card-row,
+.theme-dark .admin-mobile-card-row {
+  color: var(--hospital-text);
+}
+
+[data-theme="dark"] .admin-mobile-card-actions,
+.theme-dark .admin-mobile-card-actions {
+  border-top-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* 24.8. Modals, Dialogs, Dropdowns & Popovers in Dark Mode */
+[data-theme="dark"] .modal-content,
+.theme-dark .modal-content,
+[data-theme="dark"] .glass-modal,
+.theme-dark .glass-modal,
+[data-theme="dark"] .doctor-dashboard-view .modal-content,
+.theme-dark .doctor-dashboard-view .modal-content,
+[data-theme="dark"] .admin-dashboard-view .modal-content,
+.theme-dark .admin-dashboard-view .modal-content,
+[data-theme="dark"] .patient-dashboard-page .modal .neu-surface,
+.theme-dark .patient-dashboard-page .modal .neu-surface {
+  background-color: rgba(15, 30, 48, 0.96) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.80) !important;
+  color: #E8F0F8 !important;
+}
+
+[data-theme="dark"] .modal-header,
+.theme-dark .modal-header,
+[data-theme="dark"] .glass-modal-header,
+.theme-dark .glass-modal-header {
+  background-color: rgba(11, 22, 36, 0.80) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .modal-footer,
+.theme-dark .modal-footer,
+[data-theme="dark"] .glass-modal-footer,
+.theme-dark .glass-modal-footer {
+  background-color: rgba(11, 22, 36, 0.80) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .modal-backdrop,
+.theme-dark .modal-backdrop,
+[data-theme="dark"] .glass-modal-backdrop,
+.theme-dark .glass-modal-backdrop {
+  background-color: rgba(6, 12, 20, 0.82) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Modal close button in Dark Mode */
+[data-theme="dark"] .btn-close,
+.theme-dark .btn-close {
+  filter: invert(1) grayscale(100%) brightness(180%) !important;
+  opacity: 0.85;
+}
+
+[data-theme="dark"] .btn-close:hover,
+.theme-dark .btn-close:hover {
+  opacity: 1;
+}
+
+/* Dropdown menus in Dark Mode */
+[data-theme="dark"] .dropdown-menu,
+.theme-dark .dropdown-menu {
+  background-color: rgba(15, 30, 48, 0.96) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65) !important;
+  color: #E8F0F8 !important;
+}
+
+[data-theme="dark"] .dropdown-item,
+.theme-dark .dropdown-item {
+  color: #E8F0F8 !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+.theme-dark .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus,
+.theme-dark .dropdown-item:focus {
+  background-color: rgba(56, 132, 216, 0.20) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .dropdown-item.active,
+.theme-dark .dropdown-item.active {
+  background-color: #3884D8 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .dropdown-divider,
+.theme-dark .dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* 24.9. Status Badges in Dark Mode */
+[data-theme="dark"] .glass-badge-blue,
+.theme-dark .glass-badge-blue {
+  background-color: rgba(56, 132, 216, 0.20) !important;
+  color: #60A5FA !important;
+  border-color: rgba(56, 132, 216, 0.40) !important;
+}
+
+[data-theme="dark"] .glass-badge-cyan,
+.theme-dark .glass-badge-cyan {
+  background-color: rgba(53, 184, 201, 0.20) !important;
+  color: #35B8C9 !important;
+  border-color: rgba(53, 184, 201, 0.40) !important;
+}
+
+[data-theme="dark"] .glass-badge-success,
+.theme-dark .glass-badge-success,
+[data-theme="dark"] .badge-confirmed,
+.theme-dark .badge-confirmed {
+  background-color: rgba(16, 185, 129, 0.20) !important;
+  color: #34D399 !important;
+  border-color: rgba(16, 185, 129, 0.40) !important;
+}
+
+[data-theme="dark"] .glass-badge-warning,
+.theme-dark .glass-badge-warning,
+[data-theme="dark"] .badge-pending,
+.theme-dark .badge-pending {
+  background-color: rgba(245, 158, 11, 0.20) !important;
+  color: #FBBF24 !important;
+  border-color: rgba(245, 158, 11, 0.40) !important;
+}
+
+[data-theme="dark"] .glass-badge-danger,
+.theme-dark .glass-badge-danger,
+[data-theme="dark"] .badge-cancelled,
+.theme-dark .badge-cancelled {
+  background-color: rgba(239, 68, 68, 0.20) !important;
+  color: #F87171 !important;
+  border-color: rgba(239, 68, 68, 0.40) !important;
+}
+
+/* 24.10. Patient Portal Dedicated Dark Mode Glass */
+[data-theme="dark"] .patient-portal-nav-wrapper .neu-surface,
+.theme-dark .patient-portal-nav-wrapper .neu-surface {
+  background-color: var(--glass-surface-card) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+[data-theme="dark"] .patient-dashboard-page section[aria-label="Next Upcoming Appointment"],
+.theme-dark .patient-dashboard-page section[aria-label="Next Upcoming Appointment"] {
+  background: linear-gradient(135deg, rgba(18, 36, 58, 0.85) 0%, rgba(40, 120, 200, 0.15) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-left: 4px solid var(--hospital-medical-blue) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.50) !important;
+}
+
+/* 24.11. Doctor Portal Dedicated Dark Mode Glass */
+[data-theme="dark"] .doctor-dashboard-view .neu-card,
+.theme-dark .doctor-dashboard-view .neu-card,
+[data-theme="dark"] .doctor-appointments-view .neu-card,
+.theme-dark .doctor-appointments-view .neu-card,
+[data-theme="dark"] .doctor-history-view .neu-card,
+.theme-dark .doctor-history-view .neu-card,
+[data-theme="dark"] .doctor-patients-view .neu-card,
+.theme-dark .doctor-patients-view .neu-card,
+[data-theme="dark"] .doctor-schedule-view .neu-card,
+.theme-dark .doctor-schedule-view .neu-card,
+[data-theme="dark"] .doctor-notifications-view .neu-card,
+.theme-dark .doctor-notifications-view .neu-card,
+[data-theme="dark"] .doctor-profile-view .neu-card,
+.theme-dark .doctor-profile-view .neu-card {
+  background-color: var(--glass-surface-card) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* 24.12. Admin Portal Dedicated Dark Mode Glass */
+[data-theme="dark"] .hospital-admin-header,
+.theme-dark .hospital-admin-header {
+  background-color: rgba(10, 20, 32, 0.94) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .admin-dashboard-view .neu-card,
+.theme-dark .admin-dashboard-view .neu-card,
+[data-theme="dark"] .admin-patients-view .neu-card,
+.theme-dark .admin-patients-view .neu-card,
+[data-theme="dark"] .admin-doctors-view .neu-card,
+.theme-dark .admin-doctors-view .neu-card,
+[data-theme="dark"] .admin-appointments-view .neu-card,
+.theme-dark .admin-appointments-view .neu-card,
+[data-theme="dark"] .admin-schedules-view .neu-card,
+.theme-dark .admin-schedules-view .neu-card,
+[data-theme="dark"] .admin-departments-view .neu-card,
+.theme-dark .admin-departments-view .neu-card,
+[data-theme="dark"] .admin-content-view .neu-card,
+.theme-dark .admin-content-view .neu-card,
+[data-theme="dark"] .admin-notifications-view .neu-card,
+.theme-dark .admin-notifications-view .neu-card,
+[data-theme="dark"] .admin-administrators-view .neu-card,
+.theme-dark .admin-administrators-view .neu-card,
+[data-theme="dark"] .admin-audit-view .neu-card,
+.theme-dark .admin-audit-view .neu-card {
+  background-color: var(--glass-surface-card) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.50) !important;
+}
+
+
+/* ------------------------------------------------------------------------------
+   25. Production Polish, Accessibility & Print Systems
+   ------------------------------------------------------------------------------ */
+
+/* 25.1. Accessible Skip to Main Content Link (WCAG 2.1 AA/AAA) */
+.skip-to-content {
+  position: fixed;
+  top: -100px;
+  left: 1.25rem;
+  z-index: 10050;
+  background-color: var(--hospital-medical-blue, #1A609B);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md, 12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  text-decoration: none;
+  transition: top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: 3px solid #FFFFFF;
+}
+
+.skip-to-content:focus,
+.skip-to-content:focus-visible {
+  top: 1.25rem;
+}
+
+/* 25.2. Smooth Back to Top Action */
+.neu-back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1040;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 50%;
+  background: var(--neu-surface, #F8FAFC);
+  color: var(--hospital-medical-blue, #1A609B);
+  border: 1px solid var(--hospital-border, #E2E8F0);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) scale(0.9);
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+}
+
+.neu-back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.neu-back-to-top:hover {
+  background: var(--hospital-medical-blue, #1A609B);
+  color: #FFFFFF;
+  box-shadow: 0 10px 28px rgba(26, 96, 155, 0.35);
+  transform: translateY(-2px) scale(1.05);
+}
+
+.neu-back-to-top:focus-visible {
+  outline: 3px solid var(--hospital-medical-blue, #1A609B);
+  outline-offset: 3px;
+}
+
+[data-theme="dark"] .neu-back-to-top,
+.theme-dark .neu-back-to-top {
+  background: rgba(22, 38, 58, 0.94);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #60A5FA;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] .neu-back-to-top:hover,
+.theme-dark .neu-back-to-top:hover {
+  background: #3B82F6;
+  color: #FFFFFF;
+}
+
+@media (max-width: 767.98px) {
+  .neu-back-to-top {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    right: 1rem;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* 25.3. Authoritative Healthcare Print Stylesheet */
+@media print {
+  /* Hide non-printable navigation, chrome, actions, interactive tools */
+  .hospital-topbar,
+  .hospital-navbar,
+  .hospital-footer,
+  .sticky-mobile-cta,
+  .neu-back-to-top,
+  .neu-theme-toggle,
+  .cookie-consent-bar,
+  .cookie-consent-banner,
+  .skip-to-content,
+  .btn,
+  button:not(.d-print-inline),
+  .no-print,
+  .appointment-result-actions,
+  .status-refresh-btn,
+  .hospital-navbar-toggler,
+  .modal-backdrop,
+  .portal-nav-pills {
+    display: none !important;
+  }
+
+  /* Reset document backgrounds for pure paper output */
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    line-height: 1.45 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .hospital-layout-root,
+  .hospital-main-content,
+  .appointment-result-page,
+  .container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Official Appointment Slip Print Layout */
+  .booking-receipt-card,
+  .appointment-result-page .neu-raised {
+    border: 1.5pt solid #1F2937 !important;
+    border-radius: 6pt !important;
+    padding: 16pt !important;
+    margin: 0 0 16pt 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .booking-receipt-card .neu-inset,
+  .appointment-result-page .neu-inset {
+    border: 1pt solid #D1D5DB !important;
+    border-radius: 4pt !important;
+    padding: 8pt !important;
+    background: #F9FAFB !important;
+  }
+
+  /* Table rules for printed medical reports & logs */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  th, td {
+    border: 1pt solid #E5E7EB !important;
+    padding: 6pt 8pt !important;
+  }
+
+  /* Print utility classes */
+  .d-print-block {
+    display: block !important;
+  }
+
+  .d-print-flex {
+    display: flex !important;
+  }
+
+  .d-print-none {
+    display: none !important;
+  }
+
+  .page-break {
+    page-break-after: always !important;
+  }
+}

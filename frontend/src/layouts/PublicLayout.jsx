@@ -5,6 +5,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import CookieConsent from '../components/common/CookieConsent';
 import StickyMobileCTA from '../components/common/StickyMobileCTA';
+import BackToTop from '../components/common/BackToTop';
 
 /**
  * Hospital Platform — Public Layout (Phase 1)
@@ -13,6 +14,9 @@ import StickyMobileCTA from '../components/common/StickyMobileCTA';
 export function PublicLayout() {
   return (
     <div className="hospital-layout-root has-sticky-cta">
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
       <TopBar />
       <Navbar />
       <main id="main-content" className="hospital-main-content">
@@ -20,6 +24,7 @@ export function PublicLayout() {
       </main>
       <Footer />
       <StickyMobileCTA />
+      <BackToTop />
       <CookieConsent />
     </div>
   );

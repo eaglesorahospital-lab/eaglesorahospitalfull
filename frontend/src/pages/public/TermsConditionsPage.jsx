@@ -55,7 +55,7 @@ export function TermsConditionsPage() {
               </div>
               <p className="text-muted" style={{ lineHeight: '1.7' }}>
                 By accessing or utilizing the digital platform of {HOSPITAL_METADATA.legalName} ("{HOSPITAL_METADATA.name}"),
-                located at <code>https://eglesorahospital.netlify.app</code>, you acknowledge that you have read, understood, and agree
+                located at <code>https://eaglesora-hospital-frontend.onrender.com</code>, you acknowledge that you have read, understood, and agree
                 to be bound by these Terms and Conditions. If you do not agree, please discontinue use of this website.
               </p>
 

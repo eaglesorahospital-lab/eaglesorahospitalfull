@@ -5,7 +5,7 @@ import authService from '../../services/authService';
 import { HOSPITAL_METADATA } from '../../data/navigation';
 import ThemeToggle from '../../components/common/ThemeToggle';
 import SEO from '../../components/common/SEO';
-import { Activity, ShieldCheck, Mail, Lock, AlertTriangle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Activity, ShieldCheck, Mail, Lock, AlertTriangle, ArrowRight, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { sanitizeRedirectUrl } from '../../utils/urlSecurity';
 
 /**
@@ -20,6 +20,7 @@ export function StaffLoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -147,7 +148,7 @@ export function StaffLoginPage() {
                 <span className="text-muted ps-2"><Lock size={16} /></span>
                 <input
                   id="staff-password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   className="form-control bg-transparent border-0 shadow-none ps-0" style={{ fontSize: "16px", minHeight: "44px" }}
                   placeholder="••••••••••••"
                   value={password}
@@ -156,6 +157,16 @@ export function StaffLoginPage() {
                   autoComplete="current-password"
                   required
                 />
+                <button
+                  type="button"
+                  className="btn btn-link text-muted pe-2 p-0 text-decoration-none d-flex align-items-center justify-content-center"
+                  style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px' }}
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 

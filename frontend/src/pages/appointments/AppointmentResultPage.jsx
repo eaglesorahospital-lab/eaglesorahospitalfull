@@ -5,6 +5,8 @@ import PageHeader from '../../components/common/PageHeader';
 import EmptyState from '../../components/common/EmptyState';
 import SEO from '../../components/common/SEO';
 import appointmentService from '../../services/appointmentService';
+import { HOSPITAL_METADATA } from '../../data/navigation';
+import CopyButton from '../../components/common/CopyButton';
 import {
   CheckCircle2,
   Clock,
@@ -18,6 +20,7 @@ import {
   FileText,
   ShieldCheck,
   ChevronRight,
+  Printer,
 } from 'lucide-react';
 
 /**
@@ -307,12 +310,30 @@ export function AppointmentResultPage() {
 
         {/* Consultation Summary Slip */}
         <div className="neu-raised neu-surface p-4 p-md-5 rounded-4 mb-5">
+          {/* Printable Official Letterhead (Visible only on print) */}
+          <div className="d-none d-print-block border-bottom pb-3 mb-4">
+            <div className="d-flex justify-content-between align-items-start">
+              <div>
+                <h2 className="h4 fw-bold mb-1 text-dark">{HOSPITAL_METADATA.name.toUpperCase()}</h2>
+                <p className="small mb-0 text-muted">
+                  {HOSPITAL_METADATA.address} &bull; Emergency: {HOSPITAL_METADATA.emergencyPhone}
+                </p>
+              </div>
+              <div className="text-end">
+                <div className="fw-bold small text-uppercase">Official Outpatient Consultation Slip</div>
+                <div className="small text-muted">Printed: {new Date().toLocaleDateString()}</div>
+              </div>
+            </div>
+          </div>
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom pb-3 mb-4">
             <div>
               <span className="neu-eyebrow text-uppercase fw-bold text-muted">
                 {isConfirmed ? 'Booking Reference' : isCancelled ? 'Cancelled Reference' : 'Request Reference'}
               </span>
-              <div className="h4 fw-bold text-primary mb-0 font-monospace">{appointment.reference}</div>
+              <div className="d-flex align-items-center gap-2 mt-1">
+                <div className="h4 fw-bold text-primary mb-0 font-monospace">{appointment.reference}</div>
+                <CopyButton text={appointment.reference} label="Copy Ref" showText={true} />
+              </div>
             </div>
             <div>
               <span
@@ -435,10 +456,21 @@ export function AppointmentResultPage() {
 
           {/* Actions */}
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 border-top">
-            <Link to="/my-appointments" className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1">
-              <span>View My Appointments</span>
-              <ChevronRight size={14} />
-            </Link>
+            <div className="d-flex flex-wrap gap-2">
+              <Link to="/my-appointments" className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1">
+                <span>View My Appointments</span>
+                <ChevronRight size={14} />
+              </Link>
+              <button
+                type="button"
+                className="neu-btn neu-btn-outline d-inline-flex align-items-center gap-1"
+                onClick={() => window.print()}
+                title="Print this consultation slip or save as PDF"
+              >
+                <Printer size={15} />
+                <span>Print Official Slip</span>
+              </button>
+            </div>
 
             <div className="d-flex gap-2">
               <Link to="/appointments/book" className="neu-btn neu-btn-outline">
