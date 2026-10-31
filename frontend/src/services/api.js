@@ -22,7 +22,7 @@ export function getApiBaseUrl() {
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
     const host = window.location.hostname;
-    if (host.includes('eaglesora-hospital-frontend.onrender.com')) {
+    if (host.includes('eaglesora-hospital-frontend.onrender.com') || host.includes('netlify.app') || host.includes('eglesorahospital')) {
       return 'https://eaglesorahospitalfull.onrender.com';
     }
   }

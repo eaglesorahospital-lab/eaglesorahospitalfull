@@ -1,3 +1,6 @@
+# API Proxy to Render Backend
+/api/*  https://eaglesorahospitalfull.onrender.com/api/:splat  200
+
 # Single Page Application (SPA) routing fallback
 # Netlify & Cloudflare Pages rule:
 /*    /index.html   200
