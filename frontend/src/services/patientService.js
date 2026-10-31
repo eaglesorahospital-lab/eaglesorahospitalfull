@@ -1,7 +1,7 @@
 /**
  * Hospital Platform — Patient API Service
  * Authoritative integration with Django REST Framework / PostgreSQL (/api/patients/).
- * Supports outpatient demographic retrieval, staff search, and patient profile management.
+ * Supports outpatient demographic retrieval, staff search, profile editing, and safe deactivation.
  */
 
 import authService from './authService';
@@ -144,10 +144,35 @@ export const patientService = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const patchData = {};
+    if (payload.name || payload.fullName) {
+      const parts = (payload.name || payload.fullName).trim().split(' ');
+      patchData.first_name = parts[0] || '';
+      patchData.last_name = parts.slice(1).join(' ') || '';
+    }
+    if (payload.first_name !== undefined) patchData.first_name = payload.first_name;
+    if (payload.last_name !== undefined) patchData.last_name = payload.last_name;
+    if (payload.phone !== undefined || payload.contact !== undefined || payload.mobile !== undefined) {
+      patchData.phone = payload.phone ?? payload.contact ?? payload.mobile;
+    }
+    if (payload.email !== undefined) patchData.email = payload.email;
+    if (payload.date_of_birth !== undefined || payload.dateOfBirth !== undefined) {
+      patchData.date_of_birth = payload.date_of_birth ?? payload.dateOfBirth;
+    }
+    if (payload.gender !== undefined) patchData.gender = payload.gender;
+    if (payload.blood_group !== undefined || payload.bloodGroup !== undefined) {
+      patchData.blood_group = payload.blood_group ?? payload.bloodGroup;
+    }
+    if (payload.emergency_contact !== undefined || payload.emergencyContact !== undefined) {
+      patchData.emergency_contact = payload.emergency_contact ?? payload.emergencyContact;
+    }
+    if (payload.address !== undefined) patchData.address = payload.address;
+    if (payload.is_active !== undefined) patchData.is_active = payload.is_active;
+
     const res = await fetch(`${API_BASE_URL}/api/patients/${id}/`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(patchData),
     });
 
     const data = await res.json();
@@ -156,6 +181,57 @@ export const patientService = {
     }
 
     return normalizePatient(data);
+  },
+
+  /**
+   * Safe outpatient soft-deactivation (preserves relational clinical history)
+   */
+  async deactivatePatient(id) {
+    const token = authService.getAccessToken();
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/api/patients/${id}/`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Failed to deactivate patient.');
+    }
+    return data;
+  },
+
+  /**
+   * Delete patient alias for safe soft-deactivation
+   */
+  async deletePatient(id) {
+    return this.deactivatePatient(id);
+  },
+
+  /**
+   * Toggle patient active/archived state
+   */
+  async togglePatientStatus(id) {
+    const token = authService.getAccessToken();
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/api/patients/${id}/toggle-status/`, {
+      method: 'POST',
+      headers,
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Failed to toggle patient status.');
+    }
+    return data;
   },
 
   /**

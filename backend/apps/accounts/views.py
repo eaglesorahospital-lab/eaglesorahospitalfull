@@ -62,6 +62,50 @@ class PatientProfileViewSet(viewsets.ModelViewSet):
         else:
             serializer.save()
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        Safe outpatient profile deactivation/archival.
+        Never executes a destructive SQL DELETE to preserve relational clinical integrity
+        and foreign key constraints (Appointment.patient on_delete=models.PROTECT).
+        """
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save(update_fields=['is_active', 'updated_at'])
+
+        # Synchronize linked portal account if present
+        if instance.user:
+            instance.user.is_active = False
+            instance.user.save(update_fields=['is_active', 'updated_at'])
+
+        return Response({
+            "message": f"Patient {instance.mrn} successfully archived (deactivated).",
+            "id": instance.id,
+            "mrn": instance.mrn,
+            "is_active": False,
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='toggle-status')
+    def toggle_status(self, request, pk=None):
+        """
+        Explicit toggle between Active and Archived states.
+        Maintains relational integrity and synchronizes portal account state.
+        """
+        instance = self.get_object()
+        instance.is_active = not instance.is_active
+        instance.save(update_fields=['is_active', 'updated_at'])
+
+        if instance.user:
+            instance.user.is_active = instance.is_active
+            instance.user.save(update_fields=['is_active', 'updated_at'])
+
+        status_text = "Active" if instance.is_active else "Archived"
+        return Response({
+            "message": f"Patient {instance.mrn} status set to {status_text}.",
+            "id": instance.id,
+            "mrn": instance.mrn,
+            "is_active": instance.is_active,
+        }, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['get', 'put', 'patch'], url_path='me')
     def me(self, request):
         """

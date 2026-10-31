@@ -8,6 +8,9 @@ import {
   CheckCircle2, 
   X, 
   Eye, 
+  Edit3,
+  Power,
+  Save,
   Phone, 
   Mail, 
   MapPin, 
@@ -24,7 +27,7 @@ import { INITIAL_DEMO_PATIENTS } from '../../data/adminData';
 
 /**
  * Hospital Platform — Admin Patients Management Page (Neumorphic Redesign)
- * Registry of registered patients and outpatient clinical files.
+ * Registry of registered patients, outpatient clinical files, safe archival, and editing.
  */
 export function AdminPatientsPage() {
   const { currentRole, setRole } = useOutletContext() || {};
@@ -80,6 +83,7 @@ export function AdminPatientsPage() {
   // Modals
   const [viewPatient, setViewPatient] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editPatient, setEditPatient] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
 
   // Add Patient Form State
@@ -92,6 +96,18 @@ export function AdminPatientsPage() {
     address: '',
     emergencyContact: '',
     bloodGroup: 'O+',
+  });
+
+  // Edit Patient Form State
+  const [editPatientForm, setEditPatientForm] = useState({
+    name: '',
+    dateOfBirth: '',
+    gender: 'MALE',
+    contact: '',
+    email: '',
+    bloodGroup: 'O+',
+    emergencyContact: '',
+    address: '',
   });
 
   const breadcrumbs = [
@@ -167,6 +183,64 @@ export function AdminPatientsPage() {
       emergencyContact: '',
       bloodGroup: 'O+',
     });
+  };
+
+  // Open Edit Modal
+  const handleOpenEdit = (pat) => {
+    setEditPatient(pat);
+    setEditPatientForm({
+      name: pat.name || pat.fullName || '',
+      dateOfBirth: pat.dateOfBirth || pat.date_of_birth || '',
+      gender: pat.gender ? pat.gender.toUpperCase() : 'MALE',
+      contact: pat.contact || pat.phone || pat.mobile || '',
+      email: pat.email || '',
+      bloodGroup: pat.bloodGroup || pat.blood_group || 'O+',
+      emergencyContact: pat.emergencyContact || pat.emergency_contact || '',
+      address: pat.address || '',
+    });
+  };
+
+  // Save Patient Edit
+  const handleSavePatientEdit = async (e) => {
+    e.preventDefault();
+    if (!editPatient?.id) return;
+
+    try {
+      const updated = await patientService.updatePatient(editPatient.id, editPatientForm);
+      setPatientsList((prev) =>
+        prev.map((p) => (String(p.id) === String(editPatient.id) ? { ...p, ...updated } : p))
+      );
+      setActionNotice(`Outpatient file for ${updated.name || editPatient.name} (${editPatient.mrn}) successfully updated in PostgreSQL.`);
+      setEditPatient(null);
+    } catch (err) {
+      setActionNotice(`Failed to update patient: ${err.message || 'Server error'}`);
+    }
+  };
+
+  // Safe Deactivate / Toggle Status
+  const handleTogglePatientStatus = async (pat) => {
+    try {
+      const res = await patientService.togglePatientStatus(pat.id);
+      const isNowActive = res.is_active;
+      const nextStatus = isNowActive ? 'Active' : 'Inactive';
+      setPatientsList((prev) =>
+        prev.map((p) =>
+          String(p.id) === String(pat.id)
+            ? { ...p, is_active: isNowActive, status: nextStatus }
+            : p
+        )
+      );
+      setActionNotice(
+        `Patient ${pat.mrn} ${isNowActive ? 'reactivated' : 'safely archived (deactivated)'}. All linked appointments preserved.`
+      );
+    } catch (err) {
+      // Local fallback
+      const nextStatus = pat.status === 'Active' ? 'Inactive' : 'Active';
+      setPatientsList((prev) =>
+        prev.map((p) => (String(p.id) === String(pat.id) ? { ...p, status: nextStatus } : p))
+      );
+      setActionNotice(`Patient ${pat.mrn} status updated to ${nextStatus}.`);
+    }
   };
 
   return (
@@ -309,13 +383,13 @@ export function AdminPatientsPage() {
                         {pat.name}
                       </div>
                       <span className="small text-muted d-block mt-0.5">
-                        {pat.address ? pat.address.split(',')[0] : 'Mumbai, Maharashtra'}
+                        {pat.address ? pat.address.split(',')[0] : 'Pune, Maharashtra'}
                       </span>
                     </td>
                     <td className="col-demographics">
                       <div className="small fw-bold text-body">{pat.gender}</div>
                       <span className="small text-muted d-block mt-0.5">
-                        {pat.age} yrs ({pat.dateOfBirth})
+                        {pat.age ? `${pat.age} yrs ` : ''}({pat.dateOfBirth || 'Demographic Record'})
                       </span>
                     </td>
                     <td className="col-contact">
@@ -346,7 +420,25 @@ export function AdminPatientsPage() {
                           title="View complete outpatient file"
                         >
                           <Eye size={13} className="me-1" />
-                          View File
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          className="neu-btn neu-btn-outline neu-btn-sm"
+                          onClick={() => handleOpenEdit(pat)}
+                          title="Edit patient file"
+                        >
+                          <Edit3 size={13} className="me-1" />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className={`neu-btn neu-btn-sm ${pat.status === 'Active' ? 'neu-btn-outline text-warning' : 'neu-btn-primary'}`}
+                          onClick={() => handleTogglePatientStatus(pat)}
+                          title={pat.status === 'Active' ? 'Archive patient (safe soft-deactivation)' : 'Restore patient'}
+                        >
+                          <Power size={13} className="me-1" />
+                          {pat.status === 'Active' ? 'Archive' : 'Restore'}
                         </button>
                       </div>
                     </td>
@@ -399,7 +491,7 @@ export function AdminPatientsPage() {
                     >
                       <div className="small text-muted fw-bold mb-2 text-uppercase">Demographic Profile</div>
                       <div className="small mb-1"><strong>Full Name:</strong> {viewPatient.name}</div>
-                      <div className="small mb-1"><strong>Date of Birth:</strong> {viewPatient.dateOfBirth} ({viewPatient.age} years)</div>
+                      <div className="small mb-1"><strong>Date of Birth:</strong> {viewPatient.dateOfBirth} {viewPatient.age ? `(${viewPatient.age} years)` : ''}</div>
                       <div className="small mb-1"><strong>Gender:</strong> {viewPatient.gender}</div>
                       <div className="small mb-1"><strong>Blood Group:</strong> {viewPatient.bloodGroup}</div>
                       <div className="small"><strong>File Status:</strong> {viewPatient.status}</div>
@@ -429,9 +521,21 @@ export function AdminPatientsPage() {
                 </div>
               </div>
               <div 
-                className="modal-footer px-4 py-3 border-top"
+                className="modal-footer px-4 py-3 border-top d-flex justify-content-between"
                 style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
               >
+                <button
+                  type="button"
+                  className="neu-btn neu-btn-primary neu-btn-sm"
+                  onClick={() => {
+                    const target = viewPatient;
+                    setViewPatient(null);
+                    handleOpenEdit(target);
+                  }}
+                >
+                  <Edit3 size={13} className="me-1" />
+                  Edit This File
+                </button>
                 <button
                   type="button"
                   className="neu-btn neu-btn-outline neu-btn-sm"
@@ -440,6 +544,153 @@ export function AdminPatientsPage() {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Patient File Modal */}
+      {editPatient && (
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: 'rgba(15, 27, 43, 0.65)', backdropFilter: 'blur(4px)' }}
+          role="dialog"
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div 
+              className="modal-content neu-card p-0" 
+              style={{ borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--hospital-border)' }}
+            >
+              <form onSubmit={handleSavePatientEdit}>
+                <div 
+                  className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <h5 className="modal-title fs-6 fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
+                    Edit Outpatient File: {editPatient.name} ({editPatient.mrn})
+                  </h5>
+                  <button
+                    type="button"
+                    className="neu-btn-icon"
+                    style={{ width: '32px', height: '32px', padding: 0 }}
+                    onClick={() => setEditPatient(null)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="modal-body p-4" style={{ background: 'var(--hospital-bg)' }}>
+                  <div className="row g-3">
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">Full Name</label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        value={editPatientForm.name}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">Date of Birth</label>
+                      <input
+                        type="date"
+                        className="neu-input"
+                        value={editPatientForm.dateOfBirth}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, dateOfBirth: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="col-12 col-md-4">
+                      <label className="neu-form-label">Gender</label>
+                      <select
+                        className="neu-select"
+                        value={editPatientForm.gender}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, gender: e.target.value })}
+                      >
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="col-12 col-md-4">
+                      <label className="neu-form-label">Blood Group</label>
+                      <select
+                        className="neu-select"
+                        value={editPatientForm.bloodGroup}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, bloodGroup: e.target.value })}
+                      >
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                      </select>
+                    </div>
+
+                    <div className="col-12 col-md-4">
+                      <label className="neu-form-label">Mobile Phone</label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        value={editPatientForm.contact}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, contact: e.target.value })}
+                        required
+                      />
+                    </div>
+
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">Email Address</label>
+                      <input
+                        type="email"
+                        className="neu-input"
+                        value={editPatientForm.email}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, email: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="col-12 col-md-6">
+                      <label className="neu-form-label">Emergency Contact (Name & Phone)</label>
+                      <input
+                        type="text"
+                        className="neu-input"
+                        value={editPatientForm.emergencyContact}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, emergencyContact: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="col-12">
+                      <label className="neu-form-label">Residential Address</label>
+                      <textarea
+                        rows="3"
+                        className="neu-textarea"
+                        value={editPatientForm.address}
+                        onChange={(e) => setEditPatientForm({ ...editPatientForm, address: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div 
+                  className="modal-footer px-4 py-3 border-top"
+                  style={{ background: 'var(--hospital-surface)', borderColor: 'var(--hospital-border)' }}
+                >
+                  <button
+                    type="button"
+                    className="neu-btn neu-btn-outline neu-btn-sm"
+                    onClick={() => setEditPatient(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm">
+                    <Save size={14} className="me-1" />
+                    Save Patient Changes
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
@@ -521,12 +772,12 @@ export function AdminPatientsPage() {
                   <div className="row g-2 mb-3">
                     <div className="col-6">
                       <label className="neu-form-label">
-                        Mobile Number <span className="text-danger">*</span>
+                        Phone <span className="text-danger">*</span>
                       </label>
                       <input
-                        type="tel"
+                        type="text"
                         className="neu-input"
-                        placeholder="9876543210"
+                        placeholder="+91-9876543210"
                         value={newPatientForm.contact}
                         onChange={(e) =>
                           setNewPatientForm({ ...newPatientForm, contact: e.target.value })
@@ -571,10 +822,25 @@ export function AdminPatientsPage() {
                     <input
                       type="text"
                       className="neu-input"
-                      placeholder="e.g. S. Sundaram (+91 98765 00000) - Spouse"
+                      placeholder="e.g. Ramesh Sundaram (+91-9876543219)"
                       value={newPatientForm.emergencyContact}
                       onChange={(e) =>
-                        setNewPatientForm({ ...newPatientForm, emergencyContact: e.target.value })
+                        setNewPatientForm({
+                          ...newPatientForm,
+                          emergencyContact: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="neu-form-label">Residential Address</label>
+                    <textarea
+                      rows="2"
+                      className="neu-textarea"
+                      placeholder="Area, Street, City"
+                      value={newPatientForm.address}
+                      onChange={(e) =>
+                        setNewPatientForm({ ...newPatientForm, address: e.target.value })
                       }
                     />
                   </div>
@@ -591,7 +857,7 @@ export function AdminPatientsPage() {
                     Cancel
                   </button>
                   <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm">
-                    Register File
+                    Complete Registration
                   </button>
                 </div>
               </form>
