@@ -1,76 +1,90 @@
 /* ==============================================================================
-   EgleSora Hospital Platform — Complete Neumorphic Design System Tokens
-   Soft UI / Neumorphism architecture: Light & Dark Mode
-   Colors, Shadows, Radii, Typography, and Transitions
+   EgleSora Hospital Platform — Complete Professional Design System Tokens
+   Harmonized Light & Dark Mode Healthcare Palette, Surfaces, Shadows, Radii,
+   Typography, Universal Aliases, and Bootstrap Interoperability Tokens
    ============================================================================== */
 
 :root {
   /* ----------------------------------------------------------------------------
-     1. Brand & Core Color Palette (User Specification)
+     1. Brand & Core Healthcare Palette (Light Mode)
      ---------------------------------------------------------------------------- */
-  --hospital-bg: #EEF3F8;             /* Main background */
-  --hospital-surface: #F5F8FC;        /* Primary surface */
-  --hospital-surface-subtle: #E8EEF5; /* Secondary surface */
-  --hospital-surface-card: #F5F8FC;   /* Card surface */
-  --hospital-surface-alt: #E8EEF5;    /* Alt section background */
-  --hospital-surface-input: #F5F8FC;  /* Inset input background */
+  --hospital-bg: #EEF3F8;             /* Clean clinical slate canvas */
+  --hospital-surface: #FFFFFF;        /* Crisp white primary card surface */
+  --hospital-surface-subtle: #F4F8FC; /* Alternating table & soft panel surface */
+  --hospital-surface-card: #FFFFFF;   /* Standard card background */
+  --hospital-surface-alt: #E8EEF5;    /* Alternating section background */
+  --hospital-surface-input: #FFFFFF;  /* Maximum legibility input background */
 
-  --hospital-primary-navy: #16365C;   /* Primary navy */
+  --hospital-primary-navy: #16365C;   /* Authoritative institutional navy */
   --hospital-primary: #16365C;        /* Main brand primary */
-  --hospital-primary-dark: #0F2540;   /* Deep header navy */
-  --hospital-primary-light: #224C7E;  /* Navy accent */
+  --hospital-primary-dark: #0A1C30;   /* Deep header & banner navy */
+  --hospital-primary-light: #204C7C;  /* Interactive hover state */
 
-  --hospital-medical-blue: #2878C8;   /* Medical blue */
-  --hospital-accent-cyan: #35B8C9;    /* Accent cyan */
-  --hospital-secondary: #2878C8;      /* Medical blue */
-  --hospital-secondary-dark: #1E60A3; /* Deeper medical blue */
+  --hospital-medical-blue: #2070C0;   /* Clinical healthcare blue */
+  --hospital-secondary: #2070C0;      /* Secondary brand action */
+  --hospital-secondary-dark: #155794; /* Deep clinical blue */
+  --hospital-accent-cyan: #0E92A0;    /* Dignified clinical cyan/teal */
 
-  /* Typography Colors */
-  --hospital-text: #172B43;           /* Primary text */
-  --hospital-text-muted: #64748B;     /* Secondary text */
-  --hospital-text-light: #8294A8;     /* Supporting subtle text */
-  --hospital-text-inverse: #FFFFFF;   /* Text on navy/dark */
+  /* Typography Colors (WCAG AAA / AA Compliant) */
+  --hospital-text: #172B43;           /* Primary text (>11:1 contrast on white) */
+  --hospital-text-muted: #54677E;     /* Secondary text (>4.8:1 contrast on white) */
+  --hospital-text-light: #7E93A8;     /* Supporting subtle text */
+  --hospital-text-inverse: #FFFFFF;   /* Text on navy/dark elements */
 
   /* Borders & Dividers */
-  --hospital-border: #D8E2ED;         /* Default border */
-  --hospital-border-light: #E8EEF5;   /* Subtle divider */
-  --hospital-border-focus: #2878C8;   /* Focused input border */
+  --hospital-border: #D8E2ED;         /* Default card & divider border */
+  --hospital-border-light: #E8EEF5;   /* Subtle inner divider */
+  --hospital-border-focus: #2070C0;   /* Focused input border */
 
-  /* Semantic Feedback Colors */
+  /* Semantic Feedback & Clinical Status Colors */
   --status-confirmed-bg: #EAF7EE;
-  --status-confirmed-text: #16845B;
+  --status-confirmed-text: #0E6E45;
   --status-confirmed-border: #C6EBD2;
 
   --status-scheduled-bg: #EBF4FC;
-  --status-scheduled-text: #2878C8;
+  --status-scheduled-text: #1860A8;
   --status-scheduled-border: #C8E1FA;
 
   --status-pending-bg: #FEF7EA;
-  --status-pending-text: #B7791F;
+  --status-pending-text: #9A5807;
   --status-pending-border: #FBE6B6;
 
   --status-cancelled-bg: #FDEEEE;
-  --status-cancelled-text: #C43D4B;
+  --status-cancelled-text: #B91C28;
   --status-cancelled-border: #F8CCD0;
 
+  /* Universal Aliases for Seamless Backward & Cross-Component Compatibility */
+  --hospital-blue: var(--hospital-medical-blue);
+  --hospital-cyan: var(--hospital-accent-cyan);
+  --neu-bg: var(--hospital-bg);
+  --neu-surface: var(--hospital-surface);
+  --neu-card-bg: var(--hospital-surface-card);
+  --neu-inset-bg: var(--hospital-surface-input);
+  --neu-border: var(--hospital-border);
+  --neu-shadow-sm: var(--neu-raised-sm);
+  --neu-success: var(--status-confirmed-text);
+  --neu-warning: var(--status-pending-text);
+  --neu-error: var(--status-cancelled-text);
+  --neu-info: var(--status-scheduled-text);
+
   /* ----------------------------------------------------------------------------
-     2. Neumorphic Elevation & Shadow Tokens (Light Mode)
+     2. Elevation & Shadow Tokens (Light Mode)
      ---------------------------------------------------------------------------- */
-  /* Raised Surfaces (Soft extrusion from light background) */
-  --neu-raised: 0 6px 16px rgba(31, 55, 82, 0.08), -5px -5px 14px rgba(255, 255, 255, 0.85);
-  --neu-raised-sm: 0 3px 8px rgba(31, 55, 82, 0.06), -3px -3px 8px rgba(255, 255, 255, 0.85);
-  --neu-raised-card: 6px 6px 16px rgba(31, 55, 82, 0.08), -6px -6px 16px rgba(255, 255, 255, 0.85);
-  --neu-raised-hover: 8px 12px 24px rgba(31, 55, 82, 0.12), -8px -8px 20px rgba(255, 255, 255, 0.90);
-  --neu-raised-float: 10px 16px 30px rgba(31, 55, 82, 0.15), -10px -10px 24px rgba(255, 255, 255, 0.95);
+  /* Soft Medical Shadows */
+  --neu-raised: 0 4px 16px rgba(22, 54, 92, 0.07), 0 1px 3px rgba(22, 54, 92, 0.04);
+  --neu-raised-sm: 0 2px 8px rgba(22, 54, 92, 0.06);
+  --neu-raised-card: 0 6px 20px rgba(22, 54, 92, 0.08), 0 1px 3px rgba(22, 54, 92, 0.04);
+  --neu-raised-hover: 0 10px 28px rgba(22, 54, 92, 0.12), 0 2px 6px rgba(22, 54, 92, 0.06);
+  --neu-raised-float: 0 16px 36px rgba(22, 54, 92, 0.15), 0 4px 10px rgba(22, 54, 92, 0.08);
 
-  /* Inset Surfaces (Soft deboss for inputs, search, pressed buttons) */
-  --neu-inset: inset 3px 3px 7px rgba(31, 55, 82, 0.07), inset -3px -3px 7px rgba(255, 255, 255, 0.85);
-  --neu-inset-sm: inset 2px 2px 5px rgba(31, 55, 82, 0.06), inset -2px -2px 5px rgba(255, 255, 255, 0.85);
-  --neu-pressed: inset 2px 2px 6px rgba(31, 55, 82, 0.14), inset -2px -2px 6px rgba(255, 255, 255, 0.70);
+  /* Inset Surfaces (Inputs, Search Bars, Table Cells) */
+  --neu-inset: inset 0 2px 4px rgba(22, 54, 92, 0.06);
+  --neu-inset-sm: inset 0 1px 3px rgba(22, 54, 92, 0.05);
+  --neu-pressed: inset 0 2px 6px rgba(22, 54, 92, 0.12);
 
-  /* Convex / Flat button styles */
-  --neu-btn-primary: 0 4px 12px rgba(22, 54, 92, 0.25), -3px -3px 8px rgba(255, 255, 255, 0.50);
-  --neu-btn-blue: 0 4px 12px rgba(40, 120, 200, 0.25), -3px -3px 8px rgba(255, 255, 255, 0.50);
+  /* Button Elevation Tokens */
+  --neu-btn-primary: 0 4px 12px rgba(22, 54, 92, 0.22);
+  --neu-btn-blue: 0 4px 12px rgba(32, 112, 192, 0.25);
 
   /* ----------------------------------------------------------------------------
      3. Geometry, Radii & Typography Stack
@@ -78,21 +92,21 @@
   --font-stack: "Inter", "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
   --radius-pill: 9999px;
 
-  /* Spacing Scale (Consistent Hierarchy) */
-  --space-1: 0.25rem;   /* 4px - tiny icon/text gaps only */
+  /* Spacing Scale */
+  --space-1: 0.25rem;   /* 4px - tiny icon/text gaps */
   --space-2: 0.5rem;    /* 8px - compact internal spacing */
   --space-3: 0.75rem;   /* 12px - related inline controls */
   --space-4: 1rem;      /* 16px - standard component spacing */
-  --space-5: 1.25rem;   /* 20px - card content spacing compact */
-  --space-6: 1.5rem;    /* 24px - standard card content spacing & major section gap */
-  --space-7: 1.75rem;   /* 28px - generous component separation */
+  --space-5: 1.25rem;   /* 20px - card content compact */
+  --space-6: 1.5rem;    /* 24px - standard card content spacing */
+  --space-7: 1.75rem;   /* 28px - generous separation */
   --space-8: 2rem;      /* 32px - major content groups separation */
   --space-10: 2.5rem;   /* 40px - major page sections */
   --space-12: 3rem;     /* 48px - large sections */
@@ -102,9 +116,9 @@
   --control-height: 44px;
   --control-height-sm: 36px;
   --control-height-lg: 50px;
-  --table-cell-padding-y: 1.1rem;
-  --table-cell-padding-x: 1.25rem;
-  --page-padding-desktop: 1.5rem; /* 24px */
+  --table-cell-padding-y: 0.95rem;
+  --table-cell-padding-x: 1.15rem;
+  --page-padding-desktop: 1.5rem;  /* 24px */
   --page-padding-tablet: 1.25rem;  /* 20px */
   --page-padding-mobile: 1rem;     /* 16px */
 
@@ -112,186 +126,244 @@
   --transition-normal: 200ms ease;
   --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  --container-max-width: 1200px;
+  --container-max-width: 1240px;
 
   /* ----------------------------------------------------------------------------
-     3.1. Premium Medical Glassmorphism Tokens (Light Mode Foundation - Phase 1)
+     3.1. Premium Medical Glassmorphism Tokens (Light Mode)
      ---------------------------------------------------------------------------- */
-  /* Background Canvas & Ambient Lighting */
   --glass-bg-canvas: #EEF3F8;
-  --glass-bg-gradient: radial-gradient(at 0% 0%, rgba(40, 120, 200, 0.08) 0px, transparent 55%),
-                       radial-gradient(at 100% 100%, rgba(53, 184, 201, 0.07) 0px, transparent 55%),
+  --glass-bg-gradient: radial-gradient(at 0% 0%, rgba(32, 112, 192, 0.07) 0px, transparent 55%),
+                       radial-gradient(at 100% 100%, rgba(14, 146, 160, 0.06) 0px, transparent 55%),
                        #EEF3F8;
 
-  /* Translucent Glass Surfaces */
-  --glass-surface-card: rgba(255, 255, 255, 0.72);
-  --glass-surface-card-hover: rgba(255, 255, 255, 0.86);
-  --glass-surface-subtle: rgba(240, 246, 253, 0.58);
-  --glass-surface-nav: rgba(255, 255, 255, 0.82);
-  --glass-surface-modal: rgba(255, 255, 255, 0.94);
-  --glass-surface-input: rgba(255, 255, 255, 0.65);
-  --glass-surface-input-focus: rgba(255, 255, 255, 0.95);
-  --glass-surface-pill: rgba(255, 255, 255, 0.55);
+  --glass-surface-card: rgba(255, 255, 255, 0.88);
+  --glass-surface-card-hover: rgba(255, 255, 255, 0.96);
+  --glass-surface-subtle: rgba(244, 248, 252, 0.80);
+  --glass-surface-nav: rgba(255, 255, 255, 0.92);
+  --glass-surface-modal: rgba(255, 255, 255, 0.98);
+  --glass-surface-input: #FFFFFF;
+  --glass-surface-input-focus: #FFFFFF;
+  --glass-surface-pill: rgba(255, 255, 255, 0.85);
 
-  /* Glass Borders & Subtle Edge Highlights */
-  --glass-border: 1px solid rgba(255, 255, 255, 0.65);
-  --glass-border-subtle: 1px solid rgba(216, 228, 240, 0.60);
+  --glass-border: 1px solid rgba(216, 228, 240, 0.85);
+  --glass-border-subtle: 1px solid rgba(229, 238, 246, 0.80);
   --glass-border-focus: 1px solid var(--hospital-medical-blue);
-  --glass-border-accent: 1px solid rgba(40, 120, 200, 0.35);
+  --glass-border-accent: 1px solid rgba(32, 112, 192, 0.35);
 
-  /* Glass Elevation & Ambient Soft Shadows */
   --glass-shadow-sm: 0 4px 14px rgba(22, 54, 92, 0.05);
   --glass-shadow-md: 0 8px 24px rgba(22, 54, 92, 0.07);
   --glass-shadow-lg: 0 16px 36px rgba(22, 54, 92, 0.10);
   --glass-shadow-hover: 0 12px 30px rgba(22, 54, 92, 0.12);
-  --glass-shadow-glow: 0 0 20px rgba(53, 184, 201, 0.25);
+  --glass-shadow-glow: 0 0 20px rgba(14, 146, 160, 0.20);
 
-  /* Controlled Blur Standards (GPU Optimized) */
   --glass-blur-sm: blur(6px);
   --glass-blur-md: blur(12px);
   --glass-blur-lg: blur(16px);
 
-  /* Mobile-First Interactive Touch Standards */
   --touch-target-min: 44px;
+
+  /* ----------------------------------------------------------------------------
+     3.2. Bootstrap Theme Tokens Interoperability (Light Mode)
+     ---------------------------------------------------------------------------- */
+  --bs-primary: #16365C;
+  --bs-primary-rgb: 22, 54, 92;
+  --bs-secondary: #2070C0;
+  --bs-secondary-rgb: 32, 112, 192;
+  --bs-success: #0E6E45;
+  --bs-success-rgb: 14, 110, 69;
+  --bs-info: #1860A8;
+  --bs-info-rgb: 24, 96, 168;
+  --bs-warning: #9A5807;
+  --bs-warning-rgb: 154, 88, 7;
+  --bs-danger: #B91C28;
+  --bs-danger-rgb: 185, 28, 40;
+  --bs-body-color: #172B43;
+  --bs-body-color-rgb: 23, 43, 67;
+  --bs-body-bg: #EEF3F8;
+  --bs-body-bg-rgb: 238, 243, 248;
+  --bs-emphasis-color: #0A1C30;
+  --bs-emphasis-color-rgb: 10, 28, 48;
+  --bs-secondary-color: #54677E;
+  --bs-secondary-color-rgb: 84, 103, 126;
+  --bs-secondary-bg: #F4F8FC;
+  --bs-tertiary-color: #7E93A8;
+  --bs-tertiary-color-rgb: 126, 147, 168;
+  --bs-tertiary-bg: #F4F8FC;
+  --bs-heading-color: #16365C;
+  --bs-link-color: #2070C0;
+  --bs-link-hover-color: #16365C;
+  --bs-border-color: #D8E2ED;
+  --bs-border-color-translucent: rgba(22, 54, 92, 0.12);
+  --bs-card-bg: #FFFFFF;
+  --bs-card-border-color: #D8E2ED;
+  --bs-card-color: #172B43;
+  --bs-modal-bg: #FFFFFF;
+  --bs-modal-border-color: #D8E2ED;
+  --bs-modal-color: #172B43;
+  --bs-dropdown-bg: #FFFFFF;
+  --bs-dropdown-color: #172B43;
+  --bs-dropdown-link-color: #172B43;
+  --bs-dropdown-link-hover-color: #16365C;
+  --bs-dropdown-link-hover-bg: #EEF3F8;
+  --bs-dropdown-border-color: #D8E2ED;
 }
 
 /* ------------------------------------------------------------------------------
-   4. Dark Mode Neumorphic Tokens
+   4. Dark Mode Palette & Tokens (Authoritative Healthcare Elevation)
    ------------------------------------------------------------------------------ */
 [data-theme="dark"],
 .theme-dark {
-  --hospital-bg: #0F1D2E;
-  --hospital-surface: #15273D;
-  --hospital-surface-subtle: #1B324F;
-  --hospital-surface-card: #15273D;
-  --hospital-surface-alt: #182C44;
-  --hospital-surface-input: #112033;
+  --hospital-bg: #0A1626;             /* Deep clinical navy canvas */
+  --hospital-surface: #12243A;        /* Elevated dark card surface */
+  --hospital-surface-subtle: #172C46; /* Alternate surface & table row */
+  --hospital-surface-card: #12243A;   /* Standard card background */
+  --hospital-surface-alt: #15273F;    /* Alternate section */
+  --hospital-surface-input: #0E1D30;  /* Inset input background */
 
-  --hospital-primary-navy: #35B8C9;
-  --hospital-primary: #3884D8;
-  --hospital-primary-dark: #0A1420;
-  --hospital-primary-light: #5AA1ED;
+  --hospital-primary-navy: #3884D8;   /* High-contrast clinical blue */
+  --hospital-primary: #3884D8;        /* Main brand primary on dark */
+  --hospital-primary-dark: #07101C;   /* Deepest dark header */
+  --hospital-primary-light: #5AA1ED;  /* Interactive hover blue */
 
-  --hospital-medical-blue: #3A8EE5;
-  --hospital-accent-cyan: #35B8C9;
-  --hospital-secondary: #35B8C9;
-  --hospital-secondary-dark: #229AA9;
+  --hospital-medical-blue: #3A92E8;   /* Clinical accent blue */
+  --hospital-secondary: #35B8C9;      /* Luminous secondary cyan */
+  --hospital-secondary-dark: #229AA9; /* Dark cyan accent */
+  --hospital-accent-cyan: #35B8C9;    /* Luminous cyan indicator */
 
-  --hospital-text: #E8F0F8;
-  --hospital-text-muted: #95A9C0;
-  --hospital-text-light: #6A829E;
-  --hospital-text-inverse: #0F1D2E;
+  --hospital-text: #EAF1F8;           /* High-contrast readable text */
+  --hospital-text-muted: #97ABC0;     /* Muted secondary text */
+  --hospital-text-light: #6E849E;     /* Subtle tertiary text */
+  --hospital-text-inverse: #0A1626;   /* Inverted text */
 
-  --hospital-border: #233B57;
-  --hospital-border-light: #1A314B;
-  --hospital-border-focus: #3A8EE5;
+  --hospital-border: #1E3A5B;         /* Crisp boundary border */
+  --hospital-border-light: #162E4A;   /* Subtle divider */
+  --hospital-border-focus: #3884D8;   /* Focus ring border */
 
   /* Semantic Feedback Colors (Dark Mode) */
-  --status-confirmed-bg: #0E2E20;
+  --status-confirmed-bg: #0C2B1D;
   --status-confirmed-text: #34D399;
-  --status-confirmed-border: #166534;
+  --status-confirmed-border: #155E38;
 
-  --status-scheduled-bg: #102B47;
+  --status-scheduled-bg: #0E2744;
   --status-scheduled-text: #60A5FA;
-  --status-scheduled-border: #1E40AF;
+  --status-scheduled-border: #1D4ED8;
 
-  --status-pending-bg: #32250F;
+  --status-pending-bg: #33230C;
   --status-pending-text: #FBBF24;
-  --status-pending-border: #92400E;
+  --status-pending-border: #854D0E;
 
-  --status-cancelled-bg: #35171B;
+  --status-cancelled-bg: #341418;
   --status-cancelled-text: #F87171;
   --status-cancelled-border: #991B1B;
 
-  /* Dark Neumorphic Shadows */
-  --neu-raised: 5px 5px 14px rgba(6, 12, 20, 0.65), -4px -4px 12px rgba(34, 62, 93, 0.45);
-  --neu-raised-sm: 3px 3px 8px rgba(6, 12, 20, 0.55), -2px -2px 8px rgba(34, 62, 93, 0.35);
-  --neu-raised-card: 6px 8px 18px rgba(6, 12, 20, 0.70), -6px -6px 16px rgba(34, 62, 93, 0.45);
-  --neu-raised-hover: 8px 14px 24px rgba(6, 12, 20, 0.80), -7px -7px 20px rgba(45, 78, 115, 0.50);
-  --neu-raised-float: 10px 18px 32px rgba(6, 12, 20, 0.90), -8px -8px 24px rgba(45, 78, 115, 0.55);
+  /* Universal Aliases (Dark Mode) */
+  --hospital-blue: var(--hospital-medical-blue);
+  --hospital-cyan: var(--hospital-accent-cyan);
+  --neu-bg: var(--hospital-bg);
+  --neu-surface: var(--hospital-surface);
+  --neu-card-bg: var(--hospital-surface-card);
+  --neu-inset-bg: var(--hospital-surface-input);
+  --neu-border: var(--hospital-border);
+  --neu-shadow-sm: var(--neu-raised-sm);
+  --neu-success: var(--status-confirmed-text);
+  --neu-warning: var(--status-pending-text);
+  --neu-error: var(--status-cancelled-text);
+  --neu-info: var(--status-scheduled-text);
 
-  --neu-inset: inset 3px 3px 7px rgba(6, 12, 20, 0.75), inset -3px -3px 7px rgba(34, 62, 93, 0.35);
-  --neu-inset-sm: inset 2px 2px 5px rgba(6, 12, 20, 0.65), inset -2px -2px 5px rgba(34, 62, 93, 0.30);
-  --neu-pressed: inset 2px 2px 6px rgba(6, 12, 20, 0.85), inset -2px -2px 6px rgba(34, 62, 93, 0.40);
+  /* Dark Elevation Shadows */
+  --neu-raised: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --neu-raised-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --neu-raised-card: 0 8px 24px rgba(0, 0, 0, 0.50);
+  --neu-raised-hover: 0 12px 32px rgba(0, 0, 0, 0.60);
+  --neu-raised-float: 0 18px 40px rgba(0, 0, 0, 0.70);
 
-  --neu-btn-primary: 0 4px 14px rgba(0, 0, 0, 0.45), -2px -2px 6px rgba(56, 132, 216, 0.25);
-  --neu-btn-blue: 0 4px 14px rgba(0, 0, 0, 0.45), -2px -2px 6px rgba(58, 142, 229, 0.25);
+  --neu-inset: inset 0 2px 5px rgba(0, 0, 0, 0.55);
+  --neu-inset-sm: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+  --neu-pressed: inset 0 2px 6px rgba(0, 0, 0, 0.65);
 
-  /* ----------------------------------------------------------------------------
-     4.1. Dark Mode Glassmorphism Tokens (Phase 1 & Dedicated Dark Mode Elevation)
-     ---------------------------------------------------------------------------- */
-  --glass-bg-canvas: #091422;
-  --glass-bg-gradient: radial-gradient(at 0% 0%, rgba(40, 120, 200, 0.16) 0px, transparent 60%),
-                       radial-gradient(at 100% 100%, rgba(53, 184, 201, 0.12) 0px, transparent 60%),
-                       #091422;
+  --neu-btn-primary: 0 4px 14px rgba(0, 0, 0, 0.50);
+  --neu-btn-blue: 0 4px 14px rgba(0, 0, 0, 0.50);
 
-  --glass-surface-card: rgba(18, 34, 54, 0.78);
-  --glass-surface-card-hover: rgba(26, 48, 76, 0.90);
-  --glass-surface-subtle: rgba(14, 28, 46, 0.70);
-  --glass-surface-nav: rgba(10, 20, 32, 0.92);
-  --glass-surface-modal: rgba(15, 30, 48, 0.96);
-  --glass-surface-input: rgba(14, 28, 46, 0.85);
-  --glass-surface-input-focus: rgba(20, 42, 68, 0.98);
-  --glass-surface-pill: rgba(25, 48, 77, 0.75);
+  /* Dark Mode Glassmorphism Surfaces */
+  --glass-bg-canvas: #07101C;
+  --glass-bg-gradient: radial-gradient(at 0% 0%, rgba(56, 132, 216, 0.14) 0px, transparent 60%),
+                       radial-gradient(at 100% 100%, rgba(53, 184, 201, 0.10) 0px, transparent 60%),
+                       #07101C;
 
-  --glass-border: 1px solid rgba(255, 255, 255, 0.14);
+  --glass-surface-card: rgba(18, 36, 58, 0.88);
+  --glass-surface-card-hover: rgba(24, 46, 74, 0.95);
+  --glass-surface-subtle: rgba(15, 30, 48, 0.78);
+  --glass-surface-nav: rgba(10, 22, 38, 0.94);
+  --glass-surface-modal: rgba(16, 32, 52, 0.98);
+  --glass-surface-input: #0E1D30;
+  --glass-surface-input-focus: #142842;
+  --glass-surface-pill: rgba(24, 46, 74, 0.85);
+
+  --glass-border: 1px solid rgba(255, 255, 255, 0.12);
   --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.08);
   --glass-border-focus: 1px solid #3884D8;
   --glass-border-accent: 1px solid rgba(53, 184, 201, 0.40);
 
-  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.40);
-  --glass-shadow-md: 0 8px 30px rgba(0, 0, 0, 0.50);
-  --glass-shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.65);
-  --glass-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.55);
-  --glass-shadow-glow: 0 0 28px rgba(53, 184, 201, 0.35);
+  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --glass-shadow-md: 0 8px 30px rgba(0, 0, 0, 0.55);
+  --glass-shadow-lg: 0 16px 44px rgba(0, 0, 0, 0.70);
+  --glass-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.60);
+  --glass-shadow-glow: 0 0 28px rgba(53, 184, 201, 0.30);
 
   /* Bootstrap Theme Tokens Interoperability (Dark Mode) */
-  --bs-body-color: #E8F0F8;
-  --bs-body-color-rgb: 232, 240, 248;
-  --bs-body-bg: #091422;
-  --bs-body-bg-rgb: 9, 20, 34;
+  --bs-primary: #3884D8;
+  --bs-primary-rgb: 56, 132, 216;
+  --bs-secondary: #35B8C9;
+  --bs-secondary-rgb: 53, 184, 201;
+  --bs-success: #34D399;
+  --bs-success-rgb: 52, 211, 153;
+  --bs-info: #60A5FA;
+  --bs-info-rgb: 96, 165, 250;
+  --bs-warning: #FBBF24;
+  --bs-warning-rgb: 251, 191, 36;
+  --bs-danger: #F87171;
+  --bs-danger-rgb: 248, 113, 113;
+  --bs-body-color: #EAF1F8;
+  --bs-body-color-rgb: 234, 241, 248;
+  --bs-body-bg: #0A1626;
+  --bs-body-bg-rgb: 10, 22, 38;
   --bs-emphasis-color: #FFFFFF;
   --bs-emphasis-color-rgb: 255, 255, 255;
-  --bs-secondary-color: #95A9C0;
-  --bs-secondary-color-rgb: 149, 169, 192;
-  --bs-secondary-bg: #15273D;
-  --bs-tertiary-color: #6A829E;
-  --bs-tertiary-color-rgb: 106, 130, 158;
-  --bs-tertiary-bg: #112033;
+  --bs-secondary-color: #97ABC0;
+  --bs-secondary-color-rgb: 151, 171, 192;
+  --bs-secondary-bg: #12243A;
+  --bs-tertiary-color: #6E849E;
+  --bs-tertiary-color-rgb: 110, 132, 158;
+  --bs-tertiary-bg: #0E1D30;
   --bs-heading-color: #F1F6FC;
   --bs-link-color: #3884D8;
   --bs-link-hover-color: #5AA1ED;
   --bs-border-color: rgba(255, 255, 255, 0.12);
   --bs-border-color-translucent: rgba(255, 255, 255, 0.08);
-  --bs-card-bg: rgba(18, 34, 54, 0.78);
+  --bs-card-bg: #12243A;
   --bs-card-border-color: rgba(255, 255, 255, 0.12);
-  --bs-card-color: #E8F0F8;
-  --bs-modal-bg: rgba(15, 30, 48, 0.96);
+  --bs-card-color: #EAF1F8;
+  --bs-modal-bg: #12243A;
   --bs-modal-border-color: rgba(255, 255, 255, 0.14);
-  --bs-modal-color: #E8F0F8;
-  --bs-dropdown-bg: #112033;
-  --bs-dropdown-color: #E8F0F8;
-  --bs-dropdown-link-color: #E8F0F8;
+  --bs-modal-color: #EAF1F8;
+  --bs-dropdown-bg: #12243A;
+  --bs-dropdown-color: #EAF1F8;
+  --bs-dropdown-link-color: #EAF1F8;
   --bs-dropdown-link-hover-color: #FFFFFF;
-  --bs-dropdown-link-hover-bg: #1B324F;
+  --bs-dropdown-link-hover-bg: #1A324E;
   --bs-dropdown-border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* ------------------------------------------------------------------------------
-   5. Mobile GPU & Performance Optimization Media Queries (Phase 1)
+   5. Mobile GPU & Performance Optimization Media Queries
    ------------------------------------------------------------------------------ */
 @media (max-width: 767.98px) {
   :root {
-    /* Controlled Blur Reduction on Handheld Devices to Prevent Frame Drops */
     --glass-blur-sm: blur(4px);
     --glass-blur-md: blur(8px);
     --glass-blur-lg: blur(10px);
-
-    /* Ambient Shadow Softening for Mobile GPU */
     --glass-shadow-md: 0 4px 16px rgba(22, 54, 92, 0.06);
     --glass-shadow-lg: 0 8px 24px rgba(22, 54, 92, 0.08);
-
-    /* Minimum touch target enforcement */
     --control-height: 44px;
     --control-height-sm: 40px;
   }

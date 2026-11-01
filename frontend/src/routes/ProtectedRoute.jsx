@@ -52,7 +52,7 @@ export function ProtectedRoute({ allowedRoles = ['SUPER_ADMIN', 'HOSPITAL_ADMIN'
 
     return (
       <div className="container py-5 text-center" style={{ maxWidth: '600px' }}>
-        <div className="card shadow-sm border-danger p-4 rounded-4" style={{ backgroundColor: 'var(--neu-bg, #fff)' }}>
+        <div className="card shadow-sm border-danger p-4 rounded-4" style={{ backgroundColor: 'var(--hospital-surface)', color: 'var(--hospital-text)', borderColor: 'var(--status-cancelled-border)' }}>
           <h2 className="h4 fw-bold text-danger mb-2">403 — Unauthorized Role Access</h2>
           <p className="text-muted small mb-4">
             Your authenticated account role (<strong>{currentUser?.role || 'Unknown'}</strong>) does not have

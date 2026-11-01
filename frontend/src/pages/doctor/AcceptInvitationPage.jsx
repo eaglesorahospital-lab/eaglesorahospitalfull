@@ -154,7 +154,7 @@ export function AcceptInvitationPage() {
         </div>
 
         {/* Card */}
-        <div className="neu-raised neu-surface rounded-4 p-4 p-sm-5">
+        <div className="neu-raised neu-surface rounded-4 p-3 p-sm-4 p-md-5">
           {/* State 1: Validating Token */}
           {isValidating && (
             <div className="text-center py-5" role="status">
@@ -191,7 +191,7 @@ export function AcceptInvitationPage() {
                 <div>Please contact Hospital Medical Staff Administration or your department director to request a fresh onboarding invitation link.</div>
               </div>
 
-              <div className="d-flex gap-2 justify-content-center">
+              <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center">
                 <Link to="/staff/login" className="btn neu-btn-primary px-4 py-2">
                   Staff Login Portal
                 </Link>

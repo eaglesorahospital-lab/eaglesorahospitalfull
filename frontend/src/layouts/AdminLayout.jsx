@@ -187,8 +187,8 @@ export function AdminLayout() {
                 </button>
                 <button
                   type="button"
-                  className="glass-btn glass-btn-primary"
-                  style={{ minHeight: '44px', background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)' }}
+                  className="glass-btn glass-btn-danger"
+                  style={{ minHeight: '44px' }}
                   onClick={handleConfirmedLogout}
                 >
                   Sign Out Now

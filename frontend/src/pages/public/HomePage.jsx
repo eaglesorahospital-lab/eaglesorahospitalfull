@@ -499,17 +499,13 @@ export function HomePage() {
                 </p>
               </div>
               <div className="col-12 col-lg-4 d-flex flex-column flex-sm-row flex-lg-column gap-2 justify-content-lg-end">
-                <Link to="/appointments/book" className="w-100">
-                  <button className="neu-btn neu-btn-primary w-100 justify-content-center py-2 d-flex align-items-center gap-2">
-                    <Calendar size={18} />
-                    <span>{t('nav.bookConsultation')}</span>
-                  </button>
+                <Link to="/appointments/book" className="neu-btn neu-btn-primary w-100 justify-content-center py-2 d-flex align-items-center gap-2 text-decoration-none">
+                  <Calendar size={18} />
+                  <span>{t('nav.bookConsultation')}</span>
                 </Link>
-                <Link to="/doctors" className="w-100">
-                  <button className="neu-btn neu-btn-outline w-100 justify-content-center py-2 d-flex align-items-center gap-2">
-                    <Users size={18} />
-                    <span>{t('nav.doctors')}</span>
-                  </button>
+                <Link to="/doctors" className="neu-btn neu-btn-outline w-100 justify-content-center py-2 d-flex align-items-center gap-2 text-decoration-none">
+                  <Users size={18} />
+                  <span>{t('nav.doctors')}</span>
                 </Link>
               </div>
             </div>

@@ -191,7 +191,7 @@ export function DoctorLayout() {
             ) : (
               <div
                 className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
-                style={{ width: '40px', height: '40px', background: '#0D47A1' }}
+                style={{ width: '40px', height: '40px', background: 'var(--hospital-medical-blue)' }}
               >
                 {(doctorProfile?.name || currentUser?.name || 'DR')
                   .split(' ')
@@ -363,8 +363,8 @@ export function DoctorLayout() {
                 </button>
                 <button
                   type="button"
-                  className="glass-btn glass-btn-primary w-50"
-                  style={{ minHeight: '44px', background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)' }}
+                  className="glass-btn glass-btn-danger w-50"
+                  style={{ minHeight: '44px' }}
                   onClick={handleConfirmedLogout}
                 >
                   Sign Out

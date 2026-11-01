@@ -4367,3 +4367,554 @@ select.form-select option {
     page-break-after: always !important;
   }
 }
+
+
+/* ==============================================================================
+   26. MASTER DESIGN SYSTEM ELEVATION & COMPONENT HARMONIZATION (PHASES 2-8)
+   Universal unification of Buttons, Forms, Tables, Modals, Cards, Typography,
+   and Responsive Viewports across Light & Dark Modes
+   ============================================================================== */
+
+/* ------------------------------------------------------------------------------
+   26.1. Universal Button & Interactive Standards (Phase 3)
+   ------------------------------------------------------------------------------ */
+.hospital-btn,
+.neu-btn,
+.glass-btn,
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-stack);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  min-height: var(--control-height, 44px);
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+  transition: all var(--transition-normal);
+  outline: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.hospital-btn svg,
+.neu-btn svg,
+.glass-btn svg,
+.btn svg,
+svg.lucide {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.hospital-btn:active:not(:disabled),
+.neu-btn:active:not(:disabled),
+.glass-btn:active:not(:disabled),
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.hospital-btn:focus-visible,
+.neu-btn:focus-visible,
+.glass-btn:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--hospital-border-focus);
+  outline-offset: 2px;
+}
+
+.hospital-btn:disabled,
+.hospital-btn[aria-disabled="true"],
+.neu-btn:disabled,
+.glass-btn:disabled,
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Primary Button Hierarchy */
+.hospital-btn-primary,
+.neu-btn-primary,
+.glass-btn-primary,
+.btn-primary {
+  background: linear-gradient(135deg, var(--hospital-primary-navy) 0%, var(--hospital-medical-blue) 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 14px rgba(32, 112, 192, 0.28) !important;
+}
+
+.hospital-btn-primary:hover:not(:disabled),
+.neu-btn-primary:hover:not(:disabled),
+.glass-btn-primary:hover:not(:disabled),
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--hospital-primary-light) 0%, var(--hospital-secondary-dark) 100%) !important;
+  box-shadow: 0 6px 20px rgba(32, 112, 192, 0.38) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+/* Secondary / Soft Button Hierarchy */
+.hospital-btn-secondary,
+.neu-btn-secondary,
+.glass-btn-secondary,
+.btn-secondary,
+.btn-light {
+  background-color: var(--hospital-surface) !important;
+  color: var(--hospital-text) !important;
+  border: 1px solid var(--hospital-border) !important;
+  box-shadow: var(--neu-raised-sm) !important;
+}
+
+.hospital-btn-secondary:hover:not(:disabled),
+.neu-btn-secondary:hover:not(:disabled),
+.glass-btn-secondary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-light:hover:not(:disabled) {
+  background-color: var(--hospital-surface-subtle) !important;
+  border-color: rgba(32, 112, 192, 0.40) !important;
+  color: var(--hospital-medical-blue) !important;
+  box-shadow: var(--neu-raised) !important;
+  transform: translateY(-1px);
+}
+
+/* Outline Button Hierarchy */
+.hospital-btn-outline,
+.neu-btn-outline,
+.glass-btn-outline,
+.btn-outline-primary {
+  background-color: transparent !important;
+  color: var(--hospital-medical-blue) !important;
+  border: 1.5px solid var(--hospital-medical-blue) !important;
+  box-shadow: none !important;
+}
+
+.hospital-btn-outline:hover:not(:disabled),
+.neu-btn-outline:hover:not(:disabled),
+.glass-btn-outline:hover:not(:disabled),
+.btn-outline-primary:hover:not(:disabled) {
+  background-color: var(--hospital-medical-blue) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+/* Danger Button Hierarchy */
+.hospital-btn-danger,
+.neu-btn-danger,
+.glass-btn-danger,
+.btn-danger {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28) !important;
+}
+
+.hospital-btn-danger:hover:not(:disabled),
+.neu-btn-danger:hover:not(:disabled),
+.glass-btn-danger:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.38) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+.btn-outline-danger {
+  background-color: transparent !important;
+  color: var(--status-cancelled-text) !important;
+  border: 1.5px solid var(--status-cancelled-text) !important;
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  background-color: var(--status-cancelled-text) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+/* Sizing Modifiers */
+.hospital-btn-sm,
+.neu-btn-sm,
+.glass-btn-sm,
+.btn-sm {
+  min-height: var(--control-height-sm, 36px);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-sm, 10px);
+}
+
+.hospital-btn-lg,
+.neu-btn-lg,
+.glass-btn-lg,
+.btn-lg {
+  min-height: var(--control-height-lg, 50px);
+  padding: 0.75rem 1.65rem;
+  font-size: 1.05rem;
+  border-radius: var(--radius-md, 14px);
+}
+
+/* Circular Icon Buttons */
+.neu-btn-icon,
+.glass-btn-icon {
+  width: var(--touch-target-min, 44px);
+  height: var(--touch-target-min, 44px);
+  min-width: var(--touch-target-min, 44px);
+  min-height: var(--touch-target-min, 44px);
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  box-shadow: var(--neu-raised-sm);
+  color: var(--hospital-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.neu-btn-icon:hover,
+.glass-btn-icon:hover {
+  background-color: var(--hospital-surface-subtle);
+  border-color: rgba(32, 112, 192, 0.40);
+  color: var(--hospital-medical-blue);
+  box-shadow: var(--neu-raised);
+  transform: translateY(-1px);
+}
+
+/* ------------------------------------------------------------------------------
+   26.2. Universal Form Controls & Inputs (Phase 6)
+   ------------------------------------------------------------------------------ */
+.hospital-form-control,
+.neu-input,
+.glass-input,
+.glass-textarea,
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: var(--control-height, 44px);
+  padding: 0.65rem 1.15rem;
+  font-size: 0.9375rem;
+  font-family: var(--font-stack);
+  line-height: 1.5;
+  color: var(--hospital-text) !important;
+  background-color: var(--hospital-surface-input) !important;
+  border: 1px solid var(--hospital-border) !important;
+  border-radius: var(--radius-sm, 10px) !important;
+  transition: all var(--transition-fast);
+  outline: none;
+  box-sizing: border-box;
+}
+
+textarea.hospital-form-control,
+textarea.neu-input,
+textarea.glass-textarea,
+textarea.form-control {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.hospital-form-control:focus,
+.neu-input:focus,
+.glass-input:focus,
+.glass-textarea:focus,
+.form-control:focus {
+  background-color: var(--hospital-surface-input) !important;
+  color: var(--hospital-text) !important;
+  border-color: var(--hospital-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(32, 112, 192, 0.18) !important;
+  outline: none;
+}
+
+.hospital-form-control::placeholder,
+.neu-input::placeholder,
+.glass-input::placeholder,
+.form-control::placeholder {
+  color: var(--hospital-text-muted) !important;
+  opacity: 0.85;
+}
+
+/* Custom Select Dropdowns */
+.hospital-form-select,
+.neu-select,
+.glass-select,
+.form-select {
+  display: block;
+  width: 100%;
+  min-height: var(--control-height, 44px);
+  padding: 0.65rem 2.5rem 0.65rem 1.15rem;
+  font-size: 0.9375rem;
+  font-family: var(--font-stack);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--hospital-text) !important;
+  background-color: var(--hospital-surface-input) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232070C0' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 16px 16px;
+  border: 1px solid var(--hospital-border) !important;
+  border-radius: var(--radius-sm, 10px) !important;
+  transition: all var(--transition-fast);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+[data-theme="dark"] .hospital-form-select,
+[data-theme="dark"] .neu-select,
+[data-theme="dark"] .glass-select,
+[data-theme="dark"] .form-select,
+.theme-dark .form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2335B8C9' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.hospital-form-select:focus,
+.neu-select:focus,
+.glass-select:focus,
+.form-select:focus {
+  border-color: var(--hospital-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(32, 112, 192, 0.18) !important;
+  outline: none;
+}
+
+.hospital-form-select option,
+.neu-select option,
+.glass-select option,
+.form-select option {
+  background-color: var(--hospital-surface);
+  color: var(--hospital-text);
+  padding: 0.6rem 1rem;
+}
+
+/* ------------------------------------------------------------------------------
+   26.3. Universal Tables & Grids (Phase 6)
+   ------------------------------------------------------------------------------ */
+.table-responsive,
+.neu-table-container,
+.hospital-table-container,
+.admin-table-container {
+  background-color: var(--hospital-surface);
+  border: 1px solid var(--hospital-border);
+  border-radius: var(--radius-md, 14px);
+  box-shadow: var(--neu-raised-card);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: var(--space-6, 1.5rem);
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(32, 112, 192, 0.35) var(--hospital-surface-subtle);
+}
+
+.neu-table,
+.hospital-table,
+.admin-table,
+.table {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 0.915rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--hospital-text) !important;
+  background-color: transparent !important;
+}
+
+.neu-table th,
+.hospital-table th,
+.admin-table th,
+.table th,
+.table thead th {
+  background-color: var(--hospital-surface-subtle) !important;
+  color: var(--hospital-text) !important;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--table-cell-padding-y, 0.95rem) var(--table-cell-padding-x, 1.15rem);
+  border-top: none !important;
+  border-bottom: 1px solid var(--hospital-border) !important;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.neu-table td,
+.hospital-table td,
+.admin-table td,
+.table td,
+.table tbody td {
+  padding: var(--table-cell-padding-y, 0.95rem) var(--table-cell-padding-x, 1.15rem);
+  border-bottom: 1px solid var(--hospital-border-light) !important;
+  color: var(--hospital-text) !important;
+  vertical-align: middle;
+  background-color: transparent !important;
+}
+
+.neu-table tr:hover td,
+.hospital-table tr:hover td,
+.admin-table tr:hover td,
+.table tr:hover td,
+.table-hover > tbody > tr:hover > * {
+  background-color: var(--hospital-surface-subtle) !important;
+}
+
+/* ------------------------------------------------------------------------------
+   26.4. Universal Cards & Panels (Phase 6)
+   ------------------------------------------------------------------------------ */
+.hospital-card,
+.neu-card,
+.glass-card,
+.neu-surface,
+.neu-raised,
+.card {
+  background-color: var(--hospital-surface) !important;
+  border: 1px solid var(--hospital-border) !important;
+  border-radius: var(--radius-md, 14px) !important;
+  box-shadow: var(--neu-raised-card);
+  color: var(--hospital-text) !important;
+  transition: box-shadow var(--transition-normal), border-color var(--transition-normal), transform var(--transition-normal);
+}
+
+.card-header {
+  background-color: var(--hospital-surface-subtle) !important;
+  border-bottom: 1px solid var(--hospital-border) !important;
+  color: var(--hospital-text) !important;
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+}
+
+.card-footer {
+  background-color: var(--hospital-surface-subtle) !important;
+  border-top: 1px solid var(--hospital-border) !important;
+  color: var(--hospital-text-muted) !important;
+  padding: 0.85rem 1.25rem;
+}
+
+/* ------------------------------------------------------------------------------
+   26.5. Universal Modals & Overlays (Phase 6)
+   ------------------------------------------------------------------------------ */
+.modal-content,
+.glass-modal {
+  background-color: var(--hospital-surface) !important;
+  border: 1px solid var(--hospital-border) !important;
+  border-radius: var(--radius-lg, 18px) !important;
+  box-shadow: var(--neu-raised-float) !important;
+  color: var(--hospital-text) !important;
+  overflow: hidden;
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--hospital-border) !important;
+  background-color: var(--hospital-surface-subtle) !important;
+  color: var(--hospital-heading-color, var(--hospital-primary-navy)) !important;
+  padding: 1.15rem 1.5rem !important;
+}
+
+.modal-header .modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--hospital-heading-color, var(--hospital-primary-navy)) !important;
+}
+
+[data-theme="dark"] .modal-header .modal-title,
+.theme-dark .modal-header .modal-title {
+  color: #FFFFFF !important;
+}
+
+.modal-body {
+  padding: 1.5rem !important;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  color: var(--hospital-text) !important;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--hospital-border) !important;
+  background-color: var(--hospital-surface-subtle) !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.glass-modal-backdrop,
+.modal-backdrop {
+  background-color: rgba(10, 28, 48, 0.65) !important;
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
+}
+
+[data-theme="dark"] .glass-modal-backdrop,
+[data-theme="dark"] .modal-backdrop,
+.theme-dark .modal-backdrop {
+  background-color: rgba(3, 8, 15, 0.85) !important;
+}
+
+/* ------------------------------------------------------------------------------
+   26.6. Navigation & Sidebar Active Indicator Polish (Phase 4)
+   ------------------------------------------------------------------------------ */
+.admin-sidebar-link.active,
+.doctor-sidebar-link.active {
+  background-color: rgba(32, 112, 192, 0.12) !important;
+  color: var(--hospital-medical-blue) !important;
+  font-weight: 600 !important;
+  border-left: 3px solid var(--hospital-medical-blue) !important;
+}
+
+[data-theme="dark"] .admin-sidebar-link.active,
+[data-theme="dark"] .doctor-sidebar-link.active,
+.theme-dark .admin-sidebar-link.active,
+.theme-dark .doctor-sidebar-link.active {
+  background-color: rgba(56, 132, 216, 0.18) !important;
+  color: #5AA1ED !important;
+  border-left: 3px solid #3884D8 !important;
+}
+
+.admin-sidebar-link:hover:not(.active),
+.doctor-sidebar-link:hover:not(.active) {
+  background-color: var(--hospital-surface-subtle) !important;
+  color: var(--hospital-text) !important;
+}
+
+/* ------------------------------------------------------------------------------
+   26.7. Responsive Viewport Guards (320px–1920px) (Phase 8)
+   ------------------------------------------------------------------------------ */
+@media (max-width: 576px) {
+  .hospital-container,
+  .container,
+  .admin-main-content {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem) !important;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .modal-footer > * {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  .hospital-container,
+  .container {
+    max-width: var(--container-max-width, 1240px);
+  }
+}
