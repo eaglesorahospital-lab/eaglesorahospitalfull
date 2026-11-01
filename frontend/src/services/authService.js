@@ -23,8 +23,13 @@ function resolveApiBaseUrl() {
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
     const host = window.location.hostname;
-    if (host.includes('eaglesora-hospital-frontend.onrender.com') || host.includes('netlify.app') || host.includes('eglesorahospital')) {
+    // Render static frontend talks directly to Render backend (whitelisted in CORS)
+    if (host.includes('eaglesora-hospital-frontend.onrender.com')) {
       return 'https://eaglesorahospitalfull.onrender.com';
+    }
+    // Netlify uses its edge proxy (_redirects: /api/* -> Render) for seamless same-origin transport
+    if (host.includes('netlify.app') || host.includes('eglesorahospital') || host.includes('eaglesorahospital')) {
+      return '';
     }
   }
   return '';
