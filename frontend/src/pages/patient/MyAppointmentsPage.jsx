@@ -350,8 +350,8 @@ export function MyAppointmentsPage() {
                         className={`neu-raised neu-surface p-3 p-md-4 rounded-4 transition-all hover-lift ${isCancelled ? 'patient-apt-cancelled' : isCompleted ? 'patient-apt-completed' : 'patient-apt-active'}`}
                         aria-label={`Appointment reference ${apt.reference}`}
                       >
-                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-4">
-                          <div className="flex-grow-1 min-w-0">
+                        <div className="row g-3 align-items-start align-items-md-center">
+                          <div className="col-12 col-md-8 col-lg-9">
                             <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
                               <span 
                                 className="font-monospace px-2.5 py-1 rounded small fw-bold"
@@ -396,38 +396,40 @@ export function MyAppointmentsPage() {
                             )}
                           </div>
 
-                          <div className="d-flex flex-column flex-sm-row flex-md-column gap-2 justify-content-md-end flex-shrink-0 w-100 w-md-auto" style={{ minWidth: '150px' }}>
-                            <Link to={`/my-appointments/${apt.reference}`} className="w-100">
-                              <button type="button" className="neu-btn neu-btn-outline neu-btn-sm w-100 justify-content-center" style={{ minHeight: '44px' }}>
-                                {t('patient.viewDetails')}
-                              </button>
-                            </Link>
-                            {isActionable && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="neu-btn neu-btn-outline neu-btn-sm w-100 justify-content-center"
-                                  style={{ minHeight: '44px' }}
-                                  onClick={() => handleReschedule(apt)}
-                                >
-                                  {t('patient.reschedule')}
+                          <div className="col-12 col-md-4 col-lg-3">
+                            <div className="d-flex flex-column gap-2 justify-content-md-end">
+                              <Link to={`/my-appointments/${apt.reference}`} className="w-100">
+                                <button type="button" className="neu-btn neu-btn-outline neu-btn-sm w-100 justify-content-center" style={{ minHeight: '44px' }}>
+                                  {t('patient.viewDetails')}
                                 </button>
-                                <button
-                                  type="button"
-                                  className="neu-btn neu-btn-outline text-danger neu-btn-sm w-100 justify-content-center"
-                                  style={{ minHeight: '44px' }}
-                                  onClick={() => setCancellingAppointment(apt)}
-                                >
-                                  {t('patient.cancel')}
-                                </button>
-                              </>
-                            )}
-                            {isCancelled && (
-                              <span className="small text-danger fst-italic text-center py-1">Cancelled</span>
-                            )}
-                            {isCompleted && (
-                              <span className="small text-success fst-italic text-center py-1">Completed</span>
-                            )}
+                              </Link>
+                              {isActionable && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="neu-btn neu-btn-outline neu-btn-sm w-100 justify-content-center"
+                                    style={{ minHeight: '44px' }}
+                                    onClick={() => handleReschedule(apt)}
+                                  >
+                                    {t('patient.reschedule')}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="neu-btn neu-btn-outline text-danger neu-btn-sm w-100 justify-content-center"
+                                    style={{ minHeight: '44px' }}
+                                    onClick={() => setCancellingAppointment(apt)}
+                                  >
+                                    {t('patient.cancel')}
+                                  </button>
+                                </>
+                              )}
+                              {isCancelled && (
+                                <span className="small text-danger fst-italic text-center py-1">Cancelled</span>
+                              )}
+                              {isCompleted && (
+                                <span className="small text-success fst-italic text-center py-1">Completed</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </article>
