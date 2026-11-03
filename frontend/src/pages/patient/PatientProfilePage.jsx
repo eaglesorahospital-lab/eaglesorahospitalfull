@@ -75,7 +75,7 @@ export function PatientProfilePage() {
       setIsSaving(true);
       await updateProfile(formData);
       setIsEditing(false);
-      setFeedbackNotice('Patient profile successfully updated in PostgreSQL database.');
+      setFeedbackNotice('Patient profile updated successfully.');
     } catch (err) {
       setErrors({ general: err.message || 'Failed to update patient profile.' });
     } finally {
@@ -165,7 +165,7 @@ export function PatientProfilePage() {
         ) : profileLoading ? (
           <div className="neu-raised neu-surface rounded-4 p-5 text-center">
             <div className="spinner-border spinner-border-sm text-primary mb-2" role="status" />
-            <div className="text-muted small">Loading patient profile from database...</div>
+            <div className="text-muted small">Loading patient profile...</div>
           </div>
         ) : (
           <div className="neu-raised neu-surface rounded-4 p-4 p-md-5 mb-5">
@@ -371,7 +371,7 @@ export function PatientProfilePage() {
 
                   <div className="col-12 d-flex flex-wrap gap-2 pt-3 border-top mt-3">
                     <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" style={{ minHeight: '44px' }} disabled={isSaving}>
-                      {isSaving ? 'Saving to Database...' : t('patient.saveChanges')}
+                      {isSaving ? 'Saving Changes...' : t('patient.saveChanges')}
                     </button>
                     <button type="button" className="neu-btn neu-btn-outline neu-btn-sm" style={{ minHeight: '44px' }} onClick={handleCancelEdit} disabled={isSaving}>
                       {t('patient.cancelEdit')}

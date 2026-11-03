@@ -102,7 +102,7 @@ export function DoctorProfilePage() {
       const updated = await doctorService.updateMyDoctorProfile(payload);
       setDoctorProfile(updated);
       setSelectedPhoto(null);
-      setProfileNotice('Consultant profile updated successfully in database.');
+      setProfileNotice('Consultant profile updated successfully.');
     } catch (err) {
       setProfileError(`Failed to update profile: ${err.message}`);
     } finally {

@@ -161,7 +161,7 @@ export function AdminDoctorsPage() {
         setIsAuthError(true);
         setActionError('Administrative authentication required: Your staff session has expired or is unauthorized. Please sign in to staff portal.');
       } else {
-        setActionError(`Failed to load medical staff from database: ${err.message}`);
+        setActionError(`Failed to load medical staff: ${err.message}`);
       }
     } finally {
       setIsLoading(false);
@@ -344,7 +344,7 @@ export function AdminDoctorsPage() {
       setDoctorsList((prev) =>
         prev.map((d) => (d.id === doctor.id ? updated : d))
       );
-      setActionNotice(`Doctor ${doctor.name} status updated to ${updated.status} in database.`);
+      setActionNotice(`Doctor ${doctor.name} status updated to ${updated.status}.`);
     } catch (err) {
       setActionError(`Failed to update status for ${doctor.name}: ${err.message}`);
     } finally {
@@ -476,7 +476,7 @@ export function AdminDoctorsPage() {
         prev.map((d) => (d.id === editDoctor.id ? updated : d))
       );
       if (!actionNotice) {
-        setActionNotice(`Doctor profile for ${updated.name} updated in database.`);
+        setActionNotice(`Doctor profile for ${updated.name} updated successfully.`);
       }
       handleCloseEditModal();
     } catch (err) {
@@ -653,7 +653,7 @@ export function AdminDoctorsPage() {
         }
         setActionError(generalMsg || err.message || 'Failed to register consultant.');
       } else {
-        setActionError(`Failed to register consultant in database: ${err.message}`);
+        setActionError(`Failed to register consultant: ${err.message}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -747,7 +747,7 @@ export function AdminDoctorsPage() {
             Administrative Authentication Required
           </h3>
           <p className="text-muted small mx-auto mb-4" style={{ maxWidth: '480px' }}>
-            Your staff session has expired or requires authorization to retrieve medical staff and credentialing records from the hospital database.
+            Your staff session has expired or requires authorization to retrieve medical staff and credentialing records.
           </p>
           <div className="d-flex justify-content-center gap-2">
             <Link to={`/staff/login?redirect=${encodeURIComponent(window.location.pathname)}`} className="neu-btn neu-btn-primary neu-btn-sm">

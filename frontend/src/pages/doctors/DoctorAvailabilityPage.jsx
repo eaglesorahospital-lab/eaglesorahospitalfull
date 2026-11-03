@@ -207,7 +207,7 @@ export function DoctorAvailabilityPage() {
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading doctor schedule...</span>
           </div>
-          <p className="mt-3 text-muted">Retrieving doctor roster and OPD schedule from hospital database...</p>
+          <p className="mt-3 text-muted">Retrieving doctor roster and OPD schedule...</p>
         </div>
       </Container>
     );

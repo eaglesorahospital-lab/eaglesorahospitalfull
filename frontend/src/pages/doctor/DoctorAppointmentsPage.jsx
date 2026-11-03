@@ -227,7 +227,18 @@ export function DoctorAppointmentsPage() {
                 </thead>
                 <tbody>
                   {filteredAppointments.map((apt) => (
-                    <tr key={apt.reference}>
+                    <tr 
+                      key={apt.reference}
+                      style={{
+                        borderLeft: apt.status === 'REQUESTED' 
+                          ? '3px solid var(--neu-warning)' 
+                          : apt.status === 'CHECKED_IN'
+                            ? '3px solid #16845B'
+                            : apt.status === 'CONFIRMED' 
+                              ? '3px solid var(--hospital-medical-blue)' 
+                              : '3px solid transparent'
+                      }}
+                    >
                       <td>
                         <span className="small font-monospace px-2.5 py-1 rounded neu-inset text-primary fw-bold">
                           {apt.reference}

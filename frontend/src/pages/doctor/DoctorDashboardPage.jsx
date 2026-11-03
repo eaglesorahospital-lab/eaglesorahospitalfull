@@ -148,9 +148,9 @@ export function DoctorDashboardPage() {
     <div className="doctor-dashboard-view">
       {/* Welcome Banner */}
       <div 
-        className="neu-card p-4 rounded-4 mb-4"
+        className="neu-card p-3 p-md-4 rounded-4 mb-3"
         style={{
-          background: 'linear-gradient(135deg, rgba(13, 71, 161, 0.08) 0%, rgba(22, 132, 91, 0.08) 100%)',
+          background: 'var(--hospital-surface)',
           border: '1px solid var(--hospital-border)',
         }}
       >
@@ -160,15 +160,15 @@ export function DoctorDashboardPage() {
               <img
                 src={doctorProfile.photo}
                 alt={`Portrait of ${doctorProfile?.name || 'Doctor'}`}
-                width="64"
-                height="64"
+                width="56"
+                height="56"
                 className="rounded-circle neu-raised border border-2 border-white"
-                style={{ width: '64px', height: '64px', objectFit: 'cover' }}
+                style={{ width: '56px', height: '56px', objectFit: 'cover' }}
               />
             ) : (
               <div
-                className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white fs-4 neu-raised"
-                style={{ width: '64px', height: '64px', background: 'var(--hospital-primary-navy)' }}
+                className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white fs-5 neu-raised"
+                style={{ width: '56px', height: '56px', background: 'var(--hospital-primary-navy)' }}
               >
                 {(doctorProfile?.name || 'DR')
                   .split(' ')
@@ -179,22 +179,22 @@ export function DoctorDashboardPage() {
               </div>
             )}
             <div>
-              <div className="badge mb-1" style={{ background: '#16845B', fontSize: '0.7rem' }}>
+              <div className="neu-badge neu-badge-success mb-1" style={{ fontSize: '0.72rem' }}>
                 Consultant Physician Dashboard
               </div>
               <h1 className="h4 fw-bold text-body mb-0.5">
                 Welcome back, {doctorProfile?.name || 'Doctor'}
               </h1>
-              <div className="small text-muted d-flex flex-wrap align-items-center gap-3">
+              <div className="small text-muted d-flex flex-wrap align-items-center gap-2">
                 <span>
                   <strong>Department:</strong> {doctorProfile?.departmentName || 'Medical Services'}
                 </span>
-                <span>•</span>
+                <span>&bull;</span>
                 <span>
                   <strong>Specialty:</strong> {doctorProfile?.specialty || 'Consultant'}
                 </span>
-                <span>•</span>
-                <span className="d-flex align-items-center gap-1">
+                <span>&bull;</span>
+                <span className="d-inline-flex align-items-center gap-1">
                   <MapPin size={13} className="text-primary" />
                   {doctorProfile?.consultation_location || 'Consultation Suite'}
                 </span>
@@ -306,10 +306,28 @@ export function DoctorDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {todayAppointments.map((apt) => (
-                    <tr key={apt.reference}>
-                      <td className="fw-bold text-primary font-monospace" style={{ fontSize: '0.85rem' }}>
-                        {apt.time || apt.startTime?.slice(0, 5) || 'OPD'}
+                  {todayAppointments.map((apt) => {
+                    const isRequested = apt.status === 'REQUESTED';
+                    const isConfirmed = apt.status === 'CONFIRMED';
+                    const isCheckedIn = apt.status === 'CHECKED_IN';
+
+                    return (
+                    <tr 
+                      key={apt.reference}
+                      style={{
+                        borderLeft: isRequested 
+                          ? '3px solid var(--neu-warning)' 
+                          : isCheckedIn 
+                            ? '3px solid #16845B' 
+                            : isConfirmed 
+                              ? '3px solid var(--hospital-medical-blue)' 
+                              : '3px solid transparent'
+                      }}
+                    >
+                      <td className="fw-bold font-monospace" style={{ fontSize: '0.85rem' }}>
+                        <span className="px-2 py-1 rounded small fw-bold d-inline-block" style={{ background: 'var(--hospital-surface-subtle)', color: 'var(--hospital-medical-blue)' }}>
+                          {apt.time || apt.startTime?.slice(0, 5) || 'OPD'}
+                        </span>
                       </td>
                       <td>
                         <div className="fw-semibold text-body">{apt.patientName}</div>
@@ -375,64 +393,86 @@ export function DoctorDashboardPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {/* Mobile Stacked Glass Cards View (< 768px) */}
+            {/* Mobile Stacked Cards View (< 768px) */}
             <div className="d-md-none d-flex flex-column gap-3">
-              {todayAppointments.map((apt) => (
-                <div key={apt.reference} className="doctor-mobile-card neu-inset p-3 rounded-4">
+              {todayAppointments.map((apt) => {
+                const isRequested = apt.status === 'REQUESTED';
+                const isConfirmed = apt.status === 'CONFIRMED';
+                const isCheckedIn = apt.status === 'CHECKED_IN';
+
+                return (
+                <div 
+                  key={apt.reference} 
+                  className="doctor-mobile-card p-3 rounded-4"
+                  style={{
+                    background: 'var(--hospital-surface)',
+                    border: '1px solid var(--hospital-border)',
+                    borderLeft: isRequested 
+                      ? '4px solid var(--neu-warning)' 
+                      : isCheckedIn 
+                        ? '4px solid #16845B' 
+                        : isConfirmed 
+                          ? '4px solid var(--hospital-medical-blue)' 
+                          : '1px solid var(--hospital-border)'
+                  }}
+                >
                   <div className="d-flex justify-content-between align-items-center mb-2">
-                    <span className="fw-bold text-primary font-monospace fs-6">
+                    <span className="fw-bold font-monospace fs-6 px-2 py-0.5 rounded" style={{ background: 'var(--hospital-surface-subtle)', color: 'var(--hospital-medical-blue)' }}>
                       {apt.time || apt.startTime?.slice(0, 5) || 'OPD'}
                     </span>
                     <AdminStatusBadge status={apt.status} />
                   </div>
                   <div className="fw-bold text-body fs-6">{apt.patientName}</div>
                   <div className="small text-muted mb-2">
-                    {apt.patientContact || 'Outpatient'} • Ref: <span className="font-monospace text-primary">{apt.reference}</span>
+                    {apt.patientContact || 'Outpatient'} &bull; Ref: <span className="font-monospace text-primary">{apt.reference}</span>
                   </div>
-                  <div className="small text-body-secondary p-2 rounded-2 neu-inset mb-3" style={{ fontSize: '0.8rem' }}>
+                  <div className="small text-body-secondary p-2 rounded-2 mb-3" style={{ fontSize: '0.8rem', background: 'var(--hospital-surface-subtle)', border: '1px solid var(--hospital-border)' }}>
                     {apt.reasonForVisit || 'General Medical Consultation'}
                   </div>
-                  <div className="d-flex flex-wrap gap-2 pt-1 border-top">
+                  <div className="d-flex flex-wrap gap-2 pt-1 border-top" style={{ borderColor: 'var(--hospital-border)' }}>
                     <button
                       type="button"
                       className="neu-btn neu-btn-outline neu-btn-sm flex-fill"
+                      style={{ minHeight: '44px' }}
                       onClick={() => setSelectedAppointment(apt)}
                       title="View clinical details"
                     >
                       <Eye size={14} className="me-1" />
                       Details
                     </button>
-                    {apt.status === 'REQUESTED' && (
+                    {isRequested && (
                       <button
                         type="button"
                         className="neu-btn neu-btn-primary neu-btn-sm flex-fill"
-                        style={{ background: '#0D47A1', borderColor: '#0D47A1', color: '#fff' }}
+                        style={{ minHeight: '44px', background: 'var(--hospital-medical-blue)', borderColor: 'var(--hospital-medical-blue)', color: '#fff' }}
                         onClick={() => handleUpdateStatus(apt, 'CONFIRMED')}
                       >
                         <Check size={14} className="me-1" />
                         Confirm
                       </button>
                     )}
-                    {apt.status === 'CONFIRMED' && (
+                    {isConfirmed && (
                       <button
                         type="button"
                         className="neu-btn neu-btn-outline neu-btn-sm text-primary flex-fill"
+                        style={{ minHeight: '44px' }}
                         onClick={() => handleUpdateStatus(apt, 'CHECKED_IN')}
                       >
                         <Check size={14} className="me-1" />
                         Check In
                       </button>
                     )}
-                    {apt.status === 'CHECKED_IN' && (
+                    {isCheckedIn && (
                       <button
                         type="button"
                         className="neu-btn neu-btn-primary neu-btn-sm flex-fill"
-                        style={{ background: '#16845B', borderColor: '#16845B', color: '#fff' }}
+                        style={{ minHeight: '44px', background: '#16845B', borderColor: '#16845B', color: '#fff' }}
                         onClick={() => handleUpdateStatus(apt, 'COMPLETED')}
                       >
                         <Check size={14} className="me-1" />
@@ -441,7 +481,8 @@ export function DoctorDashboardPage() {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}

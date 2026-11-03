@@ -20,9 +20,9 @@
     "marathi": "मराठी (Marathi)"
   },
   "hero": {
-    "badge": "Excellence in Clinical Care & Patient Safety",
-    "title": "World-Class Healthcare, Patient-First Healing",
-    "lead": "Trusted medical specialists, multi-disciplinary departments, advanced diagnostics, and 24/7 dedicated emergency trauma facilities.",
+    "badge": "Outpatient Consultations, Inpatient & Emergency Care",
+    "title": "Multi-Specialty Hospital & 24/7 Emergency Care",
+    "lead": "Outpatient consultations with qualified medical specialists, diagnostic laboratory testing, inpatient care, and 24/7 emergency response.",
     "bookAppointment": "Book Appointment",
     "findDoctor": "Find a Doctor",
     "exploreSpecialties": "Explore Specialties",
@@ -50,15 +50,15 @@
     "emergencySub": "Immediate trauma response and ambulance dispatch"
   },
   "departments": {
-    "title": "Clinical Departments & Centers of Excellence",
-    "subtitle": "Comprehensive multi-disciplinary patient care backed by modern medical infrastructure and experienced clinical teams.",
+    "title": "Clinical Departments & Medical Specialties",
+    "subtitle": "Specialized medical departments providing diagnosis, treatment, and ongoing care for outpatients and inpatients.",
     "viewAll": "View All Departments",
     "exploreDepartment": "Explore Department & Consultants",
     "doctorsAvailable": "Specialists Available"
   },
   "doctors": {
     "title": "Our Clinical Specialists & Consultants",
-    "subtitle": "Experienced healthcare practitioners committed to rigorous patient safety and personalized treatment.",
+    "subtitle": "Consultant physicians and specialists available for outpatient appointments and medical opinions.",
     "viewAll": "View All Doctors",
     "experience": "Experience",
     "qualification": "Qualifications",
@@ -71,7 +71,7 @@
   },
   "services": {
     "title": "Hospital Services & Patient Care",
-    "subtitle": "Comprehensive healthcare infrastructure supporting outpatient, inpatient, diagnostic, and emergency requirements.",
+    "subtitle": "Hospital facilities supporting scheduled consultations, diagnostic testing, inpatient admission, and round-the-clock emergency care.",
     "visitingGuidelines": "Visitor Guidelines & Hospital Policies",
     "admissionGuide": "Inpatient Admission Guide",
     "insuranceTpa": "Insurance & Cashless Mediclaim Desk",

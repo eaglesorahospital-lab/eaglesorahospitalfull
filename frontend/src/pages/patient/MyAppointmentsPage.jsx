@@ -205,8 +205,8 @@ export function MyAppointmentsPage() {
           <>
             {/* Primary Upcoming Consultation Highlight */}
             {nextUpcoming && (
-              <section className="neu-raised neu-surface rounded-4 p-4 p-md-5 mb-5 border-start border-4 border-primary" aria-label="Next Upcoming Appointment">
-                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 pb-3 border-bottom">
+              <section className="neu-raised neu-surface rounded-4 p-3 p-md-4 mb-4 border-start border-4 border-primary" aria-label="Next Upcoming Appointment">
+                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
                   <span className="neu-badge neu-badge-primary">
                     Next Upcoming Consultation
                   </span>
@@ -224,17 +224,20 @@ export function MyAppointmentsPage() {
                       <span>{nextUpcoming.specialty} &bull; <span className="text-muted">{nextUpcoming.department}</span></span>
                     </div>
 
-                    <div className="p-3 p-md-4 neu-inset rounded-3 mb-0 w-100">
-                      <div className="small text-body mb-2 d-flex align-items-center gap-2">
-                        <Calendar size={15} className="text-primary flex-shrink-0" />
-                        <strong className="text-muted">Slot: </strong>
-                        <span className="fw-bold text-body">
-                          {nextUpcoming.dayName ? `${nextUpcoming.dayName}, ` : ''}{nextUpcoming.date} at {nextUpcoming.time}
+                    <div className="p-3 neu-card-sm rounded-3 mb-0 w-100" style={{ background: 'var(--hospital-surface-subtle)', border: '1px solid var(--hospital-border)' }}>
+                      <div className="small text-body mb-2 d-flex flex-wrap align-items-center gap-2">
+                        <Calendar size={16} className="text-primary flex-shrink-0" />
+                        <span className="fw-bold text-body fs-6">
+                          {nextUpcoming.dayName ? `${nextUpcoming.dayName}, ` : ''}{nextUpcoming.date}
                         </span>
-                        <span className="text-muted small"> ({nextUpcoming.duration || '30 mins'})</span>
+                        <span className="text-muted">&bull;</span>
+                        <span className="fw-bold fs-6" style={{ color: 'var(--hospital-medical-blue)' }}>
+                          {nextUpcoming.time}
+                        </span>
+                        <span className="text-muted small">({nextUpcoming.duration || '30 mins'})</span>
                       </div>
-                      <div className="small text-muted d-flex flex-wrap align-items-center gap-2">
-                        <strong className="text-body">OPD Clinic: </strong>
+                      <div className="small text-muted d-flex flex-wrap align-items-center gap-2 pt-1 border-top" style={{ borderColor: 'var(--hospital-border)' }}>
+                        <strong className="text-body">OPD Suite: </strong>
                         <span>{nextUpcoming.location}</span>
                         <span className="ms-2 font-monospace neu-badge neu-badge-neutral">{nextUpcoming.reference}</span>
                       </div>
@@ -283,39 +286,52 @@ export function MyAppointmentsPage() {
                   </div>
                 </div>
 
-                {/* Filter Buttons */}
-                <div className="neu-inset p-1.5 rounded-pill d-flex flex-wrap gap-1" style={{ maxWidth: '100%' }}>
+                {/* Filter Buttons — Segmented Control */}
+                <div 
+                  className="d-flex flex-wrap gap-1 p-1 rounded-3" 
+                  style={{ background: 'var(--hospital-surface-subtle)', border: '1px solid var(--hospital-border)', maxWidth: '100%' }}
+                  role="tablist"
+                  aria-label="Filter appointment status"
+                >
                   <button
                     type="button"
-                    style={{ minHeight: '38px' }}
-                    className={`neu-btn neu-btn-sm rounded-pill px-3 py-1.5 ${activeTab === 'upcoming' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
+                    role="tab"
+                    aria-selected={activeTab === 'upcoming'}
+                    style={{ minHeight: '40px' }}
+                    className={`neu-btn neu-btn-sm rounded-2 px-3 py-1.5 fw-semibold ${activeTab === 'upcoming' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
                     onClick={() => setActiveTab('upcoming')}
                   >
-                    {t('patient.tabUpcoming')} ({upcomingAppointments.length})
+                    {t('patient.tabUpcoming')} <span className="badge rounded-pill ms-1" style={{ background: activeTab === 'upcoming' ? 'rgba(255,255,255,0.25)' : 'var(--hospital-border)', color: activeTab === 'upcoming' ? '#fff' : 'var(--hospital-text)' }}>{upcomingAppointments.length}</span>
                   </button>
                   <button
                     type="button"
-                    style={{ minHeight: '38px' }}
-                    className={`neu-btn neu-btn-sm rounded-pill px-3 py-1.5 ${activeTab === 'past' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
+                    role="tab"
+                    aria-selected={activeTab === 'past'}
+                    style={{ minHeight: '40px' }}
+                    className={`neu-btn neu-btn-sm rounded-2 px-3 py-1.5 fw-semibold ${activeTab === 'past' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
                     onClick={() => setActiveTab('past')}
                   >
-                    {t('patient.tabPast')} ({pastAppointments.length})
+                    {t('patient.tabPast')} <span className="badge rounded-pill ms-1" style={{ background: activeTab === 'past' ? 'rgba(255,255,255,0.25)' : 'var(--hospital-border)', color: activeTab === 'past' ? '#fff' : 'var(--hospital-text)' }}>{pastAppointments.length}</span>
                   </button>
                   <button
                     type="button"
-                    style={{ minHeight: '38px' }}
-                    className={`neu-btn neu-btn-sm rounded-pill px-3 py-1.5 ${activeTab === 'cancelled' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
+                    role="tab"
+                    aria-selected={activeTab === 'cancelled'}
+                    style={{ minHeight: '40px' }}
+                    className={`neu-btn neu-btn-sm rounded-2 px-3 py-1.5 fw-semibold ${activeTab === 'cancelled' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
                     onClick={() => setActiveTab('cancelled')}
                   >
-                    {t('patient.tabCancelled')} ({cancelledAppointments.length})
+                    {t('patient.tabCancelled')} <span className="badge rounded-pill ms-1" style={{ background: activeTab === 'cancelled' ? 'rgba(255,255,255,0.25)' : 'var(--hospital-border)', color: activeTab === 'cancelled' ? '#fff' : 'var(--hospital-text)' }}>{cancelledAppointments.length}</span>
                   </button>
                   <button
                     type="button"
-                    style={{ minHeight: '38px' }}
-                    className={`neu-btn neu-btn-sm rounded-pill px-3 py-1.5 ${activeTab === 'all' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
+                    role="tab"
+                    aria-selected={activeTab === 'all'}
+                    style={{ minHeight: '40px' }}
+                    className={`neu-btn neu-btn-sm rounded-2 px-3 py-1.5 fw-semibold ${activeTab === 'all' ? 'neu-btn-primary' : 'neu-btn-outline border-0 shadow-none'}`}
                     onClick={() => setActiveTab('all')}
                   >
-                    {t('patient.tabAll')} ({appointments.length})
+                    {t('patient.tabAll')} <span className="badge rounded-pill ms-1" style={{ background: activeTab === 'all' ? 'rgba(255,255,255,0.25)' : 'var(--hospital-border)', color: activeTab === 'all' ? '#fff' : 'var(--hospital-text)' }}>{appointments.length}</span>
                   </button>
                 </div>
               </div>
@@ -331,7 +347,7 @@ export function MyAppointmentsPage() {
                     return (
                       <article
                         key={apt.reference}
-                        className="neu-raised neu-surface p-3 p-md-4 rounded-4 transition-all hover-lift"
+                        className={`neu-raised neu-surface p-3 p-md-4 rounded-4 transition-all hover-lift ${isCancelled ? 'patient-apt-cancelled' : isCompleted ? 'patient-apt-completed' : 'patient-apt-active'}`}
                         aria-label={`Appointment reference ${apt.reference}`}
                       >
                         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start gap-4">
@@ -364,9 +380,13 @@ export function MyAppointmentsPage() {
                               Specialty: <strong className="text-body">{apt.specialty}</strong> &bull; Clinic: {apt.location}
                             </div>
 
-                            <div className="small mb-3 text-muted">
+                            <div className="small mb-3 text-muted d-flex flex-wrap align-items-center gap-2 p-2 rounded-2" style={{ background: 'var(--hospital-surface-subtle)', border: '1px solid var(--hospital-border)' }}>
+                              <Calendar size={15} className="text-primary flex-shrink-0" />
                               <span>Consultation: </span>
-                              <strong className="text-body">{apt.dayName ? `${apt.dayName}, ` : ''}{apt.date}</strong> at <strong className="text-body">{apt.time}</strong> ({apt.duration || '30 mins'})
+                              <strong className="text-body">{apt.dayName ? `${apt.dayName}, ` : ''}{apt.date}</strong>
+                              <span className="text-muted">&bull;</span>
+                              <strong className="text-primary font-monospace">{apt.time}</strong>
+                              <span className="text-muted">({apt.duration || '30 mins'})</span>
                             </div>
 
                             {apt.patient && (

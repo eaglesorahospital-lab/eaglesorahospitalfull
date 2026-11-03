@@ -322,7 +322,7 @@ export function AdminAppointmentsPage() {
       }
 
       setActionNotice(
-        `Appointment ${targetRef} status changed to ${newStatus} in database.`
+        `Appointment ${targetRef} status changed to ${newStatus}.`
       );
     } catch (err) {
       setAppointmentsList((prev) =>
@@ -364,7 +364,7 @@ export function AdminAppointmentsPage() {
         )
       );
       setActionNotice(
-        `Appointment ${cancelModalAppointment.reference} cancelled in database.`
+        `Appointment ${cancelModalAppointment.reference} cancelled.`
       );
     } catch (err) {
       setAppointmentsList((prev) =>
@@ -416,7 +416,7 @@ export function AdminAppointmentsPage() {
         )
       );
       setActionNotice(
-        `Appointment ${rescheduleModalAppointment.reference} rescheduled to ${rescheduleDate} in database.`
+        `Appointment ${rescheduleModalAppointment.reference} rescheduled to ${rescheduleDate}.`
       );
     } catch (err) {
       setAppointmentsList((prev) =>
@@ -609,7 +609,18 @@ export function AdminAppointmentsPage() {
                 </tr>
               ) : (
                 filteredAppointments.map((apt) => (
-                  <tr key={apt.reference}>
+                  <tr 
+                    key={apt.reference}
+                    style={{
+                      borderLeft: apt.status === 'REQUESTED' 
+                        ? '3px solid var(--neu-warning)' 
+                        : apt.status === 'CONFIRMED' 
+                          ? '3px solid var(--hospital-medical-blue)' 
+                          : apt.status === 'COMPLETED'
+                            ? '3px solid #16845B'
+                            : '3px solid transparent'
+                    }}
+                  >
                     <td className="col-apt-ref">
                       <span 
                         className="px-2.5 py-1 rounded small fw-bold font-monospace d-inline-block mb-1"
@@ -1071,7 +1082,7 @@ export function AdminAppointmentsPage() {
                   <div><strong>Slot:</strong> {cancelModalAppointment.date} at {cancelModalAppointment.time}</div>
                 </div>
                 <p className="small text-muted mb-0">
-                  This action marks the consultation as CANCELLED in database records.
+                  This action marks the consultation as CANCELLED in the appointment registry.
                 </p>
               </div>
               <div 

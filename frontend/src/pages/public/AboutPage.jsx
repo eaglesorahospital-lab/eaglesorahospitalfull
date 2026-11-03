@@ -21,14 +21,14 @@ export function AboutPage() {
   return (
     <div className="py-4">
       <SEO
-        title="About EgleSora Hospital | Clinical Heritage & Governance"
-        description="Learn about EgleSora Hospital's institutional history, multi-specialty medical governance, patient safety protocols, and healthcare facilities."
+        title="About EgleSora Hospital | Clinical Services & Facilities"
+        description="Learn about EgleSora Hospital's clinical departments, medical staff governance, patient care protocols, and diagnostic facilities."
         canonicalUrl="/about"
       />
       <Container>
         <PageHeader
           title={`About ${HOSPITAL_METADATA.name}`}
-          description="Institutional history, clinical care philosophy, diagnostic facilities, and medical staff governance."
+          description="Clinical departments, patient care protocols, diagnostic facilities, and medical staff governance."
           breadcrumbs={breadcrumbs}
         >
           <Link to="/appointments/book" className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-1">
@@ -45,23 +45,22 @@ export function AboutPage() {
             <div className="col-12 col-lg-7">
               <span className="neu-eyebrow text-uppercase fw-bold text-primary">Our Story & Purpose</span>
               <h2 className="hospital-section-title mt-1 mb-3">
-                Committed to Compassionate Clinical Excellence
+                Patient Care & Clinical Practice
               </h2>
               <p className="hospital-body mb-3 text-muted">
-                {HOSPITAL_METADATA.legalName} was founded with the objective of providing accessible,
-                rigorous medical care to patients and families. Over decades of clinical service, the hospital
-                has evolved into a trusted multi-disciplinary center offering outpatient consultations, advanced
-                surgical interventions, and round-the-clock emergency care.
+                {HOSPITAL_METADATA.legalName} provides medical consultations, diagnostic services,
+                and inpatient care for patients and families. The hospital brings together outpatient
+                specialties, diagnostic imaging and laboratories, and emergency medical services
+                at a single campus.
               </p>
               <p className="hospital-body mb-3 text-muted">
-                We believe that modern medicine achieves its highest purpose when cutting-edge clinical
-                science is paired with deep personal empathy. Every patient walking through our doors receives
-                the focused attention of multidisciplinary medical teams who work in close alignment to ensure
-                safe and accurate treatment pathways.
+                Clinical care is organized around collaborative medical departments. Attending
+                physicians, nursing staff, and diagnostic specialists coordinate treatment plans,
+                medication management, and patient follow-up.
               </p>
               <p className="hospital-body mb-0 text-muted">
-                Our facilities operate under strict infection control standards, standardized clinical
-                documentation, and continuous medical review protocols.
+                All departments maintain standard infection prevention practices, structured clinical
+                documentation, and scheduled reviews of outpatient and inpatient cases.
               </p>
             </div>
 
@@ -105,10 +104,9 @@ export function AboutPage() {
                 <span className="neu-badge neu-badge-secondary mb-2 d-inline-block">Our Purpose</span>
                 <h3 className="hospital-subsection-title mt-1 mb-3 text-body">Institutional Mission</h3>
                 <p className="hospital-body mb-0 text-muted">
-                  To provide evidence-based, compassionate healthcare services to all individuals;
-                  to maintain absolute clinical integrity in diagnostics and procedures; and to uphold
-                  the dignity and emotional well-being of our patients and their loved ones throughout
-                  their care journey.
+                  To deliver reliable, evidence-based healthcare; to maintain accuracy in diagnostics
+                  and therapeutic procedures; and to treat patients and families with respect, clear
+                  communication, and professional care.
                 </p>
               </div>
             </div>
@@ -118,9 +116,9 @@ export function AboutPage() {
                 <span className="neu-badge neu-badge-primary mb-2 d-inline-block">Our Direction</span>
                 <h3 className="hospital-subsection-title mt-1 mb-3 text-body">Institutional Vision</h3>
                 <p className="hospital-body mb-0 text-muted">
-                  To serve as a benchmark for patient safety, ethical healthcare delivery, and medical
-                  transparency; continually modernizing our clinical infrastructure while sustaining
-                  an environment of warmth, medical humility, and respectful community care.
+                  To be a dependable center for outpatient and inpatient healthcare, maintaining
+                  rigorous patient safety standards, clear clinical communication, and disciplined
+                  medical ethics across all departments.
                 </p>
               </div>
             </div>
@@ -132,10 +130,10 @@ export function AboutPage() {
       <section className="hospital-section" aria-label="Clinical Infrastructure">
         <Container>
           <div className="mb-4">
-            <span className="neu-eyebrow text-uppercase fw-bold text-primary">State of the Art Facilities</span>
-            <h2 className="hospital-section-title mb-1 fs-3">Clinical Infrastructure & Medical Capabilities</h2>
+            <span className="neu-eyebrow text-uppercase fw-bold text-primary">Campus & Facilities</span>
+            <h2 className="hospital-section-title mb-1 fs-3">Diagnostic & Clinical Facilities</h2>
             <p className="hospital-text-supporting text-muted mb-0">
-              Architected for rapid diagnosis, patient comfort, and sterile surgical environments.
+              Dedicated consultation rooms, diagnostic testing areas, and inpatient care wings.
             </p>
           </div>
 

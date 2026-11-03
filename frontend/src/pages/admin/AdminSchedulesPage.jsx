@@ -256,9 +256,9 @@ export function AdminSchedulesPage() {
       });
 
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Updated ${dayName} shift (${nextEnabled ? 'Active OPD' : 'Closed'}) for ${doctor.name} in database.`);
+      setActionNotice(`Updated ${dayName} shift (${nextEnabled ? 'Active OPD' : 'Closed'}) for ${doctor.name}.`);
     } catch (err) {
-      setActionError(`Failed to save ${dayName} schedule to database: ${err.message}`);
+      setActionError(`Failed to save ${dayName} schedule: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -289,7 +289,7 @@ export function AdminSchedulesPage() {
 
       setEditShiftDay(null);
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Updated ${editShiftDay} shift (${editShiftStart} - ${editShiftEnd}) for ${doctor.name} in database.`);
+      setActionNotice(`Updated ${editShiftDay} shift (${editShiftStart} - ${editShiftEnd}) for ${doctor.name}.`);
     } catch (err) {
       setActionError(`Failed to update shift: ${err.message}`);
     } finally {
@@ -317,7 +317,7 @@ export function AdminSchedulesPage() {
       }
 
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Consultation slot duration for ${doctor.name} updated to ${newDuration} minutes in database.`);
+      setActionNotice(`Consultation slot duration for ${doctor.name} updated to ${newDuration} minutes.`);
     } catch (err) {
       setActionError(`Failed to update slot duration: ${err.message}`);
     } finally {
@@ -365,7 +365,7 @@ export function AdminSchedulesPage() {
       setShowOverrideModal(false);
       setModalError(null);
       await loadDoctorSchedules(doctor.id || doctor.slug);
-      setActionNotice(`Successfully added schedule override on ${newOverrideDate} for ${doctor.name} in database.`);
+      setActionNotice(`Schedule override for ${doctor.name} on ${newOverrideDate} saved successfully.`);
     } catch (err) {
       const errorMsg = err.message || 'Failed to save schedule override.';
       setModalError(errorMsg);
@@ -497,7 +497,7 @@ export function AdminSchedulesPage() {
           style={{ borderRadius: '14px', background: 'var(--hospital-surface)' }}
         >
           <RotateCw size={16} className="spin-anim text-primary" />
-          <span className="small text-muted fw-semibold">Saving schedule changes to PostgreSQL database...</span>
+          <span className="small text-muted fw-semibold">Saving schedule changes...</span>
         </div>
       )}
 
@@ -505,7 +505,7 @@ export function AdminSchedulesPage() {
       {isLoading && !doctor ? (
         <div className="py-5 text-center my-4">
           <RotateCw size={28} className="spin-anim text-primary mb-2" />
-          <p className="mt-2 text-muted">Retrieving doctor rosters and shift allocations from database...</p>
+          <p className="mt-2 text-muted">Retrieving doctor rosters and shift allocations...</p>
         </div>
       ) : isAuthError ? (
         <div 
@@ -537,7 +537,7 @@ export function AdminSchedulesPage() {
         <div className="my-5">
           <EmptyState
             title="No Medical Specialists Found"
-            message="No doctor profiles were found in the hospital database to configure schedules for."
+            message="No doctor profiles were found to configure schedules for."
           />
         </div>
       ) : (
@@ -688,7 +688,7 @@ export function AdminSchedulesPage() {
                   Weekly Recurring Roster for {doctor?.name}
                 </h3>
                 <p className="small text-muted mb-0">
-                  Standard recurring outpatient shift timings and breaks backed by PostgreSQL database.
+                  Standard recurring outpatient shift timings and clinical breaks.
                 </p>
               </div>
               <div>
@@ -949,7 +949,7 @@ export function AdminSchedulesPage() {
               </div>
             ) : (
               <div className="p-3 neu-card-sm text-muted small" style={{ borderRadius: '14px' }}>
-                No recurring midday clinical breaks are currently logged for this specialist in PostgreSQL.
+                No recurring midday clinical breaks are currently logged for this specialist.
               </div>
             )}
           </section>
@@ -999,7 +999,7 @@ export function AdminSchedulesPage() {
                   </div>
                 ) : (
                   <div className="p-3 neu-card-sm text-muted small text-center" style={{ borderRadius: '14px' }}>
-                    No scheduled leaves recorded for this specialist in PostgreSQL.
+                    No scheduled leaves recorded for this specialist.
                   </div>
                 )}
               </section>
@@ -1056,7 +1056,7 @@ export function AdminSchedulesPage() {
                   </div>
                 ) : (
                   <div className="p-3 neu-card-sm text-muted small text-center" style={{ borderRadius: '14px' }}>
-                    No active schedule overrides logged for this specialist in PostgreSQL.
+                    No active schedule overrides logged for this specialist.
                   </div>
                 )}
               </section>
@@ -1146,7 +1146,7 @@ export function AdminSchedulesPage() {
                     Cancel
                   </button>
                   <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSaving}>
-                    {isSaving ? 'Saving...' : 'Save Shift to Database'}
+                    {isSaving ? 'Saving...' : 'Save Shift'}
                   </button>
                 </div>
               </form>
@@ -1309,7 +1309,7 @@ export function AdminSchedulesPage() {
                     Cancel
                   </button>
                   <button type="submit" className="neu-btn neu-btn-primary neu-btn-sm" disabled={isSaving}>
-                    {isSaving ? 'Saving...' : 'Save to Database'}
+                    {isSaving ? 'Saving...' : 'Save Schedule'}
                   </button>
                 </div>
               </form>

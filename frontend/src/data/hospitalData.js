@@ -668,8 +668,8 @@ export const DEMO_SERVICES = [
   },
   {
     code: 'DIAGNOSTICS',
-    title: 'Comprehensive Diagnostic Imaging',
-    badge: 'Modern Equipment',
+    title: 'Diagnostic Imaging & Radiology',
+    badge: 'On-Site Diagnostics',
     description: 'Direct digital radiography, ultrasonography, multi-slice computed tomography, and diagnostic echocardiography on premise.',
   },
   {

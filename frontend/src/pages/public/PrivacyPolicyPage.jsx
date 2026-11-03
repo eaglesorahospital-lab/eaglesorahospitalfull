@@ -120,7 +120,7 @@ export function PrivacyPolicyPage() {
                 The EgleSora Hospital Platform uses browser local storage exclusively for necessary operational purposes:
               </p>
               <ul className="text-muted small d-flex flex-column gap-2 ps-3" style={{ lineHeight: '1.6' }}>
-                <li><strong className="text-body">Authentication Tokens:</strong> Temporary JWT tokens enabling authenticated communication with the Django REST Framework API.</li>
+                <li><strong className="text-body">Authentication Tokens:</strong> Temporary secure session tokens enabling authenticated communication with hospital clinical services.</li>
                 <li><strong className="text-body">User Preferences:</strong> Storing selected interface theme (light/dark mode) and preferred language (English, Hindi, Marathi).</li>
                 <li><strong className="text-body">Zero Third-Party Advertising:</strong> We do not deploy third-party advertising cookies, cross-site trackers, or commercial data brokers.</li>
               </ul>

@@ -134,7 +134,7 @@ export function AdminDepartmentsPage() {
       setDepartmentsList((prev) =>
         prev.map((d) => (d.id === deptId || d.slug === deptId ? { ...d, ...updated } : d))
       );
-      setActionNotice(`Department "${dept.name}" status updated to ${nextStatus} in database.`);
+      setActionNotice(`Department "${dept.name}" status updated to ${nextStatus}.`);
     } catch (err) {
       setDepartmentsList((prev) =>
         prev.map((d) => {
@@ -169,7 +169,7 @@ export function AdminDepartmentsPage() {
           d.id === editDepartment.id || d.slug === editDepartment.slug ? { ...d, ...updated } : d
         )
       );
-      setActionNotice(`Department "${editDepartment.name}" updated in database.`);
+      setActionNotice(`Department "${editDepartment.name}" updated successfully.`);
     } catch (err) {
       setDepartmentsList((prev) =>
         prev.map((d) => (d.id === editDepartment.id ? { ...d, ...editDepartment } : d))
@@ -190,7 +190,7 @@ export function AdminDepartmentsPage() {
     try {
       const savedDept = await departmentService.createDepartment(newDeptForm);
       setDepartmentsList((prev) => [savedDept, ...prev]);
-      setActionNotice(`Department "${savedDept.name}" created in database.`);
+      setActionNotice(`Department "${savedDept.name}" created successfully.`);
     } catch (err) {
       const newDeptObj = {
         id: slug,

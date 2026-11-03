@@ -165,7 +165,7 @@ export function AdminPatientsPage() {
     try {
       const savedPatient = await patientService.createPatient(newPatientForm);
       setPatientsList((prev) => [savedPatient, ...prev]);
-      setActionNotice(`Registered new patient ${savedPatient.name} with MRN ${savedPatient.mrn} in database.`);
+      setActionNotice(`Registered new patient ${savedPatient.name} with MRN ${savedPatient.mrn}.`);
     } catch (err) {
       const newId = `PAT-${4400 + patientsList.length + 1}`;
       const newMRN = `MRN-2026-${4400 + patientsList.length + 1}`;
@@ -232,7 +232,7 @@ export function AdminPatientsPage() {
       setPatientsList((prev) =>
         prev.map((p) => (String(p.id) === String(editPatient.id) ? { ...p, ...updated } : p))
       );
-      setActionNotice(`Outpatient file for ${updated.name || editPatient.name} (${editPatient.mrn}) successfully updated in PostgreSQL.`);
+      setActionNotice(`Outpatient file for ${updated.name || editPatient.name} (${editPatient.mrn}) updated successfully.`);
       setEditPatient(null);
     } catch (err) {
       setActionNotice(`Failed to update patient: ${err.message || 'Server error'}`);

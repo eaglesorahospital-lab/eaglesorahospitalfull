@@ -106,8 +106,8 @@ export function HomePage() {
   return (
     <div className="hospital-homepage">
       <SEO
-        title="EgleSora Hospital | Quality Healthcare"
-        description="EgleSora Hospital provides patient-first clinical excellence, multi-specialty outpatient and inpatient care, and 24/7 emergency response."
+        title="EgleSora Hospital | Multi-Specialty Medical Care"
+        description="EgleSora Hospital provides multi-specialty outpatient and inpatient medical care, diagnostic testing, and 24/7 emergency response."
         canonicalUrl="/"
       />
       {/* ======================================================================
@@ -119,7 +119,7 @@ export function HomePage() {
             {/* Left Column: Heading, Booking Form & Patient Entry */}
             <div className="col-12 col-lg-7">
               <div className="d-inline-flex flex-wrap align-items-center gap-2 px-3 py-1 rounded-pill neu-raised mb-3">
-                <span className="neu-badge neu-badge-primary">Tertiary Care</span>
+                <span className="neu-badge neu-badge-primary">Multi-Specialty Care</span>
                 <span className="small fw-semibold text-primary d-inline-flex align-items-center gap-1">
                   <ShieldCheck size={14} />
                   {HOSPITAL_METADATA.legalName}
@@ -256,7 +256,7 @@ export function HomePage() {
                       <Clock size={14} className="text-primary" />
                       {t('hero.hoursTitle')}
                     </span>
-                    <span className="small text-muted">Tertiary Campus</span>
+                    <span className="small text-muted">Hospital Campus</span>
                   </div>
                   <div className="small text-muted mb-1 d-flex align-items-start gap-2">
                     <strong className="text-body text-nowrap">OPD Hours:</strong>
@@ -456,7 +456,7 @@ export function HomePage() {
       <section className="hospital-section py-5" aria-label="Clinical Services">
         <Container>
           <div className="text-center mb-5">
-            <span className="neu-eyebrow text-uppercase fw-bold text-primary">Comprehensive Care</span>
+            <span className="neu-eyebrow text-uppercase fw-bold text-primary">Clinical Services</span>
             <h2 className="hospital-section-title mb-2 fs-3">{t('services.title')}</h2>
             <p className="hospital-text-supporting text-muted mx-auto mb-0" style={{ maxWidth: '640px' }}>
               {t('services.subtitle')}

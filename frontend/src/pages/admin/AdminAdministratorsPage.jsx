@@ -770,9 +770,9 @@ export function AdminAdministratorsPage() {
                     </div>
                     <ul className="mb-0 ps-3">
                       <li>Role strictly assigned: <strong>Hospital Administrator (HOSPITAL_ADMIN)</strong>.</li>
-                      <li>Django <code>is_staff=True</code> enabled for administrative dashboard functions.</li>
-                      <li>Added to <code>Hospital Administrators</code> permission group covering clinical management.</li>
-                      <li>Password is hashed on the server using Django PBKDF2 authentication; never stored in plaintext.</li>
+                      <li>Administrative privileges enabled for hospital operations and clinical management.</li>
+                      <li>Added to authorized staff directory with monitored audit logging.</li>
+                      <li>Credentials secured with industry-standard cryptographic hashing; never stored in plaintext.</li>
                     </ul>
                   </div>
                 </div>

@@ -105,19 +105,19 @@ export function AdminSidebar({
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
               <span className="pulse-dot"></span>
-              <span className="fw-bold admin-sidebar-footer-title">Live PostgreSQL Mode</span>
+              <span className="fw-bold admin-sidebar-footer-title">Authenticated Session</span>
             </div>
             <div className="admin-sidebar-footer-desc" style={{ fontSize: '0.75rem' }}>
-              DRF API &bull; {staffUser?.email || 'Authenticated'}
+              {staffUser?.email || 'Staff Account'} &bull; {currentRole?.label || 'Staff'}
             </div>
           </div>
         ) : (
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
               <span className="neu-badge neu-badge-warning p-1 rounded-circle" style={{ width: '8px', height: '8px', display: 'inline-block' }}></span>
-              <span className="fw-bold admin-sidebar-footer-title">Prototype Demo Mode</span>
+              <span className="fw-bold admin-sidebar-footer-title">Demo Session</span>
             </div>
-            <div className="admin-sidebar-footer-desc" style={{ fontSize: '0.75rem' }}>Local Mock State Only</div>
+            <div className="admin-sidebar-footer-desc" style={{ fontSize: '0.75rem' }}>Local Staff Preview</div>
           </div>
         )}
       </div>

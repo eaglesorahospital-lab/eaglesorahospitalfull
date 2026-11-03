@@ -69,21 +69,21 @@ html, body {
 .neu-inset,
 .neu-surface-inset {
   background-color: var(--hospital-surface-input);
-  box-shadow: var(--neu-inset);
+  box-shadow: none;
   border: 1px solid var(--hospital-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 10px);
   transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
 .neu-inset-sm {
   background-color: var(--hospital-surface-input);
-  box-shadow: var(--neu-inset-sm);
+  box-shadow: none;
   border: 1px solid var(--hospital-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 10px);
 }
 
 .neu-inset:focus-within {
-  box-shadow: var(--neu-inset), 0 0 0 3px rgba(40, 120, 200, 0.15);
+  box-shadow: 0 0 0 3px rgba(32, 112, 192, 0.18);
   border-color: var(--hospital-medical-blue);
 }
 
@@ -633,7 +633,7 @@ select.form-select:hover,
 .form-select:focus {
   background-color: var(--hospital-surface-input);
   color: var(--hospital-text);
-  box-shadow: var(--neu-inset), 0 0 0 3px rgba(40, 120, 200, 0.15);
+  box-shadow: 0 0 0 3px rgba(32, 112, 192, 0.18);
   border-color: var(--hospital-medical-blue);
   outline: none;
 }
@@ -2696,15 +2696,15 @@ select.form-select option {
 /* 20.3. Public Inset & Form Fields */
 .hospital-layout-root .neu-inset,
 .hospital-layout-root .neu-surface-inset {
-  background-color: var(--glass-surface-input) !important;
-  border: 1px solid var(--glass-border-subtle) !important;
-  box-shadow: inset 0 1px 3px rgba(15, 35, 60, 0.05) !important;
-  border-radius: var(--radius-md, 12px);
+  background-color: var(--hospital-surface-input) !important;
+  border: 1px solid var(--hospital-border) !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-sm, 10px);
 }
 
 .hospital-layout-root .neu-inset:focus-within {
   border-color: var(--hospital-medical-blue) !important;
-  box-shadow: inset 0 1px 3px rgba(15, 35, 60, 0.05), 0 0 0 3px rgba(40, 120, 200, 0.18) !important;
+  box-shadow: 0 0 0 3px rgba(32, 112, 192, 0.18) !important;
 }
 
 /* 20.4. Public Buttons Elevation */
@@ -2873,11 +2873,11 @@ select.form-select option {
 
 /* Patient Navigation Segmented Tabs */
 .patient-portal-nav-wrapper nav.neu-inset {
-  background: var(--glass-surface-input) !important;
-  border: 1px solid var(--glass-border-subtle) !important;
-  backdrop-filter: blur(var(--glass-blur-sm, 8px));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 8px));
-  box-shadow: inset 0 1px 3px rgba(15, 35, 60, 0.05) !important;
+  background: var(--hospital-surface-input) !important;
+  border: 1px solid var(--hospital-border) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
 }
 
 .patient-portal-nav-wrapper nav.neu-inset a {
@@ -3063,11 +3063,12 @@ select.form-select option {
 .doctor-schedule-view .neu-inset,
 .doctor-notifications-view .neu-inset,
 .doctor-profile-view .neu-inset {
-  background: var(--glass-surface-input) !important;
-  backdrop-filter: blur(var(--glass-blur-sm, 6px));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm, 6px));
-  border: 1px solid var(--glass-border-subtle) !important;
+  background: var(--hospital-surface-input) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--hospital-border) !important;
   box-shadow: none !important;
+  border-radius: var(--radius-sm, 10px) !important;
 }
 
 /* 22.4. Doctor Inputs & Selects */
@@ -3139,16 +3140,16 @@ select.form-select option {
   padding: 0.45rem 0.95rem;
 }
 
-/* 22.6. Doctor Modals Glassmorphism */
+/* 22.6. Doctor Modals Clinical Standard */
 .doctor-dashboard-view .modal,
 .doctor-appointments-view .modal,
 .doctor-history-view .modal,
 .doctor-patients-view .modal,
 .doctor-schedule-view .modal,
 .doctor-notifications-view .modal {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background-color: rgba(10, 25, 47, 0.7) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(10, 25, 47, 0.6) !important;
 }
 
 .doctor-dashboard-view .modal-content,
@@ -3157,12 +3158,12 @@ select.form-select option {
 .doctor-patients-view .modal-content,
 .doctor-schedule-view .modal-content,
 .doctor-notifications-view .modal-content {
-  background: var(--glass-surface-modal, #FFFFFF) !important;
-  backdrop-filter: blur(var(--glass-blur-lg, 16px)) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg, 16px)) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow-lg) !important;
-  border-radius: var(--radius-xl, 20px) !important;
+  background: var(--hospital-surface, #FFFFFF) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--hospital-border) !important;
+  box-shadow: var(--neu-raised-card) !important;
+  border-radius: var(--radius-lg, 14px) !important;
 }
 
 /* 22.7. Staff & Invitation Gateway Cards */
@@ -3226,8 +3227,8 @@ select.form-select option {
 
 /* 23.1. Admin Top Header Glass & Touch Target Upgrades */
 .hospital-admin-header {
-  backdrop-filter: blur(var(--glass-blur-md, 12px)) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .admin-header-btn {
@@ -3260,11 +3261,12 @@ select.form-select option {
 .admin-notifications-view .neu-card,
 .admin-administrators-view .neu-card,
 .admin-audit-view .neu-card {
-  background: var(--glass-surface-card) !important;
-  backdrop-filter: blur(var(--glass-blur-md, 12px));
-  -webkit-backdrop-filter: blur(var(--glass-blur-md, 12px));
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow-md) !important;
+  background: var(--hospital-surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--hospital-border) !important;
+  box-shadow: var(--neu-raised-card) !important;
+  border-radius: var(--radius-lg, 14px) !important;
 }
 
 /* 23.4. Admin Action Buttons & Touch Targets */
@@ -3579,9 +3581,9 @@ select.form-select option {
 .theme-dark .hospital-layout-root .neu-inset,
 [data-theme="dark"] .hospital-layout-root .neu-surface-inset,
 .theme-dark .hospital-layout-root .neu-surface-inset {
-  background-color: var(--glass-surface-input) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45) !important;
+  background-color: var(--hospital-surface-input) !important;
+  border: 1px solid var(--hospital-border) !important;
+  box-shadow: none !important;
 }
 
 /* 24.3. Interactive Buttons in Dark Mode */
@@ -3697,7 +3699,7 @@ select.form-select option {
   background-color: #112033 !important;
   color: #E8F0F8 !important;
   border: 1px solid #233B57 !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] input.form-control:hover,
@@ -3738,7 +3740,7 @@ select.form-select option {
   background-color: #142840 !important;
   color: #FFFFFF !important;
   border-color: #3A8EE5 !important;
-  box-shadow: 0 0 0 3px rgba(58, 142, 229, 0.28), inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(58, 142, 229, 0.35) !important;
   outline: none !important;
 }
 
@@ -4157,9 +4159,12 @@ select.form-select option {
 .theme-dark .admin-administrators-view .neu-card,
 [data-theme="dark"] .admin-audit-view .neu-card,
 .theme-dark .admin-audit-view .neu-card {
-  background-color: var(--glass-surface-card) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.50) !important;
+  background-color: var(--hospital-surface) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--hospital-border) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.40) !important;
+  border-radius: var(--radius-lg, 14px) !important;
 }
 
 
@@ -4918,3 +4923,73 @@ textarea.form-control {
     max-width: var(--container-max-width, 1240px);
   }
 }
+
+/* ==============================================================================
+   Institutional Healthcare Radius Standardization (10-14px)
+   ============================================================================== */
+.rounded-4 {
+  border-radius: var(--radius-lg, 14px) !important;
+}
+
+.modal-content,
+.glass-modal {
+  border-radius: var(--radius-lg, 14px) !important;
+}
+
+.neu-raised-card,
+.neu-card,
+.admin-card {
+  border-radius: var(--radius-lg, 14px);
+}
+
+/* ==============================================================================
+   Phase 4 — Information Hierarchy & Queue Optimization Utilities
+   ============================================================================== */
+@media (min-width: 768px) {
+  .border-end-md {
+    border-right: 1px solid var(--hospital-border) !important;
+  }
+}
+@media (max-width: 767.98px) {
+  .border-end-md {
+    border-right: none !important;
+    border-bottom: 1px solid var(--hospital-border) !important;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.apt-row-requested {
+  border-left: 3px solid var(--neu-warning) !important;
+}
+
+.apt-row-confirmed {
+  border-left: 3px solid var(--hospital-medical-blue) !important;
+}
+
+.apt-row-checkedin {
+  border-left: 3px solid #16845B !important;
+}
+
+.apt-row-completed {
+  border-left: 3px solid rgba(22, 132, 91, 0.4) !important;
+}
+
+.apt-row-cancelled {
+  border-left: 3px solid var(--hospital-border) !important;
+  opacity: 0.85;
+}
+
+.patient-apt-active {
+  border-left: 4px solid var(--hospital-medical-blue) !important;
+}
+
+.patient-apt-completed {
+  border-left: 4px solid #16845B !important;
+}
+
+.patient-apt-cancelled {
+  border-left: 4px solid #94A3B8 !important;
+  opacity: 0.85;
+}
+

@@ -29,7 +29,7 @@ export const ADMIN_NAV_LINKS = [
 export const HOSPITAL_METADATA = {
   name: 'EgleSora Hospital',
   legalName: 'EgleSora Memorial Hospital & Research Institute',
-  tagline: 'Excellence in Clinical Care & Patient Safety',
+  tagline: 'Multi-Specialty Care & Patient Services',
   emergencyPhone: '+91 (0) 22 0000 1111',
   emergencyDeskNote: 'Sample Emergency Desk',
   generalPhone: '+91 (0) 22 0000 2222',

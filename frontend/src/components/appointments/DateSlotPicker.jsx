@@ -322,7 +322,7 @@ export function DateSlotPicker({
         <div className="mt-3 p-2 neu-inset rounded-3 small text-muted d-flex align-items-center gap-2">
           <ShieldCheck size={16} className="text-success flex-shrink-0" />
           <span>
-            Consultation slots are verified in real time against doctor shifts, clinical breaks, and existing patient bookings in PostgreSQL.
+            Consultation slots are verified in real time against doctor shifts, clinical breaks, and existing appointments.
           </span>
         </div>
       </div>

@@ -37,7 +37,7 @@ function normalizeAuditLog(log) {
     resource: log.resource_type || (log.resource || 'SYSTEM'),
     resourceId: log.resource_id || (log.resourceId || 'N/A'),
     result: resultStr,
-    details: log.details || 'Audit record recorded securely in database.',
+    details: log.details || 'Audit record recorded securely.',
     ipAddress: log.ip_address || '127.0.0.1 (Internal Gateway)',
   };
 }
@@ -167,10 +167,10 @@ export function AdminAuditPage() {
         <div className="d-flex align-items-center gap-2 small">
           <ShieldCheck size={18} color="#16845B" />
           <span style={{ color: 'var(--hospital-primary-navy)' }}>
-            <strong>Healthcare Compliance:</strong> Audit records are generated via database transaction triggers and middleware for non-repudiation.
+            <strong>Healthcare Compliance:</strong> Audit events are recorded automatically across all clinical and administrative actions for regulatory accountability.
           </span>
         </div>
-        <span className="neu-badge neu-badge-success">PostgreSQL Forensic Trail</span>
+        <span className="neu-badge neu-badge-success">Audit Trail Active</span>
       </div>
 
       {/* Filter and Search Bar */}
@@ -240,7 +240,7 @@ export function AdminAuditPage() {
                 <tr>
                   <td colSpan="8" className="text-center py-5 text-muted">
                     <RotateCw size={24} className="spin-anim mb-2 text-primary" />
-                    <div>Loading audit records from PostgreSQL database...</div>
+                    <div>Loading audit records...</div>
                   </td>
                 </tr>
               ) : filteredAuditLogs.length === 0 ? (
@@ -309,7 +309,7 @@ export function AdminAuditPage() {
           {isLoading ? (
             <div className="text-center py-4 text-muted">
               <RotateCw size={24} className="spin-anim mb-2 text-primary" />
-              <div>Loading audit records from PostgreSQL database...</div>
+              <div>Loading audit records...</div>
             </div>
           ) : filteredAuditLogs.length === 0 ? (
             <div className="text-center py-4 text-muted">

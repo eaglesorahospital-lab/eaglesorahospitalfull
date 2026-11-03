@@ -53,9 +53,9 @@ export function RoleRestrictedNotice({ currentRole, moduleName, onSwitchRole }) 
         className="p-3 neu-card-sm mb-4 small text-muted"
         style={{ borderRadius: '16px', background: 'var(--hospital-surface)' }}
       >
-        <strong>Role Policy Note:</strong> In production, role-based authorization is enforced server-side
-        using signed JWT claims, Django REST Framework permission classes (e.g., <code>IsAdminUser</code>,{' '}
-        <code>IsHospitalStaff</code>), and PostgreSQL database-level constraints.
+        <strong>Access Policy:</strong> Administrative privileges are strictly enforced based on your assigned staff role and hospital security policy. Contact your system administrator to request access.
+
+
       </div>
 
       <div className="d-flex flex-wrap gap-2 align-items-center pt-2">

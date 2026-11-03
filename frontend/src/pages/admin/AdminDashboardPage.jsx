@@ -107,13 +107,13 @@ export function AdminDashboardPage() {
               Operational Management Console
             </div>
             <div className="small text-muted">
-              Active Session: <strong>{currentRole?.label || 'Super Administrator'}</strong> • High-Availability Gateway
+              Active Session: <strong>{currentRole?.label || 'Hospital Administrator'}</strong>
             </div>
           </div>
         </div>
         <div className="d-flex align-items-center gap-2">
-          <span className="neu-badge neu-badge-success">System Online</span>
-          <span className="neu-badge neu-badge-info">RBAC Active</span>
+          <span className="neu-badge neu-badge-info">Operations Active</span>
+          <span className="neu-badge neu-badge-primary">Role-Based Access</span>
         </div>
       </div>
 
@@ -161,62 +161,60 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Secondary Operational Stats Row */}
-      <div className="row g-3 g-xl-4 mb-5">
-        <div className="col-6 col-md-3">
-          <div className="neu-card p-3 p-md-4 text-center" style={{ borderRadius: '18px' }}>
-            <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+      {/* Secondary Operational Telemetry Strip (Consolidated for clinical density) */}
+      <div 
+        className="neu-card p-3 mb-4" 
+        style={{ borderRadius: 'var(--radius-lg, 14px)', background: 'var(--hospital-surface)' }}
+      >
+        <div className="row g-2 align-items-center text-center">
+          <div className="col-6 col-md-3 border-end-md">
+            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
               <CheckCircle2 size={16} color="var(--neu-success)" />
-              <span className="small text-muted fw-bold">Confirmed OPD Visits</span>
+              <span className="small text-muted fw-semibold">Confirmed:</span>
+              <span className="fs-5 fw-bold" style={{ color: 'var(--neu-success)', fontFamily: 'var(--font-display)' }}>
+                {stats.confirmedAppointmentsCount}
+              </span>
             </div>
-            <span className="fs-2 fw-bold" style={{ color: 'var(--neu-success)', fontFamily: 'var(--font-display)' }}>
-              {stats.confirmedAppointmentsCount}
-            </span>
           </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div className="neu-card p-3 p-md-4 text-center" style={{ borderRadius: '18px' }}>
-            <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+          <div className="col-6 col-md-3 border-end-md">
+            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
               <Clock size={16} color="var(--neu-warning)" />
-              <span className="small text-muted fw-bold">Pending Requests</span>
+              <span className="small text-muted fw-semibold">Pending:</span>
+              <span className="fs-5 fw-bold" style={{ color: 'var(--neu-warning)', fontFamily: 'var(--font-display)' }}>
+                {stats.pendingRequestsCount}
+              </span>
             </div>
-            <span className="fs-2 fw-bold" style={{ color: 'var(--neu-warning)', fontFamily: 'var(--font-display)' }}>
-              {stats.pendingRequestsCount}
-            </span>
           </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div className="neu-card p-3 p-md-4 text-center" style={{ borderRadius: '18px' }}>
-            <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+          <div className="col-6 col-md-3 border-end-md">
+            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
               <Activity size={16} color="var(--hospital-medical-blue)" />
-              <span className="small text-muted fw-bold">Concluded Consults</span>
+              <span className="small text-muted fw-semibold">Concluded:</span>
+              <span className="fs-5 fw-bold" style={{ color: 'var(--hospital-medical-blue)', fontFamily: 'var(--font-display)' }}>
+                {stats.completedAppointmentsCount}
+              </span>
             </div>
-            <span className="fs-2 fw-bold" style={{ color: 'var(--hospital-medical-blue)', fontFamily: 'var(--font-display)' }}>
-              {stats.completedAppointmentsCount}
-            </span>
           </div>
-        </div>
-        <div className="col-6 col-md-3">
-          <div className="neu-card p-3 p-md-4 text-center" style={{ borderRadius: '18px' }}>
-            <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+          <div className="col-6 col-md-3">
+            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
               <XCircle size={16} color="var(--neu-error)" />
-              <span className="small text-muted fw-bold">Cancelled Visits</span>
+              <span className="small text-muted fw-semibold">Cancelled:</span>
+              <span className="fs-5 fw-bold" style={{ color: 'var(--neu-error)', fontFamily: 'var(--font-display)' }}>
+                {stats.cancelledAppointmentsCount}
+              </span>
             </div>
-            <span className="fs-2 fw-bold" style={{ color: 'var(--neu-error)', fontFamily: 'var(--font-display)' }}>
-              {stats.cancelledAppointmentsCount}
-            </span>
           </div>
         </div>
       </div>
 
       {/* Main Dual Grid: Today's Appointments & Doctor On-Duty Summary */}
-      <div className="row g-4 mb-5">
+      <div className="row g-4 mb-4">
         {/* Left Column: Today's Clinical Queue */}
         <div className="col-12 col-xl-7">
-          <div className="neu-card p-4 p-md-5 h-100" style={{ borderRadius: '22px' }}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="neu-card p-3 p-md-4 h-100" style={{ borderRadius: 'var(--radius-lg, 14px)' }}>
+            <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <h2 className="fs-5 fw-bold mb-1" style={{ color: 'var(--hospital-primary-navy)' }}>
+                <h2 className="fs-5 fw-bold mb-0.5 d-flex align-items-center gap-2" style={{ color: 'var(--hospital-primary-navy)' }}>
+                  <CalendarCheck size={18} color="var(--hospital-medical-blue)" />
                   Daily Outpatient Queue
                 </h2>
                 <span className="small text-muted">Active OPD registrations and consultations for review</span>
@@ -240,7 +238,16 @@ export function AdminDashboardPage() {
                 </thead>
                 <tbody>
                   {todayAppointments.map((apt) => (
-                    <tr key={apt.reference}>
+                    <tr 
+                      key={apt.reference}
+                      style={{
+                        borderLeft: apt.status === 'REQUESTED' 
+                          ? '3px solid var(--neu-warning)' 
+                          : apt.status === 'CONFIRMED' 
+                            ? '3px solid var(--hospital-medical-blue)' 
+                            : '3px solid transparent'
+                      }}
+                    >
                       <td>
                         <span 
                           className="px-2.5 py-1 rounded small fw-bold font-monospace d-inline-block"
@@ -319,7 +326,7 @@ export function AdminDashboardPage() {
 
         {/* Right Column: Doctor Availability Summary */}
         <div className="col-12 col-xl-5">
-          <div className="neu-card p-4 p-md-5 h-100" style={{ borderRadius: '22px' }}>
+          <div className="neu-card p-3 p-md-4 h-100" style={{ borderRadius: 'var(--radius-lg, 14px)' }}>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div>
                 <h2 className="fs-5 fw-bold mb-1" style={{ color: 'var(--hospital-primary-navy)' }}>
@@ -382,7 +389,7 @@ export function AdminDashboardPage() {
       <div className="row g-4">
         {/* Recent Notifications Feed */}
         <div className="col-12 col-lg-6">
-          <div className="neu-card p-4 h-100" style={{ borderRadius: '20px' }}>
+          <div className="neu-card p-4 h-100" style={{ borderRadius: 'var(--radius-lg, 14px)' }}>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div className="d-flex align-items-center gap-2">
                 <Bell size={18} color="var(--hospital-blue)" />
@@ -422,7 +429,7 @@ export function AdminDashboardPage() {
 
         {/* Recent Audit Activity */}
         <div className="col-12 col-lg-6">
-          <div className="neu-card p-4 h-100" style={{ borderRadius: '20px' }}>
+          <div className="neu-card p-4 h-100" style={{ borderRadius: 'var(--radius-lg, 14px)' }}>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div className="d-flex align-items-center gap-2">
                 <ShieldCheck size={18} color="#16845B" />

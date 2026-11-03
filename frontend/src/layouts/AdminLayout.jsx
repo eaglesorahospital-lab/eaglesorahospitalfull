@@ -115,9 +115,7 @@ export function AdminLayout() {
       <footer 
         className="py-2.5 px-4 small d-flex flex-wrap justify-content-between align-items-center"
         style={{ 
-          background: 'rgba(10, 27, 46, 0.94)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          background: 'var(--hospital-primary-dark)',
           color: 'rgba(255, 255, 255, 0.75)',
           borderTop: '1px solid rgba(255, 255, 255, 0.10)',
           fontSize: '0.8rem'
@@ -139,8 +137,8 @@ export function AdminLayout() {
         >
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '440px' }}>
             <div 
-              className="modal-content glass-modal p-0" 
-              style={{ borderRadius: '24px', overflow: 'hidden' }}
+              className="modal-content p-0" 
+              style={{ borderRadius: 'var(--radius-lg, 14px)', overflow: 'hidden', background: 'var(--hospital-surface)', border: '1px solid var(--hospital-border)' }}
             >
               <div 
                 className="modal-header px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
@@ -167,10 +165,10 @@ export function AdminLayout() {
                   Are you sure you wish to sign out of the Eagle Sora Hospital staff workspace?
                 </p>
                 <div 
-                  className="p-3 glass-card-sm small text-muted"
-                  style={{ borderRadius: '14px', background: 'var(--glass-surface-subtle)' }}
+                  className="p-3 small text-muted"
+                  style={{ borderRadius: '10px', background: 'var(--hospital-surface-subtle)', border: '1px solid var(--hospital-border-light)' }}
                 >
-                  Your JWT access session will be terminated and credentials securely cleared from browser memory.
+                  Your staff session will be terminated and credentials securely cleared.
                 </div>
               </div>
               <div 

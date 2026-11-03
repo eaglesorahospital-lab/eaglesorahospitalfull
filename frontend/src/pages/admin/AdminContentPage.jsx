@@ -132,8 +132,8 @@ export function AdminContentPage() {
         id: 1,
         name: 'EgleSora Super Speciality Hospital',
         legal_name: 'EgleSora Healthcare Services Pvt Ltd',
-        tagline: 'Excellence in Clinical Care & Patient Safety',
-        overview: 'Tertiary healthcare institute committed to world-class clinical excellence and patient safety.',
+        tagline: 'Multi-Specialty Care & Patient Services',
+        overview: 'Multi-specialty healthcare institution providing outpatient consultations, diagnostic testing, inpatient care, and 24/7 emergency response.',
         contact_phone: '+91 (0) 22 0000 2222',
         emergency_phone: '+91 (0) 22 0000 1111',
         contact_email: 'desk@eglesorahospital.org',
@@ -161,7 +161,7 @@ export function AdminContentPage() {
     try {
       const updated = await hospitalService.updateProfile(hospitalProfile.id, profileForm);
       setHospitalProfile(updated);
-      setActionNotice('Hospital Profile and institutional details successfully updated in PostgreSQL database.');
+      setActionNotice('Hospital profile and institutional details updated successfully.');
     } catch (err) {
       setActionNotice(`Failed to save profile: ${err.message || 'Error saving changes'}`);
     } finally {
@@ -403,7 +403,7 @@ export function AdminContentPage() {
                     <h6 className="fw-bold mb-0" style={{ color: 'var(--hospital-primary-navy)' }}>
                       Institutional Governance & Contacts
                     </h6>
-                    <span className="neu-badge neu-badge-success">PostgreSQL Backed</span>
+                    <span className="neu-badge neu-badge-success">Institutional Record</span>
                   </div>
 
                   <form onSubmit={handleSaveProfile}>

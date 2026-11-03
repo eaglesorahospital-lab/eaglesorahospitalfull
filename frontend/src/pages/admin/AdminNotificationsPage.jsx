@@ -197,10 +197,10 @@ export function AdminNotificationsPage() {
             <Activity size={18} />
           </div>
           <span style={{ color: 'var(--hospital-primary-navy)' }}>
-            <strong>Queue Telemetry:</strong> Notifications trigger via appointment lifecycle events and persist securely in PostgreSQL with delivery audit tracking.
+            <strong>Notification Service:</strong> Automated SMS and email notifications dispatched upon appointment booking, confirmation, rescheduling, and cancellation.
           </span>
         </div>
-        <span className="neu-badge neu-badge-success">PostgreSQL Integrated</span>
+        <span className="neu-badge neu-badge-success">Dispatch Engine Active</span>
       </div>
 
       {actionNotice && (
@@ -296,7 +296,7 @@ export function AdminNotificationsPage() {
                 <tr>
                   <td colSpan="8" className="text-center py-5 text-muted">
                     <RotateCw size={24} className="spin-anim mb-2 text-primary" />
-                    <div>Loading communication logs from database...</div>
+                    <div>Loading communication logs...</div>
                   </td>
                 </tr>
               ) : filteredNotifications.length === 0 ? (
@@ -383,7 +383,7 @@ export function AdminNotificationsPage() {
           {isLoading ? (
             <div className="text-center py-4 text-muted">
               <RotateCw size={24} className="spin-anim mb-2 text-primary" />
-              <div>Loading communication logs from database...</div>
+              <div>Loading communication logs...</div>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="text-center py-4 text-muted">

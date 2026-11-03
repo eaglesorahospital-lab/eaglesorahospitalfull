@@ -88,7 +88,7 @@ export function DoctorDetailPage() {
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading doctor profile...</span>
           </div>
-          <p className="mt-3 text-muted">Retrieving physician credentials from hospital database...</p>
+          <p className="mt-3 text-muted">Retrieving physician credentials...</p>
         </div>
       </Container>
     );

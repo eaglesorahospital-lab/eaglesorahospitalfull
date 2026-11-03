@@ -112,13 +112,11 @@ export function DoctorLayout() {
       <header
         className="d-flex align-items-center justify-content-between px-3 px-md-4 py-2.5"
         style={{
-          background: 'rgba(10, 27, 46, 0.94)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          background: 'var(--hospital-primary-dark)',
           color: '#ffffff',
           zIndex: 1020,
           borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: 'var(--glass-shadow-sm)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
         }}
       >
         <div className="d-flex align-items-center gap-2.5">
@@ -226,18 +224,16 @@ export function DoctorLayout() {
       <div className="admin-body-wrapper d-flex flex-grow-1">
         {/* Sidebar */}
         <aside
-          className={`admin-sidebar glass-card d-flex flex-column py-3 px-2 ${
+          className={`admin-sidebar d-flex flex-column py-3 px-2 ${
             isSidebarOpen ? 'show' : ''
           }`}
           style={{
             width: '240px',
             flexShrink: 0,
-            background: 'var(--glass-surface-card)',
-            backdropFilter: 'var(--glass-blur-lg)',
-            WebkitBackdropFilter: 'var(--glass-blur-lg)',
-            borderRight: 'var(--glass-border-subtle)',
+            background: 'var(--hospital-surface)',
+            borderRight: '1px solid var(--hospital-border)',
             borderRadius: 0,
-            boxShadow: 'var(--glass-shadow-sm)',
+            boxShadow: 'var(--neu-raised-sm)',
             transition: 'transform 0.25s ease',
           }}
         >
@@ -316,9 +312,7 @@ export function DoctorLayout() {
       <footer
         className="py-2.5 px-4 small d-flex flex-wrap justify-content-between align-items-center"
         style={{
-          background: 'rgba(10, 27, 46, 0.94)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          background: 'var(--hospital-primary-dark)',
           color: 'rgba(255, 255, 255, 0.75)',
           borderTop: '1px solid rgba(255, 255, 255, 0.10)',
           fontSize: '0.8rem',
@@ -339,7 +333,7 @@ export function DoctorLayout() {
           aria-modal="true"
         >
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
-            <div className="modal-content glass-modal rounded-4 p-4 border-0">
+            <div className="modal-content p-4" style={{ borderRadius: 'var(--radius-lg, 14px)', background: 'var(--hospital-surface)', border: '1px solid var(--hospital-border)' }}>
               <div className="text-center mb-3">
                 <div
                   className="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-3 text-danger"
@@ -349,7 +343,7 @@ export function DoctorLayout() {
                 </div>
                 <h5 className="h5 fw-bold text-body mb-1">Sign Out of Doctor Portal?</h5>
                 <p className="text-muted small mb-0">
-                  Your clinical session tokens will be revoked and cleared securely.
+                  Your clinical session will be closed securely.
                 </p>
               </div>
               <div className="d-flex gap-2">
