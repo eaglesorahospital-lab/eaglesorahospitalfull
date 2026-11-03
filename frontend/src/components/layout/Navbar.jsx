@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HOSPITAL_METADATA } from '../../data/navigation';
-import LanguageSelector from '../common/LanguageSelector';
 import ThemeToggle from '../common/ThemeToggle';
 import authService from '../../services/authService';
 import { Calendar, User, LogOut, Menu, X, Activity } from 'lucide-react';
@@ -242,8 +241,7 @@ export function Navbar() {
               borderRadius: 'var(--radius-xl)'
             }}
           >
-            <div className="mb-3 pb-2 border-bottom d-flex align-items-center justify-content-between">
-              <LanguageSelector variant="pills" />
+            <div className="mb-3 pb-2 border-bottom d-flex align-items-center justify-content-end">
               <ThemeToggle showLabel />
             </div>
 

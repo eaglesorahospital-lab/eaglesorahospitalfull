@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOSPITAL_METADATA } from '../../data/navigation';
-import LanguageSelector from '../common/LanguageSelector';
 import { PhoneCall, Clock, Headphones } from 'lucide-react';
 
 /**
@@ -77,14 +76,6 @@ export function TopBar() {
               <Clock size={13.5} className="hospital-topbar-visiting-icon text-white-50 flex-shrink-0" />
               <span className="hospital-topbar-label">{t('nav.visitingHours')}:</span>
               <span className="hospital-topbar-visiting-time text-white fw-medium">{HOSPITAL_METADATA.visitingHours}</span>
-            </div>
-
-            {/* Clean subtle divider between Visiting Hours and Language Selector */}
-            <div className="hospital-topbar-divider d-none d-xl-block" aria-hidden="true" />
-
-            {/* Language Selector */}
-            <div className="d-flex align-items-center">
-              <LanguageSelector variant="topbar" />
             </div>
           </div>
         </div>
