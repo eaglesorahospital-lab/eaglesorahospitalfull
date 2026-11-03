@@ -29,7 +29,6 @@ import {
   ShieldCheck,
   Plus,
   Minus,
-  Sparkles,
   Users,
 } from 'lucide-react';
 

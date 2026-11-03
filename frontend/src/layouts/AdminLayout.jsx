@@ -75,6 +75,9 @@ export function AdminLayout() {
 
   return (
     <div className="hospital-layout-root admin-root-container">
+      <a href="#admin-main-content" className="skip-to-content">
+        Skip to administrative workspace
+      </a>
       {/* Admin Top Header */}
       <AdminHeader
         currentRoleId={currentRoleId}
@@ -104,7 +107,7 @@ export function AdminLayout() {
         )}
 
         {/* Admin Content Area */}
-        <main className="admin-main-content flex-grow-1 p-3 p-md-4">
+        <main id="admin-main-content" className="admin-main-content flex-grow-1 p-3 p-md-4">
           <ErrorBoundary>
             <Outlet context={{ currentRoleId, currentRole, setRole, hasAccessToRoute }} />
           </ErrorBoundary>

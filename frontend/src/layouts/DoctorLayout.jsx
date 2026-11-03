@@ -108,6 +108,9 @@ export function DoctorLayout() {
 
   return (
     <div className="hospital-layout-root admin-root-container min-vh-100 d-flex flex-column">
+      <a href="#doctor-main-content" className="skip-to-content">
+        Skip to clinical workspace
+      </a>
       {/* Top Navigation Bar with Frosted Glass Header */}
       <header
         className="d-flex align-items-center justify-content-between px-3 px-md-4 py-2.5"
@@ -301,7 +304,7 @@ export function DoctorLayout() {
         )}
 
         {/* Main Content View */}
-        <main className="admin-main-content flex-grow-1 p-3 p-md-4">
+        <main id="doctor-main-content" className="admin-main-content flex-grow-1 p-3 p-md-4">
           <ErrorBoundary>
             <Outlet context={{ doctorProfile, setDoctorProfile, isLoadingProfile }} />
           </ErrorBoundary>
