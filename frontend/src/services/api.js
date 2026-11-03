@@ -17,19 +17,19 @@ const DEFAULT_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTimeo
   : 15000;
 
 export function getApiBaseUrl() {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return String(import.meta.env.VITE_API_BASE_URL).replace(/\/+$/, '');
-  }
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
     const host = window.location.hostname;
+    // Netlify deployments must ALWAYS use same-origin edge proxy to eliminate CORS errors
+    if (host.includes('netlify.app') || host.includes('eglesorahospital') || host.includes('eaglesorahospital')) {
+      return '';
+    }
     // Render static frontend talks directly to Render backend (whitelisted in CORS)
     if (host.includes('eaglesora-hospital-frontend.onrender.com')) {
       return 'https://eaglesorahospitalfull.onrender.com';
     }
-    // Netlify uses its edge proxy (_redirects: /api/* -> Render) for seamless same-origin transport
-    if (host.includes('netlify.app') || host.includes('eglesorahospital') || host.includes('eaglesorahospital')) {
-      return '';
-    }
+  }
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return String(import.meta.env.VITE_API_BASE_URL).replace(/\/+$/, '');
   }
   return '';
 }
