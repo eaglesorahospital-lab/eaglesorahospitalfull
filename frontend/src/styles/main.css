@@ -243,6 +243,104 @@ li.hospital-breadcrumb-item {
   text-decoration: none;
 }
 
+.hospital-topbar-note {
+  display: none;
+}
+
+@media (min-width: 1600px) {
+  .hospital-topbar-note {
+    display: inline;
+  }
+}
+
+.hospital-topbar-visiting {
+  font-size: 0.775rem;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hospital-topbar-visiting-icon {
+  margin-right: 0.15rem;
+}
+
+.hospital-topbar-visiting-time {
+  color: #FFFFFF;
+  font-size: 0.775rem;
+  font-weight: 600;
+}
+
+.hospital-topbar-divider {
+  width: 1px;
+  height: 16px;
+  background-color: rgba(255, 255, 255, 0.20);
+  margin: 0 0.85rem;
+  flex-shrink: 0;
+}
+
+/* Institutional Compact Language Pill */
+.hospital-topbar-lang-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-sm, 6px);
+  padding: 0 0.45rem 0 0.55rem;
+  height: 32px;
+  min-height: 32px;
+  transition: background var(--transition-fast, 0.15s ease), border-color var(--transition-fast, 0.15s ease), box-shadow var(--transition-fast, 0.15s ease);
+  position: relative;
+  cursor: pointer;
+}
+
+.hospital-topbar-lang-pill:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.hospital-topbar-lang-pill:focus-within {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--hospital-medical-blue, #1A62B8);
+  box-shadow: 0 0 0 2px rgba(58, 142, 229, 0.35);
+}
+
+.hospital-topbar-lang-icon {
+  color: rgba(255, 255, 255, 0.70);
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+  pointer-events: none;
+}
+
+.hospital-topbar-lang-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #FFFFFF !important;
+  font-size: 0.775rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  padding: 0 0.2rem 0 0 !important;
+  margin: 0 !important;
+  cursor: pointer;
+  min-height: 30px !important;
+}
+
+.hospital-topbar-lang-select option {
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  font-weight: 500;
+}
+
+.hospital-topbar-lang-chevron {
+  color: rgba(255, 255, 255, 0.65);
+  flex-shrink: 0;
+  margin-left: 0.15rem;
+  pointer-events: none;
+}
+
 .hospital-navbar {
   background-color: var(--hospital-surface);
   border-bottom: 1px solid var(--hospital-border);

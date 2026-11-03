@@ -34,7 +34,7 @@ export function PatientNav() {
     <div className="patient-portal-nav-wrapper mb-4">
       {/* Patient Identity Strip */}
       <div className="neu-raised neu-surface rounded-4 p-3 p-md-4 mb-4 d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
-        <div className="d-flex align-items-center gap-3 min-w-0">
+        <div className="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
           <div
             className="neu-inset rounded-circle d-flex align-items-center justify-content-center fw-bold text-primary flex-shrink-0"
             style={{ width: '48px', height: '48px', fontSize: '1.05rem' }}
@@ -42,7 +42,7 @@ export function PatientNav() {
           >
             {initials}
           </div>
-          <div className="min-w-0">
+          <div className="flex-grow-1 min-w-0">
             <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
               <h2 className="fs-5 fw-bold text-body mb-0 lh-1">
                 {displayName}
@@ -54,13 +54,15 @@ export function PatientNav() {
             <div className="small text-muted d-flex flex-wrap align-items-center gap-2" style={{ fontSize: '0.8125rem' }}>
               <span>{patientProfile?.mobile || 'No contact phone'}</span>
               <span className="d-none d-sm-inline">&bull;</span>
-              <span className="text-break">{patientProfile?.email || 'No email registered'}</span>
+              <span className="text-break" style={{ overflowWrap: 'anywhere', wordBreak: 'normal' }}>
+                {patientProfile?.email || 'No email registered'}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Primary Action Buttons */}
-        <div className="d-flex align-items-center gap-2 flex-shrink-0 w-100 w-sm-auto justify-content-end">
+        <div className="d-flex flex-wrap align-items-center gap-2 flex-shrink-0 w-100 w-sm-auto justify-content-sm-end">
           <Link
             to="/appointments/book"
             className="neu-btn neu-btn-primary neu-btn-sm d-inline-flex align-items-center justify-content-center gap-1 text-nowrap px-3 py-2"

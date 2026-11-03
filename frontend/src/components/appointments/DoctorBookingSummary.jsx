@@ -219,7 +219,7 @@ export function DoctorBookingSummary({ doctor, onSelectDoctor, onChangeDoctor })
             return (
               <div key={doc.id} className="col-12 col-md-6">
                 <div className="neu-inset p-3 rounded-4 d-flex justify-content-between align-items-center gap-3">
-                  <div className="d-flex align-items-center gap-3 min-w-0">
+                  <div className="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
                     <div
                       className="doctor-avatar-box neu-raised flex-shrink-0"
                       style={{ width: '3rem', height: '3rem', fontSize: '1rem', overflow: 'hidden' }}
@@ -238,7 +238,7 @@ export function DoctorBookingSummary({ doctor, onSelectDoctor, onChangeDoctor })
                         <span className="fw-bold text-primary">{doc.initials || 'DR'}</span>
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="flex-grow-1 min-w-0">
                       <div className="fw-bold text-body text-truncate">{doc.name}</div>
                       <div className="small text-primary text-truncate">{doc.specialty}</div>
                       <div className="small text-muted text-truncate">{doc.departmentName || doc.department}</div>

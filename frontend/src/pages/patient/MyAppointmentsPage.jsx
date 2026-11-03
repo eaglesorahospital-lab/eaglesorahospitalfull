@@ -215,7 +215,7 @@ export function MyAppointmentsPage() {
 
                 <div className="row g-4 align-items-center">
                   {/* Doctor & Appointment Details */}
-                  <div className="col-12 col-md-8 col-lg-9">
+                  <div className="col-12 col-md-8 col-lg-9 min-w-0">
                     <h3 className="h4 fw-bold text-body mb-1">
                       {nextUpcoming.doctorName}
                     </h3>
@@ -351,7 +351,7 @@ export function MyAppointmentsPage() {
                         aria-label={`Appointment reference ${apt.reference}`}
                       >
                         <div className="row g-3 align-items-start align-items-md-center">
-                          <div className="col-12 col-md-8 col-lg-9">
+                          <div className="col-12 col-md-8 col-lg-9 min-w-0">
                             <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
                               <span 
                                 className="font-monospace px-2.5 py-1 rounded small fw-bold"

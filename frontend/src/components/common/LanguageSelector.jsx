@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Globe, ChevronDown } from 'lucide-react';
 
 export const LANGUAGES = [
   { code: 'en', label: 'English', short: 'EN' },
@@ -60,25 +61,10 @@ export function LanguageSelector({ variant = 'topbar', className = '' }) {
     );
   }
 
-  // Topbar variant (clean, accessible select dropdown with globe icon)
+  // Topbar variant (compact, polished healthcare language pill with globe and chevron)
   return (
-    <div className={`hospital-lang-selector d-inline-flex align-items-center gap-1 ${className}`}>
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-white-50"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      </svg>
+    <div className={`hospital-topbar-lang-pill ${className}`}>
+      <Globe size={13} className="hospital-topbar-lang-icon" aria-hidden="true" />
       <label htmlFor="hospital-lang-select" className="visually-hidden">
         {t('nav.language')}
       </label>
@@ -86,22 +72,16 @@ export function LanguageSelector({ variant = 'topbar', className = '' }) {
         id="hospital-lang-select"
         value={currentLang}
         onChange={handleLanguageChange}
-        className="form-select form-select-sm border-0 py-0 ps-1 pe-4 text-white bg-transparent fw-semibold"
-        style={{
-          fontSize: '0.8125rem',
-          cursor: 'pointer',
-          width: 'auto',
-          backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          borderRadius: '3px',
-        }}
+        className="hospital-topbar-lang-select"
         aria-label="Select website language"
       >
         {LANGUAGES.map((lang) => (
-          <option key={lang.code} value={lang.code} style={{ color: '#0f172a', backgroundColor: '#ffffff' }}>
+          <option key={lang.code} value={lang.code}>
             {lang.label}
           </option>
         ))}
       </select>
+      <ChevronDown size={11} className="hospital-topbar-lang-chevron" aria-hidden="true" />
     </div>
   );
 }
