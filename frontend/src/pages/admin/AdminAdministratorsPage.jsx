@@ -322,7 +322,7 @@ export function AdminAdministratorsPage() {
               />
             </div>
           </div>
-          <div className="col-6 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <select
               className="neu-select"
               value={roleFilter}
@@ -333,7 +333,7 @@ export function AdminAdministratorsPage() {
               <option value="HOSPITAL_ADMIN">Hospital Administrator</option>
             </select>
           </div>
-          <div className="col-6 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <select
               className="neu-select"
               value={statusFilter}
@@ -629,6 +629,8 @@ export function AdminAdministratorsPage() {
                   style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                   onClick={() => setShowAddModal(false)}
                   disabled={submitting}
+                  aria-label="Close dialog"
+                  title="Close dialog"
                 >
                   <X size={16} />
                 </button>

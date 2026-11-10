@@ -147,7 +147,9 @@ class IsPatientOwnerOrStaff(permissions.BasePermission):
 
         # Check if obj is Appointment
         if hasattr(obj, 'patient'):
-            return obj.patient.user == request.user
+            is_patient_owner = bool(obj.patient and obj.patient.user == request.user)
+            is_requester = bool(hasattr(obj, 'booked_by') and obj.booked_by == request.user)
+            return is_patient_owner or is_requester
 
         return False
 

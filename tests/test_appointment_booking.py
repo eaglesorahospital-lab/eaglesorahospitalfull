@@ -16,6 +16,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 import django
 django.setup()
 
+from unittest import skipIf
 from django.test import TransactionTestCase
 from django.utils import timezone
 from django.db import connection
@@ -588,6 +589,10 @@ class AppointmentBookingComprehensiveTests(TransactionTestCase):
         self.assertIn("Invalid appointment status transition", res3.json()['status'][0])
 
     # 22 & 23. Concurrent booking test & Double-booking prevention
+    @skipIf(
+        'sqlite' in connection.settings_dict.get('ENGINE', ''),
+        "Multi-threaded concurrent booking collision test requires PostgreSQL (SQLite in-memory loses schema across threads on connection.close())",
+    )
     def test_22_concurrent_booking_test(self):
         """
         True concurrency test using multiple threads against PostgreSQL.
@@ -1011,6 +1016,185 @@ class AppointmentBookingComprehensiveTests(TransactionTestCase):
         # Database state verification
         apt.refresh_from_db()
         self.assertEqual(apt.status, Appointment.Status.NO_SHOW)
+
+
+    # 38. Database-level partial unique constraint prevents duplicate slot sequences directly
+    def test_38_database_partial_unique_constraint_enforced_directly(self):
+        """
+        Direct ORM test bypassing service layer:
+        Verifies that PostgreSQL/database partial unique constraint rejects duplicate
+        active appointments for the same doctor, date, start_time, and slot_sequence.
+        """
+        from django.db import IntegrityError, transaction
+
+        Appointment.objects.create(
+            patient=self.patient_a,
+            doctor=self.doctor,
+            department=self.dept,
+            appointment_date=self.future_date,
+            start_time=time(14, 0),
+            end_time=time(14, 30),
+            slot_sequence=1,
+            status=Appointment.Status.REQUESTED,
+        )
+
+        # Second insert with identical doctor, date, start_time, and slot_sequence must raise IntegrityError
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Appointment.objects.create(
+                    patient=self.patient_b,
+                    doctor=self.doctor,
+                    department=self.dept,
+                    appointment_date=self.future_date,
+                    start_time=time(14, 0),
+                    end_time=time(14, 30),
+                    slot_sequence=1,
+                    status=Appointment.Status.CONFIRMED,
+                )
+
+    # 39. Multi-capacity supported at database level with discrete sequences
+    def test_39_multi_capacity_supported_at_database_level(self):
+        """
+        Verifies that two active appointments can coexist for the same slot
+        when slot_sequence is distinct (slot_sequence=1 and slot_sequence=2).
+        """
+        from django.db import IntegrityError, transaction
+
+        apt1 = Appointment.objects.create(
+            patient=self.patient_a,
+            doctor=self.doctor,
+            department=self.dept,
+            appointment_date=self.future_date,
+            start_time=time(14, 30),
+            end_time=time(15, 0),
+            slot_sequence=1,
+            status=Appointment.Status.CONFIRMED,
+        )
+        apt2 = Appointment.objects.create(
+            patient=self.patient_b,
+            doctor=self.doctor,
+            department=self.dept,
+            appointment_date=self.future_date,
+            start_time=time(14, 30),
+            end_time=time(15, 0),
+            slot_sequence=2,
+            status=Appointment.Status.REQUESTED,
+        )
+        self.assertEqual(apt1.slot_sequence, 1)
+        self.assertEqual(apt2.slot_sequence, 2)
+
+        # 3rd insert colliding on sequence 1 is rejected
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Appointment.objects.create(
+                    patient=self.patient_a,
+                    doctor=self.doctor,
+                    department=self.dept,
+                    appointment_date=self.future_date,
+                    start_time=time(14, 30),
+                    end_time=time(15, 0),
+                    slot_sequence=1,
+                    status=Appointment.Status.CONFIRMED,
+                )
+
+    # 40. Cancelled appointment frees slot sequence in database
+    def test_40_cancelled_appointment_frees_slot_sequence(self):
+        """
+        Verifies that when an appointment is cancelled, the partial index excludes it,
+        allowing a new active appointment to reuse slot_sequence=1.
+        """
+        payload = {
+            "doctor": self.doctor.id,
+            "appointment_date": str(self.future_date),
+            "start_time": "10:30:00",
+            "end_time": "11:00:00",
+        }
+        res1 = self.client_a.post('/api/appointments/', payload, format='json')
+        self.assertEqual(res1.status_code, status.HTTP_201_CREATED)
+        apt1_ref = res1.json()['reference']
+
+        # Cancel appointment 1
+        res_cancel = self.client_a.post(
+            f'/api/appointments/{apt1_ref}/cancel/',
+            {"reason": "Patient conflict"},
+            format='json',
+        )
+        self.assertEqual(res_cancel.status_code, status.HTTP_200_OK)
+
+        # Booking the exact same slot again now succeeds and claims slot_sequence=1
+        res2 = self.client_b.post('/api/appointments/', payload, format='json')
+        self.assertEqual(res2.status_code, status.HTTP_201_CREATED)
+        apt2 = Appointment.objects.get(reference=res2.json()['reference'])
+        self.assertEqual(apt2.slot_sequence, 1)
+
+    # 41. Off-grid start time rejected by slot-grid alignment validation
+    def test_41_off_grid_start_time_rejected(self):
+        """
+        Shift starts at 09:00 with 30-min duration.
+        Submitting start_time=09:15 (duration=30, end=09:45) is rejected
+        because 09:15 is not on the slot grid boundary.
+        """
+        payload = {
+            "doctor": self.doctor.id,
+            "appointment_date": str(self.future_date),
+            "start_time": "09:15:00",
+            "end_time": "09:45:00",
+        }
+        res = self.client_a.post('/api/appointments/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("must align with doctor slot grid", str(res.json()))
+
+    # 42. Failed reschedule preserves original booking and slot occupancy
+    def test_42_reschedule_failure_preserves_original_booking_and_slot(self):
+        """
+        If a patient attempts to reschedule to an already-full slot,
+        the transaction must roll back cleanly, leaving the original booking CONFIRMED.
+        """
+        # Book original slot at 10:00
+        payload_orig = {
+            "doctor": self.doctor.id,
+            "appointment_date": str(self.future_date),
+            "start_time": "10:00:00",
+            "end_time": "10:30:00",
+        }
+        res_orig = self.client_a.post('/api/appointments/', payload_orig, format='json')
+        self.assertEqual(res_orig.status_code, status.HTTP_201_CREATED)
+        apt_orig_ref = res_orig.json()['reference']
+
+        # Confirm original appointment
+        self.admin_client.patch(
+            f'/api/appointments/{apt_orig_ref}/',
+            {"status": "CONFIRMED"},
+            format='json',
+        )
+
+        # Book slot at 11:00 with patient B (filling capacity=1)
+        payload_target = {
+            "doctor": self.doctor.id,
+            "appointment_date": str(self.future_date),
+            "start_time": "11:00:00",
+            "end_time": "11:30:00",
+        }
+        res_target = self.client_b.post('/api/appointments/', payload_target, format='json')
+        self.assertEqual(res_target.status_code, status.HTTP_201_CREATED)
+
+        # Patient A attempts to reschedule to the full 11:00 slot
+        res_resched = self.client_a.post(
+            f'/api/appointments/{apt_orig_ref}/reschedule/',
+            {
+                "appointment_date": str(self.future_date),
+                "start_time": "11:00:00",
+                "end_time": "11:30:00",
+                "reason": "Want 11:00 slot",
+            },
+            format='json',
+        )
+        self.assertEqual(res_resched.status_code, status.HTTP_409_CONFLICT)
+
+        # Verify original appointment is still CONFIRMED and unchanged
+        apt_orig = Appointment.objects.get(reference=apt_orig_ref)
+        self.assertEqual(apt_orig.status, Appointment.Status.CONFIRMED)
+        self.assertEqual(apt_orig.start_time, time(10, 0))
 
 
 if __name__ == '__main__':

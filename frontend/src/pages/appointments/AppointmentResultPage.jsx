@@ -86,12 +86,16 @@ export function AppointmentResultPage() {
               dayName: prev?.dayName || serverApt.dayName,
               duration: prev?.duration || serverApt.duration || '30 minutes',
               status: (serverApt.status || prev?.status || 'REQUESTED').toUpperCase(),
+              relationshipToPatient: serverApt.relationshipToPatient || serverApt.relationship_to_patient || prev?.relationshipToPatient || 'Self',
+              bookedBy: serverApt.bookedBy || serverApt.booked_by || prev?.bookedBy || null,
+              patientBloodGroup: serverApt.patientBloodGroup || serverApt.patient?.blood_group || serverApt.patient?.bloodGroup || prev?.patientBloodGroup || prev?.patient?.bloodGroup || '',
               patient: {
                 ...(prev?.patient || {}),
                 ...(serverApt.patient || {}),
                 fullName: serverApt.patientName || prev?.patient?.fullName,
                 dateOfBirth: prev?.patient?.dateOfBirth || serverApt.patient?.dateOfBirth,
                 gender: prev?.patient?.gender || serverApt.patient?.gender,
+                bloodGroup: serverApt.patientBloodGroup || serverApt.patient?.blood_group || serverApt.patient?.bloodGroup || prev?.patient?.bloodGroup || '',
                 mobile: serverApt.patientContact || prev?.patient?.mobile,
                 email: serverApt.patientEmail || prev?.patient?.email,
                 reasonForVisit: serverApt.reasonForVisit || prev?.patient?.reasonForVisit,
@@ -392,9 +396,16 @@ export function AppointmentResultPage() {
             {/* Patient Information */}
             <div className="col-12">
               <div className="neu-inset p-3 rounded-4">
-                <div className="small fw-semibold text-primary mb-2 d-flex align-items-center gap-1">
-                  <User size={14} />
-                  <span>Patient Profile</span>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="small fw-semibold text-primary d-flex align-items-center gap-1">
+                    <User size={14} />
+                    <span>Patient Profile</span>
+                  </div>
+                  {appointment.relationshipToPatient && appointment.relationshipToPatient !== 'Self' && (
+                    <span className="badge bg-primary text-white" style={{ fontSize: '0.72rem' }}>
+                      Dependent ({appointment.relationshipToPatient})
+                    </span>
+                  )}
                 </div>
                 <div className="row g-2 small text-muted">
                   <div className="col-12 col-sm-6">
@@ -406,13 +417,23 @@ export function AppointmentResultPage() {
                     <span>{appointment.patient?.dateOfBirth} ({appointment.patient?.gender})</span>
                   </div>
                   <div className="col-12 col-sm-6">
+                    <strong className="text-body">Blood Group: </strong>
+                    <span className="fw-semibold text-danger">{appointment.patient?.bloodGroup || appointment.patientBloodGroup || 'Not Provided'}</span>
+                  </div>
+                  <div className="col-12 col-sm-6">
                     <strong className="text-body">Mobile Contact: </strong>
                     <span>{appointment.patient?.mobile}</span>
                   </div>
                   <div className="col-12 col-sm-6">
                     <strong className="text-body">Email Address: </strong>
-                    <span>{appointment.patient?.email}</span>
+                    <span>{appointment.patient?.email || 'Not provided (Dependent)'}</span>
                   </div>
+                  {appointment.bookedBy?.name && appointment.relationshipToPatient && appointment.relationshipToPatient !== 'Self' && (
+                    <div className="col-12 col-sm-6">
+                      <strong className="text-body">Booked By: </strong>
+                      <span>{appointment.bookedBy.name} ({appointment.bookedBy.email || 'Account Holder'})</span>
+                    </div>
+                  )}
                   <div className="col-12 mt-2">
                     <strong className="text-body">Reason for Consultation: </strong>
                     <span>{appointment.patient?.reasonForVisit}</span>

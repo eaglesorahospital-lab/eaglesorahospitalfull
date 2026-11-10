@@ -13,7 +13,18 @@ class AppointmentPatientNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PatientProfile
-        fields = ['id', 'mrn', 'first_name', 'last_name', 'full_name', 'phone', 'email']
+        fields = [
+            'id',
+            'mrn',
+            'first_name',
+            'last_name',
+            'full_name',
+            'phone',
+            'email',
+            'blood_group',
+            'gender',
+            'date_of_birth',
+        ]
 
 
 class AppointmentDoctorNestedSerializer(serializers.ModelSerializer):
@@ -34,6 +45,17 @@ class AppointmentDepartmentNestedSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'location']
 
 
+class AppointmentBookedBySerializer(serializers.ModelSerializer):
+    """
+    Compact user details for the account holder who initiated the booking.
+    """
+    name = serializers.CharField(source='get_full_name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'name', 'phone', 'role']
+
+
 class AppointmentListSerializer(serializers.ModelSerializer):
     """
     Appointment list summary serializer.
@@ -41,6 +63,8 @@ class AppointmentListSerializer(serializers.ModelSerializer):
     patient = AppointmentPatientNestedSerializer(read_only=True)
     doctor = AppointmentDoctorNestedSerializer(read_only=True)
     department = AppointmentDepartmentNestedSerializer(read_only=True)
+    booked_by = AppointmentBookedBySerializer(read_only=True)
+    relationship_to_patient = serializers.CharField(read_only=True)
 
     class Meta:
         model = Appointment
@@ -48,6 +72,8 @@ class AppointmentListSerializer(serializers.ModelSerializer):
             'id',
             'reference',
             'patient',
+            'booked_by',
+            'relationship_to_patient',
             'doctor',
             'department',
             'appointment_date',
@@ -71,6 +97,8 @@ class AppointmentDetailSerializer(serializers.ModelSerializer):
     patient = AppointmentPatientNestedSerializer(read_only=True)
     doctor = AppointmentDoctorNestedSerializer(read_only=True)
     department = AppointmentDepartmentNestedSerializer(read_only=True)
+    booked_by = AppointmentBookedBySerializer(read_only=True)
+    relationship_to_patient = serializers.CharField(read_only=True)
 
     class Meta:
         model = Appointment
@@ -78,6 +106,8 @@ class AppointmentDetailSerializer(serializers.ModelSerializer):
             'id',
             'reference',
             'patient',
+            'booked_by',
+            'relationship_to_patient',
             'doctor',
             'department',
             'appointment_date',
@@ -91,6 +121,7 @@ class AppointmentDetailSerializer(serializers.ModelSerializer):
             'cancellation_reason',
             'cancelled_at',
             'rescheduled_from',
+            'slot_sequence',
             'created_at',
             'updated_at',
         ]
@@ -104,7 +135,8 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
     """
     patient = serializers.PrimaryKeyRelatedField(
         queryset=PatientProfile.objects.all(),
-        required=True,
+        required=False,
+        allow_null=True,
     )
     doctor = serializers.PrimaryKeyRelatedField(
         queryset=Doctor.objects.all(),
@@ -112,6 +144,17 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
     department = serializers.PrimaryKeyRelatedField(
         queryset=Department.objects.all(),
         required=False,
+    )
+    relationship_to_patient = serializers.CharField(
+        max_length=50,
+        required=False,
+        default='Self',
+    )
+    booking_for = serializers.CharField(
+        max_length=20,
+        required=False,
+        default='MYSELF',
+        write_only=True,
     )
 
     class Meta:
@@ -130,6 +173,8 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
             'status',
             'reason_for_visit',
             'notes',
+            'relationship_to_patient',
+            'booking_for',
         ]
         read_only_fields = ['id', 'reference', 'status', 'consultation_location', 'department']
 

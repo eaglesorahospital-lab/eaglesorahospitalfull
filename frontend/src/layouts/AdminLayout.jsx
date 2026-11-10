@@ -25,6 +25,7 @@ export function AdminLayout() {
   } = useAdminSession();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const staffUser = authService.getCurrentUser();
 
   // Enforce administrative role verification: kick out patients and doctors immediately
@@ -67,6 +68,14 @@ export function AdminLayout() {
     };
   }, [isSidebarOpen, showLogoutModal]);
 
+  const handleToggleSidebar = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 992) {
+      setIsSidebarOpen((prev) => !prev);
+    } else {
+      setIsSidebarCollapsed((prev) => !prev);
+    }
+  };
+
   const handleConfirmedLogout = async () => {
     setShowLogoutModal(false);
     await authService.logout();
@@ -84,7 +93,8 @@ export function AdminLayout() {
         onRoleChange={setRole}
         onLogoutClick={() => setShowLogoutModal(true)}
         isSidebarOpen={isSidebarOpen}
-        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={handleToggleSidebar}
       />
 
       {/* Main Admin Workspace with Sidebar */}
@@ -93,7 +103,9 @@ export function AdminLayout() {
         <AdminSidebar
           currentRole={currentRole}
           isSidebarOpen={isSidebarOpen}
+          isSidebarCollapsed={isSidebarCollapsed}
           onCloseSidebar={() => setIsSidebarOpen(false)}
+          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         />
 
         {/* Sidebar Overlay on Mobile with Frosted Glass Backdrop */}
@@ -116,7 +128,7 @@ export function AdminLayout() {
 
       {/* Admin Minimal Footer */}
       <footer 
-        className="py-2.5 px-4 small d-flex flex-wrap justify-content-between align-items-center"
+        className="py-2.5 px-3 px-md-4 small d-flex flex-wrap justify-content-between align-items-center gap-2"
         style={{ 
           background: 'var(--hospital-primary-dark)',
           color: 'rgba(255, 255, 255, 0.75)',
@@ -124,8 +136,8 @@ export function AdminLayout() {
           fontSize: '0.8rem'
         }}
       >
-        <span>Eagle Sora Hospital Platform — Operations Workspace</span>
-        <span>
+        <span className="text-break">Eagle Sora Hospital Platform — Operations Workspace</span>
+        <span className="text-break">
           Session: <strong>{staffUser?.name || staffUser?.email || currentRole?.label}</strong> ({currentRole?.label})
         </span>
       </footer>

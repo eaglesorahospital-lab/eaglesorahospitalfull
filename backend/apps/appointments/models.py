@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 from django.utils.translation import gettext_lazy as _
@@ -48,6 +49,21 @@ class Appointment(models.Model):
         on_delete=models.PROTECT,
         related_name='appointments',
         help_text=_('Associated patient outpatient record.'),
+    )
+    booked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='booked_appointments',
+        help_text=_('User account who initiated or submitted the booking.'),
+    )
+    relationship_to_patient = models.CharField(
+        _('relationship to patient'),
+        max_length=50,
+        blank=True,
+        default='Self',
+        help_text=_('Relationship of requester to patient, e.g. Self, Parent, Spouse, Child, Guardian, Other.'),
     )
     doctor = models.ForeignKey(
         'doctors.Doctor',
@@ -105,6 +121,12 @@ class Appointment(models.Model):
         related_name='rescheduled_to',
         help_text=_('Prior appointment reference if this was rescheduled.'),
     )
+    slot_sequence = models.PositiveSmallIntegerField(
+        _('slot occupancy sequence'),
+        default=1,
+        db_index=True,
+        help_text=_('Deterministic sequence index of the booking within the slot capacity (1 to N).'),
+    )
     idempotency_key = models.CharField(
         _('idempotency key'),
         max_length=128,
@@ -131,6 +153,16 @@ class Appointment(models.Model):
             models.CheckConstraint(
                 condition=Q(end_time__gt=F('start_time')),
                 name='apt_end_time_after_start_time',
+            ),
+            models.UniqueConstraint(
+                fields=['doctor', 'appointment_date', 'start_time', 'slot_sequence'],
+                condition=Q(status__in=[
+                    'REQUESTED',
+                    'CONFIRMED',
+                    'CHECKED_IN',
+                    'COMPLETED',
+                ]),
+                name='unique_active_doctor_slot_sequence',
             ),
         ]
 

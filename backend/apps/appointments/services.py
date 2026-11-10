@@ -1,6 +1,9 @@
 from datetime import datetime, date, time, timedelta
 from zoneinfo import ZoneInfo
-from django.db import transaction
+import logging
+from django.db import transaction, IntegrityError
+
+logger = logging.getLogger(__name__)
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from apps.appointments.models import Appointment
@@ -89,10 +92,14 @@ class AppointmentBookingService:
         notes="",
         idempotency_key=None,
         rescheduled_from=None,
+        exclude_appointment_id=None,
+        booked_by=None,
+        relationship_to_patient="Self",
     ):
         """
         Creates an appointment transaction-safely with PostgreSQL row-level locking.
-        Guarantees that two concurrent requests for the same doctor/date/slot cannot both succeed.
+        Guarantees that concurrent requests for the same doctor/date/slot cannot both succeed,
+        enforcing slot capacity and deterministic slot sequence allocation.
         """
         # Validate patient
         if not patient or not patient.is_active:
@@ -135,161 +142,192 @@ class AppointmentBookingService:
         if start_t >= end_t:
             raise SlotValidationError("Consultation end time must be after start time.")
 
-        # ATOMIC TRANSACTION WITH ROW LOCKING
-        with transaction.atomic():
-            # Lock the Doctor row to serialize concurrent booking attempts for this doctor
-            try:
-                locked_doctor = (
-                    Doctor.objects.select_for_update()
-                    .select_related('department')
-                    .get(id=doctor.id if hasattr(doctor, 'id') else doctor)
-                )
-            except Doctor.DoesNotExist:
-                raise SlotValidationError("Doctor record not found.")
+        # ATOMIC TRANSACTION WITH ROW LOCKING & EXCEPTION TRANSLATION
+        try:
+            with transaction.atomic():
+                # Lock the Doctor row to serialize concurrent booking attempts for this doctor
+                try:
+                    locked_doctor = (
+                        Doctor.objects.select_for_update()
+                        .select_related('department')
+                        .get(id=doctor.id if hasattr(doctor, 'id') else doctor)
+                    )
+                except Doctor.DoesNotExist:
+                    raise SlotValidationError("Doctor record not found.")
 
-            if not locked_doctor.is_active:
-                raise SlotValidationError("Cannot book consultation with an inactive doctor.")
+                if not locked_doctor.is_active:
+                    raise SlotValidationError("Cannot book consultation with an inactive doctor.")
 
-            # Check planned leave
-            if DoctorLeave.objects.filter(
-                doctor=locked_doctor,
-                is_active=True,
-                start_date__lte=target_date,
-                end_date__gte=target_date,
-            ).exists():
-                raise SlotConflictError("Doctor is on leave on the requested consultation date.")
-
-            # Resolve schedule & overrides
-            day_name = target_date.strftime("%A")
-            schedule = (
-                DoctorSchedule.objects.filter(
+                # Check planned leave
+                if DoctorLeave.objects.filter(
                     doctor=locked_doctor,
-                    day_of_week=day_name,
                     is_active=True,
-                )
-                .prefetch_related('breaks')
-                .first()
-            )
+                    start_date__lte=target_date,
+                    end_date__gte=target_date,
+                ).exists():
+                    raise SlotConflictError("Doctor is on leave on the requested consultation date.")
 
-            override = ScheduleOverride.objects.filter(
-                doctor=locked_doctor,
-                override_date=target_date,
-            ).first()
-
-            if override:
-                if not override.is_available:
-                    raise SlotConflictError(
-                        f"Doctor is unavailable on this date ({override.reason or 'Schedule Override'})."
+                # Resolve schedule & overrides
+                day_name = target_date.strftime("%A")
+                schedule = (
+                    DoctorSchedule.objects.filter(
+                        doctor=locked_doctor,
+                        day_of_week=day_name,
+                        is_active=True,
                     )
-                shift_start = override.start_time or (schedule.start_time if schedule else None)
-                shift_end = override.end_time or (schedule.end_time if schedule else None)
-                slot_duration = (
-                    override.slot_duration_minutes
-                    or (schedule.slot_duration_minutes if schedule else locked_doctor.consultation_duration_minutes)
-                    or 30
-                )
-                capacity = override.capacity or (schedule.capacity if schedule else 1)
-            elif schedule:
-                if not schedule.is_working_day:
-                    raise SlotValidationError(f"{day_name} is a non-working day for this doctor.")
-                shift_start = schedule.start_time
-                shift_end = schedule.end_time
-                slot_duration = schedule.slot_duration_minutes or locked_doctor.consultation_duration_minutes or 30
-                capacity = schedule.capacity or 1
-            else:
-                raise SlotValidationError(f"No active schedule found for doctor on {day_name}.")
-
-            if not shift_start or not shift_end:
-                raise SlotValidationError("Shift working hours are not defined for this date.")
-
-            # Validate shift bounds
-            if start_t < shift_start or end_t > shift_end:
-                raise SlotValidationError(
-                    f"Requested consultation time ({start_t.strftime('%H:%M')} - {end_t.strftime('%H:%M')}) "
-                    f"is outside doctor shift hours ({shift_start.strftime('%H:%M')} - {shift_end.strftime('%H:%M')})."
+                    .prefetch_related('breaks')
+                    .first()
                 )
 
-            # Validate requested duration matches slot duration
-            requested_delta = (
-                datetime.combine(target_date, end_t) - datetime.combine(target_date, start_t)
-            ).total_seconds() / 60
-            if int(requested_delta) != slot_duration:
-                raise SlotValidationError(
-                    f"Invalid consultation slot duration ({int(requested_delta)} mins). "
-                    f"Doctor schedule requires exactly {slot_duration} minutes per slot."
-                )
-
-            # Validate break overlap
-            breaks = list(schedule.breaks.all()) if schedule else []
-            for brk in breaks:
-                if start_t < brk.end_time and end_t > brk.start_time:
-                    raise SlotConflictError(
-                        f"Requested slot overlaps with doctor scheduled break "
-                        f"({brk.name}: {brk.start_time.strftime('%H:%M')} - {brk.end_time.strftime('%H:%M')})."
-                    )
-
-            # Validate timezone & past time protection
-            resolved_tz_str = schedule.timezone if schedule else "Asia/Kolkata"
-            try:
-                tz = ZoneInfo(resolved_tz_str)
-            except Exception:
-                tz = ZoneInfo("Asia/Kolkata")
-
-            now_in_tz = timezone.now().astimezone(tz)
-            today_in_tz = now_in_tz.date()
-            current_time_in_tz = now_in_tz.time()
-
-            if target_date < today_in_tz:
-                raise SlotValidationError("Cannot book an appointment for a past date.")
-
-            if target_date == today_in_tz and start_t <= current_time_in_tz:
-                raise SlotValidationError("Cannot book an appointment for a past time slot today.")
-
-            # Query active booked appointments for this exact slot
-            active_booked_count = (
-                Appointment.objects.filter(
+                override = ScheduleOverride.objects.filter(
                     doctor=locked_doctor,
+                    override_date=target_date,
+                ).first()
+
+                if override:
+                    if not override.is_available:
+                        raise SlotConflictError(
+                            f"Doctor is unavailable on this date ({override.reason or 'Schedule Override'})."
+                        )
+                    shift_start = override.start_time or (schedule.start_time if schedule else None)
+                    shift_end = override.end_time or (schedule.end_time if schedule else None)
+                    slot_duration = (
+                        override.slot_duration_minutes
+                        or (schedule.slot_duration_minutes if schedule else locked_doctor.consultation_duration_minutes)
+                        or 30
+                    )
+                    capacity = override.capacity or (schedule.capacity if schedule else 1)
+                elif schedule:
+                    if not schedule.is_working_day:
+                        raise SlotValidationError(f"{day_name} is a non-working day for this doctor.")
+                    shift_start = schedule.start_time
+                    shift_end = schedule.end_time
+                    slot_duration = schedule.slot_duration_minutes or locked_doctor.consultation_duration_minutes or 30
+                    capacity = schedule.capacity or 1
+                else:
+                    raise SlotValidationError(f"No active schedule found for doctor on {day_name}.")
+
+                if not shift_start or not shift_end:
+                    raise SlotValidationError("Shift working hours are not defined for this date.")
+
+                # Validate shift bounds
+                if start_t < shift_start or end_t > shift_end:
+                    raise SlotValidationError(
+                        f"Requested consultation time ({start_t.strftime('%H:%M')} - {end_t.strftime('%H:%M')}) "
+                        f"is outside doctor shift hours ({shift_start.strftime('%H:%M')} - {shift_end.strftime('%H:%M')})."
+                    )
+
+                # Validate requested duration matches slot duration
+                requested_delta = (
+                    datetime.combine(target_date, end_t) - datetime.combine(target_date, start_t)
+                ).total_seconds() / 60
+                if int(requested_delta) != slot_duration:
+                    raise SlotValidationError(
+                        f"Invalid consultation slot duration ({int(requested_delta)} mins). "
+                        f"Doctor schedule requires exactly {slot_duration} minutes per slot."
+                    )
+
+                # Validate slot-grid alignment
+                mins_from_shift_start = (
+                    datetime.combine(target_date, start_t) - datetime.combine(target_date, shift_start)
+                ).total_seconds() / 60
+                if int(mins_from_shift_start) % slot_duration != 0:
+                    raise SlotValidationError(
+                        f"Requested consultation start time ({start_t.strftime('%H:%M')}) must align with doctor "
+                        f"slot grid ({slot_duration} mins from shift start {shift_start.strftime('%H:%M')})."
+                    )
+
+                # Validate break overlap
+                breaks = list(schedule.breaks.all()) if schedule else []
+                for brk in breaks:
+                    if start_t < brk.end_time and end_t > brk.start_time:
+                        raise SlotConflictError(
+                            f"Requested slot overlaps with doctor scheduled break "
+                            f"({brk.name}: {brk.start_time.strftime('%H:%M')} - {brk.end_time.strftime('%H:%M')})."
+                        )
+
+                # Validate timezone & past time protection
+                resolved_tz_str = schedule.timezone if schedule else "Asia/Kolkata"
+                try:
+                    tz = ZoneInfo(resolved_tz_str)
+                except Exception:
+                    tz = ZoneInfo("Asia/Kolkata")
+
+                now_in_tz = timezone.now().astimezone(tz)
+                today_in_tz = now_in_tz.date()
+                current_time_in_tz = now_in_tz.time()
+
+                if target_date < today_in_tz:
+                    raise SlotValidationError("Cannot book an appointment for a past date.")
+
+                if target_date == today_in_tz and start_t <= current_time_in_tz:
+                    raise SlotValidationError("Cannot book an appointment for a past time slot today.")
+
+                # Query active overlapping appointments for this exact slot interval
+                active_overlapping_qs = (
+                    Appointment.objects.filter(
+                        doctor=locked_doctor,
+                        appointment_date=target_date,
+                        start_time__lt=end_t,
+                        end_time__gt=start_t,
+                    )
+                    .exclude(
+                        status__in=[
+                            Appointment.Status.CANCELLED,
+                            Appointment.Status.RESCHEDULED,
+                            Appointment.Status.NO_SHOW,
+                        ]
+                    )
+                )
+
+                if exclude_appointment_id:
+                    active_overlapping_qs = active_overlapping_qs.exclude(id=exclude_appointment_id)
+
+                active_sequences = set(active_overlapping_qs.values_list('slot_sequence', flat=True))
+
+                # Enforce capacity and allocate lowest available sequence from 1 to capacity
+                available_sequences = [seq for seq in range(1, capacity + 1) if seq not in active_sequences]
+
+                if not available_sequences:
+                    raise SlotConflictError("The selected appointment slot is no longer available.")
+
+                assigned_sequence = available_sequences[0]
+
+                # Create Appointment
+                booking_status = status or Appointment.Status.REQUESTED
+                appointment = Appointment.objects.create(
+                    patient=patient,
+                    booked_by=booked_by,
+                    relationship_to_patient=relationship_to_patient or "Self",
+                    doctor=locked_doctor,
+                    department=locked_doctor.department,
+                    consultation_location=locked_doctor.consultation_location,
                     appointment_date=target_date,
                     start_time=start_t,
                     end_time=end_t,
+                    slot_sequence=assigned_sequence,
+                    appointment_type=appointment_type,
+                    status=booking_status,
+                    reason_for_visit=reason_for_visit,
+                    notes=notes,
+                    idempotency_key=idempotency_key,
+                    rescheduled_from=rescheduled_from,
                 )
-                .exclude(
-                    status__in=[
-                        Appointment.Status.CANCELLED,
-                        Appointment.Status.RESCHEDULED,
-                        Appointment.Status.NO_SHOW,
-                    ]
-                )
-                .count()
-            )
 
-            # Enforce capacity
-            if active_booked_count >= capacity:
-                raise SlotConflictError("The selected appointment slot is no longer available.")
+                # Trigger asynchronous confirmation email only if confirmed
+                if booking_status == Appointment.Status.CONFIRMED and not rescheduled_from:
+                    safe_dispatch_confirmation(appointment.id)
 
-            # Create Appointment
-            booking_status = status or Appointment.Status.REQUESTED
-            appointment = Appointment.objects.create(
-                patient=patient,
-                doctor=locked_doctor,
-                department=locked_doctor.department,
-                consultation_location=locked_doctor.consultation_location,
-                appointment_date=target_date,
-                start_time=start_t,
-                end_time=end_t,
-                appointment_type=appointment_type,
-                status=booking_status,
-                reason_for_visit=reason_for_visit,
-                notes=notes,
-                idempotency_key=idempotency_key,
-                rescheduled_from=rescheduled_from,
-            )
+                return appointment, True
 
-            # Trigger asynchronous confirmation email only if confirmed
-            if booking_status == Appointment.Status.CONFIRMED and not rescheduled_from:
-                safe_dispatch_confirmation(appointment.id)
-
-            return appointment, True
+        except IntegrityError as exc:
+            # Check if this was a concurrent duplicate with the same idempotency key
+            if idempotency_key:
+                existing = Appointment.objects.filter(idempotency_key=idempotency_key).first()
+                if existing:
+                    return existing, False
+            logger.warning("Database unique constraint caught slot conflict: %s", exc)
+            raise SlotConflictError("The selected appointment slot is no longer available.")
 
     @classmethod
     def cancel_appointment(cls, appointment_identifier, user, reason=""):
@@ -303,9 +341,11 @@ class AppointmentBookingService:
             else:
                 apt = qs.get(reference=appointment_identifier)
 
-            # Check authorization: Patients can only cancel their own appointment
+            # Check authorization: Patients can cancel if they are the patient or the booking requester
             if user.role == User.Role.PATIENT:
-                if apt.patient.user_id != user.id:
+                is_patient_owner = bool(apt.patient and apt.patient.user_id and apt.patient.user_id == user.id)
+                is_requester = bool(apt.booked_by_id and apt.booked_by_id == user.id)
+                if not (is_patient_owner or is_requester):
                     raise PermissionDenied("You do not have permission to cancel this appointment.")
 
             # Validate lifecycle status
@@ -353,9 +393,11 @@ class AppointmentBookingService:
             else:
                 original_apt = qs.get(reference=appointment_identifier)
 
-            # Check authorization: Patients can only reschedule their own appointment
+            # Check authorization: Patients can reschedule if they are the patient or the booking requester
             if user.role == User.Role.PATIENT:
-                if original_apt.patient.user_id != user.id:
+                is_patient_owner = bool(original_apt.patient and original_apt.patient.user_id and original_apt.patient.user_id == user.id)
+                is_requester = bool(original_apt.booked_by_id and original_apt.booked_by_id == user.id)
+                if not (is_patient_owner or is_requester):
                     raise PermissionDenied("You do not have permission to reschedule this appointment.")
 
             # Validate status
@@ -386,6 +428,9 @@ class AppointmentBookingService:
                 reason_for_visit=original_apt.reason_for_visit,
                 notes=f"Rescheduled from {original_apt.reference}. {reason}".strip(),
                 rescheduled_from=original_apt,
+                exclude_appointment_id=original_apt.id,
+                booked_by=original_apt.booked_by,
+                relationship_to_patient=original_apt.relationship_to_patient,
             )
 
             # Trigger asynchronous reschedule email after transaction commits

@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from .models import Appointment
 from .serializers import (
@@ -104,8 +105,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         ):
             return base_qs
 
-        # Patients are strictly isolated to their own bookings
-        return base_qs.filter(patient__user=user)
+        # Patients view appointments for their own profile OR appointments they booked for family/dependents
+        return base_qs.filter(Q(patient__user=user) | Q(booked_by=user)).distinct()
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -120,16 +121,156 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return AppointmentRescheduleSerializer
         return AppointmentListSerializer
 
-    def create(self, request, *args, **kwargs):
+    @staticmethod
+    def _validate_blood_group(raw_bg):
         """
-        Transactional booking with concurrency protection, availability re-check,
-        and PostgreSQL row locking.
+        Validates raw blood group against PatientProfile choices.
+        Returns canonical choice string or empty string. Raises SlotValidationError if invalid.
         """
-        data: Any = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
-        user = request.user
+        if not raw_bg:
+            return ""
+        raw_bg_str = str(raw_bg).strip()
+        norm_bg = raw_bg_str.upper()
+        if norm_bg in ['UNKNOWN', 'NOT PROVIDED', 'UNKNOWN / NOT PROVIDED', 'NONE', 'N/A', '']:
+            return ""
+        for choice_val, _ in PatientProfile.BloodGroup.choices:
+            if choice_val.upper() == norm_bg:
+                return choice_val
+        raise SlotValidationError(
+            f"Invalid blood group '{raw_bg}'. Allowed options are: {', '.join(PatientProfile.BloodGroup.values)}, or leave blank for Unknown / Not Provided."
+        )
 
-        # Patient resolution: authenticated patients must book for their own profile
-        if user.role == User.Role.PATIENT:
+    def _resolve_patient_and_relationship(self, request, data, validated_bg=""):
+        """
+        Resolves the target patient profile, booked_by user, and relationship_to_patient.
+        Enforces strict authorization:
+        - Authenticated patients booking for 'MYSELF': uses request.user.patient_profile.
+        - Authenticated patients booking for 'SOMEONE_ELSE':
+          * If patient_id / patient is provided: verifies that the target profile is an authorized dependent
+            (either previously booked by request.user, or self). Rejects unauthorized third-party profiles with 403.
+          * If new dependent demographics provided: reuses existing dependent or creates new PatientProfile(user=None).
+        - Staff / Admins: can book for any registered or new patient.
+        - Unauthenticated guests: creates or matches unlinked PatientProfile(user=None).
+        """
+        user = request.user if (request.user and request.user.is_authenticated) else None
+        patient_data = data.get('patient') if isinstance(data.get('patient'), dict) else {}
+
+        booking_for = str(data.get('booking_for') or patient_data.get('bookingFor') or 'MYSELF').strip().upper()
+        rel = str(data.get('relationship_to_patient') or patient_data.get('relationshipToPatient') or '').strip()
+
+        is_staff_user = bool(
+            user
+            and (
+                user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
+                or user.is_staff
+                or user.is_superuser
+            )
+        )
+
+        # 1. Unauthenticated Guest Flow
+        if not user:
+            phone = (patient_data.get('mobile') or patient_data.get('phone') or data.get('phone') or '').strip()
+            email = (patient_data.get('email') or data.get('email') or '').strip()
+
+            patient_profile = None
+            if phone:
+                patient_profile = PatientProfile.objects.filter(phone=phone, user__isnull=True).first()
+            if not patient_profile and email:
+                patient_profile = PatientProfile.objects.filter(email__iexact=email, user__isnull=True).first()
+
+            if not patient_profile:
+                full_name = patient_data.get('fullName') or patient_data.get('name') or data.get('name') or "Guest Patient"
+                parts = full_name.strip().split()
+                first_name = parts[0] if parts else "Guest"
+                last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+                gender_input = str(patient_data.get('gender') or data.get('gender') or 'FEMALE').upper()
+                gender_choice = PatientProfile.Gender.FEMALE
+                for choice in PatientProfile.Gender.choices:
+                    if choice[0] == gender_input or str(choice[1]).upper() == gender_input:
+                        gender_choice = choice[0]
+                        break
+
+                dob = patient_data.get('dateOfBirth') or patient_data.get('dob') or data.get('date_of_birth') or None
+                if dob and isinstance(dob, str):
+                    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"):
+                        try:
+                            dob = datetime.strptime(dob.strip(), fmt).date()
+                            break
+                        except ValueError:
+                            pass
+                    if isinstance(dob, str):
+                        dob = None
+
+                patient_profile = PatientProfile.objects.create(
+                    user=None,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone=phone,
+                    email=email,
+                    date_of_birth=dob,
+                    gender=gender_choice,
+                    blood_group=validated_bg,
+                    address=patient_data.get('address') or data.get('address') or '',
+                    emergency_contact=patient_data.get('emergencyContact') or data.get('emergency_contact') or '',
+                    is_active=True,
+                )
+            return patient_profile, None, (rel or 'Self')
+
+        # 2. Staff / Admin Flow
+        if is_staff_user:
+            target_pid = data.get('patient_id') or (data.get('patient') if not isinstance(data.get('patient'), dict) else None)
+            patient_profile = None
+            if target_pid:
+                patient_profile = PatientProfile.objects.filter(id=target_pid, is_active=True).first()
+            if not patient_profile:
+                phone = (patient_data.get('mobile') or patient_data.get('phone') or data.get('phone') or '').strip()
+                email = (patient_data.get('email') or data.get('email') or '').strip()
+                if phone:
+                    patient_profile = PatientProfile.objects.filter(phone=phone, user__isnull=True).first()
+                if not patient_profile and email:
+                    patient_profile = PatientProfile.objects.filter(email__iexact=email, user__isnull=True).first()
+                if not patient_profile:
+                    full_name = patient_data.get('fullName') or patient_data.get('name') or data.get('name') or "Outpatient"
+                    parts = full_name.strip().split()
+                    first_name = parts[0] if parts else "Outpatient"
+                    last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+                    gender_input = str(patient_data.get('gender') or data.get('gender') or 'FEMALE').upper()
+                    gender_choice = PatientProfile.Gender.FEMALE
+                    for choice in PatientProfile.Gender.choices:
+                        if choice[0] == gender_input or str(choice[1]).upper() == gender_input:
+                            gender_choice = choice[0]
+                            break
+                    dob = patient_data.get('dateOfBirth') or patient_data.get('dob') or None
+                    if dob and isinstance(dob, str):
+                        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"):
+                            try:
+                                dob = datetime.strptime(dob.strip(), fmt).date()
+                                break
+                            except ValueError:
+                                pass
+                        if isinstance(dob, str):
+                            dob = None
+                    patient_profile = PatientProfile.objects.create(
+                        user=None,
+                        first_name=first_name,
+                        last_name=last_name,
+                        phone=phone,
+                        email=email,
+                        date_of_birth=dob,
+                        gender=gender_choice,
+                        blood_group=validated_bg,
+                        address=patient_data.get('address') or data.get('address') or '',
+                        emergency_contact=patient_data.get('emergencyContact') or data.get('emergency_contact') or '',
+                        is_active=True,
+                    )
+            return patient_profile, user, (rel or 'Hospital Staff')
+
+        # 3. Authenticated Patient Flow
+        is_for_someone_else = (booking_for == 'SOMEONE_ELSE') or (rel and rel.upper() not in ['SELF', 'MYSELF', ''])
+
+        if not is_for_someone_else:
+            # Self-booking
             patient_profile = getattr(user, 'patient_profile', None)
             if not patient_profile and user.email:
                 patient_profile = PatientProfile.objects.filter(email__iexact=user.email, user__isnull=True).first()
@@ -143,9 +284,138 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     last_name=user.last_name or "",
                     email=user.email,
                     phone=user.phone or "",
+                    blood_group=validated_bg,
                     is_active=True,
                 )
-            data['patient'] = patient_profile.id
+            return patient_profile, user, 'Self'
+
+        # Someone Else booking
+        resolved_rel = rel if (rel and rel.upper() not in ['SELF', 'MYSELF']) else 'Other'
+        target_pid = data.get('patient_id') or (data.get('patient') if not isinstance(data.get('patient'), dict) else None)
+
+        if target_pid:
+            # Validate authorization: user can only book for themselves or an authorized dependent
+            user_own_pid = getattr(user, 'patient_profile', None).id if getattr(user, 'patient_profile', None) else None
+            if user_own_pid and str(target_pid) == str(user_own_pid):
+                return user.patient_profile, user, 'Self'
+
+            is_authorized = Appointment.objects.filter(
+                booked_by=user,
+                patient_id=target_pid,
+            ).exists()
+            if not is_authorized:
+                raise PermissionDenied("You are not authorized to book appointments for this patient profile.")
+
+            patient_profile = PatientProfile.objects.filter(id=target_pid, is_active=True).first()
+            if not patient_profile:
+                raise SlotValidationError("Authorized dependent patient profile not found.")
+            return patient_profile, user, resolved_rel
+
+        # Booking for a new or existing unlinked dependent via demographic info
+        phone = (patient_data.get('mobile') or patient_data.get('phone') or data.get('phone') or '').strip()
+        email = (patient_data.get('email') or data.get('email') or '').strip()
+        full_name = (patient_data.get('fullName') or patient_data.get('name') or data.get('name') or '').strip()
+
+        if not full_name:
+            raise SlotValidationError("Patient full name is required when booking for someone else.")
+        if not phone:
+            raise SlotValidationError("Patient contact phone number is required when booking for someone else.")
+
+        # Check if user already booked for this dependent previously (match by phone and booked_by)
+        existing_pid = Appointment.objects.filter(
+            booked_by=user,
+            patient__phone=phone,
+            patient__user__isnull=True,
+        ).values_list('patient_id', flat=True).first()
+
+        if existing_pid:
+            patient_profile = PatientProfile.objects.filter(id=existing_pid).first()
+        else:
+            patient_profile = None
+
+        if not patient_profile:
+            parts = full_name.split()
+            first_name = parts[0] if parts else "Dependent"
+            last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+            gender_input = str(patient_data.get('gender') or data.get('gender') or 'FEMALE').upper()
+            gender_choice = PatientProfile.Gender.FEMALE
+            for choice in PatientProfile.Gender.choices:
+                if choice[0] == gender_input or str(choice[1]).upper() == gender_input:
+                    gender_choice = choice[0]
+                    break
+
+            dob = patient_data.get('dateOfBirth') or patient_data.get('dob') or data.get('date_of_birth') or None
+            if dob and isinstance(dob, str):
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"):
+                    try:
+                        dob = datetime.strptime(dob.strip(), fmt).date()
+                        break
+                    except ValueError:
+                        pass
+                if isinstance(dob, str):
+                    dob = None
+
+            patient_profile = PatientProfile.objects.create(
+                user=None,  # Crucial: independent dependent record, NOT requester user
+                first_name=first_name,
+                last_name=last_name,
+                phone=phone,
+                email=email,
+                date_of_birth=dob,
+                gender=gender_choice,
+                blood_group=validated_bg,
+                address=patient_data.get('address') or data.get('address') or '',
+                emergency_contact=patient_data.get('emergencyContact') or data.get('emergency_contact') or getattr(user, 'phone', ''),
+                is_active=True,
+            )
+
+        return patient_profile, user, resolved_rel
+
+    @action(detail=False, methods=['GET'], url_path='dependents', permission_classes=[permissions.IsAuthenticated])
+    def get_dependents(self, request):
+        """
+        Returns list of distinct active dependent patient profiles previously booked by the authenticated user.
+        """
+        user = request.user
+        if user.role != User.Role.PATIENT:
+            return Response([])
+
+        dependent_ids = (
+            Appointment.objects.filter(booked_by=user)
+            .exclude(patient__user=user)
+            .values_list('patient_id', flat=True)
+            .distinct()
+        )
+        from apps.appointments.serializers import AppointmentPatientNestedSerializer
+        dependents = PatientProfile.objects.filter(id__in=dependent_ids, is_active=True).order_by('first_name', 'last_name')
+        serializer = AppointmentPatientNestedSerializer(dependents, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Transactional booking with concurrency protection, availability re-check,
+        and PostgreSQL row locking.
+        """
+        data: Any = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        user = request.user
+
+        raw_bg = data.get('blood_group') or data.get('bloodGroup')
+        if isinstance(data.get('patient'), dict):
+            raw_bg = raw_bg or data['patient'].get('bloodGroup') or data['patient'].get('blood_group')
+
+        try:
+            validated_bg = self._validate_blood_group(raw_bg)
+            patient_profile, booked_by, relationship_to_patient = self._resolve_patient_and_relationship(
+                request, data, validated_bg
+            )
+        except SlotValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+        data['patient'] = patient_profile.id
+        data['relationship_to_patient'] = relationship_to_patient
 
         serializer = AppointmentCreateSerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -160,25 +430,30 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         reason_for_visit = serializer.validated_data.get('reason_for_visit', '')
         notes = serializer.validated_data.get('notes', '')
 
-        patient = user.patient_profile if user.role == User.Role.PATIENT else serializer.validated_data['patient']
+        # Safe update of blood_group on existing patient profile if newly validated
+        if patient_profile and validated_bg and not patient_profile.blood_group:
+            patient_profile.blood_group = validated_bg
+            patient_profile.save(update_fields=['blood_group'])
 
         # Idempotency header
         idempotency_key = request.headers.get('Idempotency-Key') or request.META.get('HTTP_IDEMPOTENCY_KEY')
 
         # Resolve status: Patients ALWAYS create with REQUESTED.
-        # Staff/Admins can specify status if needed, but defaults to REQUESTED.
         booking_status = Appointment.Status.REQUESTED
         is_staff_or_admin = bool(
-            user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
-            or user.is_staff
-            or user.is_superuser
+            user.is_authenticated
+            and (
+                user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
+                or user.is_staff
+                or user.is_superuser
+            )
         )
         if is_staff_or_admin and 'status' in data and data['status'] in Appointment.Status.values:
             booking_status = data['status']
 
         try:
             appointment, created = AppointmentBookingService.book_appointment(
-                patient=patient,
+                patient=patient_profile,
                 doctor=doctor,
                 appointment_date=appointment_date,
                 start_time=start_time,
@@ -188,6 +463,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 reason_for_visit=reason_for_visit,
                 notes=notes,
                 idempotency_key=idempotency_key,
+                booked_by=booked_by,
+                relationship_to_patient=relationship_to_patient,
             )
             response_data = AppointmentDetailSerializer(appointment).data
             return Response(
@@ -198,6 +475,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return Response({"detail": str(e)}, status=status.HTTP_409_CONFLICT)
         except (SlotValidationError, AppointmentStateError) as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -476,91 +755,21 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             parsed_end = (dt_start + timedelta(minutes=duration)).time()
 
         patient_data = data.get('patient') or {}
-        patient_profile = None
-
-        if request.user and request.user.is_authenticated:
-            if hasattr(request.user, 'patient_profile') and request.user.patient_profile:
-                patient_profile = request.user.patient_profile
-            elif request.user.role == User.Role.PATIENT:
-                # Link or create for authenticated patient
-                phone = (patient_data.get('mobile') or patient_data.get('phone') or getattr(request.user, 'phone', '') or '').strip()
-                email = getattr(request.user, 'email', '') or (patient_data.get('email') or '').strip()
-                if email:
-                    patient_profile = PatientProfile.objects.filter(email__iexact=email, user__isnull=True).first()
-                if not patient_profile and phone:
-                    patient_profile = PatientProfile.objects.filter(phone=phone, user__isnull=True).first()
-                if patient_profile:
-                    patient_profile.user = request.user
-                    patient_profile.save(update_fields=['user'])
-                else:
-                    full_name = patient_data.get('fullName') or patient_data.get('name') or request.user.get_full_name() or "Patient"
-                    parts = full_name.strip().split()
-                    first_name = parts[0] if parts else "Patient"
-                    last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
-                    patient_profile = PatientProfile.objects.create(
-                        user=request.user,
-                        first_name=first_name,
-                        last_name=last_name,
-                        phone=phone,
-                        email=email,
-                        is_active=True,
-                    )
-
-        # For unauthenticated requests, do NOT trust client-supplied patient_id!
-        # Only allow staff users to specify an arbitrary patient_id
-        if not patient_profile:
-            is_staff_user = (
-                request.user
-                and request.user.is_authenticated
-                and (
-                    request.user.role in [User.Role.SUPER_ADMIN, User.Role.HOSPITAL_ADMIN, User.Role.DOCTOR_STAFF]
-                    or request.user.is_staff
-                )
+        raw_bg = patient_data.get('bloodGroup') or patient_data.get('blood_group') or data.get('blood_group') or data.get('bloodGroup') or ''
+        try:
+            validated_bg = self._validate_blood_group(raw_bg)
+            patient_profile, booked_by, relationship_to_patient = self._resolve_patient_and_relationship(
+                request, data, validated_bg
             )
-            if is_staff_user and data.get('patient_id'):
-                patient_profile = PatientProfile.objects.filter(id=data['patient_id']).first()
+        except SlotValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
-        if not patient_profile:
-            # Unauthenticated guest flow: find existing unlinked guest profile or create a new guest profile
-            phone = (patient_data.get('mobile') or patient_data.get('phone') or '').strip()
-            email = (patient_data.get('email') or '').strip()
-
-            if phone:
-                patient_profile = PatientProfile.objects.filter(phone=phone, user__isnull=True).first()
-            if not patient_profile and email:
-                patient_profile = PatientProfile.objects.filter(email__iexact=email, user__isnull=True).first()
-
-            if not patient_profile:
-                full_name = patient_data.get('fullName') or patient_data.get('name') or "Guest Patient"
-                parts = full_name.strip().split()
-                first_name = parts[0] if parts else "Guest"
-                last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
-
-                gender_input = str(patient_data.get('gender') or 'MALE').upper()
-                gender_choice = PatientProfile.Gender.MALE
-                for choice in PatientProfile.Gender.choices:
-                    if choice[0] == gender_input or str(choice[1]).upper() == gender_input:
-                        gender_choice = choice[0]
-                        break
-
-                dob = patient_data.get('dateOfBirth') or patient_data.get('dob') or None
-                if dob:
-                    try:
-                        datetime.strptime(dob, "%Y-%m-%d")
-                    except ValueError:
-                        dob = None
-
-                patient_profile = PatientProfile.objects.create(
-                    first_name=first_name,
-                    last_name=last_name,
-                    phone=phone,
-                    email=email,
-                    date_of_birth=dob,
-                    gender=gender_choice,
-                    address=patient_data.get('address', ''),
-                    emergency_contact=patient_data.get('emergencyContact', ''),
-                    is_active=True,
-                )
+        # Safe update of blood_group on existing patient profile
+        if patient_profile and validated_bg and not patient_profile.blood_group:
+            patient_profile.blood_group = validated_bg
+            patient_profile.save(update_fields=['blood_group'])
 
         reason_for_visit = data.get('reason_for_visit') or patient_data.get('reasonForVisit') or 'Clinical consultation'
         notes = data.get('notes') or ''
@@ -578,11 +787,19 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 reason_for_visit=reason_for_visit,
                 notes=notes,
                 idempotency_key=idempotency_key,
+                booked_by=booked_by,
+                relationship_to_patient=relationship_to_patient,
             )
             response_data = AppointmentDetailSerializer(appointment).data
             return Response(response_data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
         except SlotConflictError as e:
             return Response({"detail": str(e)}, status=status.HTTP_409_CONFLICT)
+        except (SlotValidationError, AppointmentStateError) as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except (SlotValidationError, AppointmentStateError) as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

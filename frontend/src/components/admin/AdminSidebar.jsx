@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   History,
   Lock,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -36,7 +38,9 @@ const ICON_MAP = {
 export function AdminSidebar({
   currentRole,
   isSidebarOpen,
+  isSidebarCollapsed = false,
   onCloseSidebar,
+  onToggleCollapse,
 }) {
   const isAllowed = (path) => {
     if (!currentRole?.allowedRoutes) return false;
@@ -51,19 +55,21 @@ export function AdminSidebar({
 
   return (
     <aside
-      className={`admin-sidebar ${isSidebarOpen ? 'show' : ''}`}
+      className={`admin-sidebar ${isSidebarOpen ? 'show' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}
       aria-label="Administration Navigation"
     >
       <div className="admin-sidebar-header p-3 border-bottom d-flex justify-content-between align-items-center">
-        <div>
+        <div className="admin-sidebar-header-info min-w-0">
           <div className="admin-sidebar-heading text-uppercase small">Active Role</div>
-          <div className="fw-bold admin-sidebar-role-text">{currentRole?.label}</div>
+          <div className="fw-bold admin-sidebar-role-text text-truncate" title={currentRole?.label}>
+            {currentRole?.label}
+          </div>
         </div>
         <button
           type="button"
           className="btn-close d-lg-none"
           onClick={onCloseSidebar}
-          aria-label="Close sidebar"
+          aria-label="Close sidebar drawer"
         />
       </div>
 
@@ -81,6 +87,8 @@ export function AdminSidebar({
               to={link.path}
               end={link.path === '/admin'}
               onClick={onCloseSidebar}
+              title={link.label}
+              aria-label={link.label}
               className={({ isActive }) =>
                 `admin-sidebar-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-decoration-none my-1 transition-all ${
                   isActive ? 'active' : ''
@@ -100,14 +108,30 @@ export function AdminSidebar({
         })}
       </nav>
 
-      <div className="admin-sidebar-footer p-3 mt-auto border-top small">
+      {/* Desktop Collapse / Expand Toggle Button */}
+      <div className="d-none d-lg-block p-2 border-top mt-auto">
+        <button
+          type="button"
+          className="admin-sidebar-collapse-btn w-100 d-flex align-items-center justify-content-center gap-2 py-2 px-2 rounded-3"
+          onClick={onToggleCollapse}
+          title={isSidebarCollapsed ? 'Expand sidebar navigation' : 'Collapse sidebar navigation'}
+          aria-label={isSidebarCollapsed ? 'Expand sidebar navigation' : 'Collapse sidebar navigation'}
+        >
+          {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {!isSidebarCollapsed && (
+            <span className="small fw-semibold admin-sidebar-collapse-text">Collapse Sidebar</span>
+          )}
+        </button>
+      </div>
+
+      <div className="admin-sidebar-footer p-3 border-top small">
         {isLiveSession ? (
           <div>
             <div className="d-flex align-items-center gap-2 mb-1">
               <span className="pulse-dot"></span>
               <span className="fw-bold admin-sidebar-footer-title">Authenticated Session</span>
             </div>
-            <div className="admin-sidebar-footer-desc" style={{ fontSize: '0.75rem' }}>
+            <div className="admin-sidebar-footer-desc text-truncate" style={{ fontSize: '0.75rem' }}>
               {staffUser?.email || 'Staff Account'} &bull; {currentRole?.label || 'Staff'}
             </div>
           </div>

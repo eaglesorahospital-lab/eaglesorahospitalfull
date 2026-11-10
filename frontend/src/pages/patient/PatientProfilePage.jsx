@@ -215,9 +215,13 @@ export function PatientProfilePage() {
                       <strong className="text-body">{t('patient.dob')}: </strong>
                       <span className="text-muted">{patientProfile?.dateOfBirth || 'Not specified'}</span>
                     </div>
-                    <div>
+                    <div className="mb-2">
                       <strong className="text-body">{t('patient.gender')}: </strong>
                       <span className="text-muted">{patientProfile?.gender || 'Not specified'}</span>
+                    </div>
+                    <div>
+                      <strong className="text-body">Blood Group: </strong>
+                      <span className="text-muted">{patientProfile?.bloodGroup || patientProfile?.blood_group || 'Not specified'}</span>
                     </div>
                   </div>
                 </div>
@@ -320,6 +324,33 @@ export function PatientProfilePage() {
                         <option value="MALE">Male</option>
                         <option value="FEMALE">Female</option>
                         <option value="OTHER">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="col-12 col-md-6">
+                    <label htmlFor="edit-blood-group" className="hospital-form-label mb-1">
+                      Blood Group
+                    </label>
+                    <div className="neu-inset rounded-3 p-1">
+                      <select
+                        id="edit-blood-group"
+                        className="form-select bg-transparent border-0 shadow-none"
+                        value={formData.bloodGroup || formData.blood_group || ''}
+                        onChange={(e) => {
+                          handleChange('bloodGroup', e.target.value);
+                          handleChange('blood_group', e.target.value);
+                        }}
+                      >
+                        <option value="">Unknown / Not Provided</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
                       </select>
                     </div>
                   </div>

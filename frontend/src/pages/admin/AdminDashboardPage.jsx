@@ -167,8 +167,8 @@ export function AdminDashboardPage() {
         style={{ borderRadius: 'var(--radius-lg, 14px)', background: 'var(--hospital-surface)' }}
       >
         <div className="row g-2 align-items-center text-center">
-          <div className="col-6 col-md-3 border-end-md">
-            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
+          <div className="col-6 col-sm-6 col-md-3 border-end-md">
+            <div className="d-flex flex-wrap align-items-center justify-content-center gap-1 gap-sm-2 py-1">
               <CheckCircle2 size={16} color="var(--neu-success)" />
               <span className="small text-muted fw-semibold">Confirmed:</span>
               <span className="fs-5 fw-bold" style={{ color: 'var(--neu-success)', fontFamily: 'var(--font-display)' }}>
@@ -176,8 +176,8 @@ export function AdminDashboardPage() {
               </span>
             </div>
           </div>
-          <div className="col-6 col-md-3 border-end-md">
-            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
+          <div className="col-6 col-sm-6 col-md-3 border-end-md">
+            <div className="d-flex flex-wrap align-items-center justify-content-center gap-1 gap-sm-2 py-1">
               <Clock size={16} color="var(--neu-warning)" />
               <span className="small text-muted fw-semibold">Pending:</span>
               <span className="fs-5 fw-bold" style={{ color: 'var(--neu-warning)', fontFamily: 'var(--font-display)' }}>
@@ -185,8 +185,8 @@ export function AdminDashboardPage() {
               </span>
             </div>
           </div>
-          <div className="col-6 col-md-3 border-end-md">
-            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
+          <div className="col-6 col-sm-6 col-md-3 border-end-md">
+            <div className="d-flex flex-wrap align-items-center justify-content-center gap-1 gap-sm-2 py-1">
               <Activity size={16} color="var(--hospital-medical-blue)" />
               <span className="small text-muted fw-semibold">Concluded:</span>
               <span className="fs-5 fw-bold" style={{ color: 'var(--hospital-medical-blue)', fontFamily: 'var(--font-display)' }}>
@@ -194,8 +194,8 @@ export function AdminDashboardPage() {
               </span>
             </div>
           </div>
-          <div className="col-6 col-md-3">
-            <div className="d-flex align-items-center justify-content-center gap-2 py-1">
+          <div className="col-6 col-sm-6 col-md-3">
+            <div className="d-flex flex-wrap align-items-center justify-content-center gap-1 gap-sm-2 py-1">
               <XCircle size={16} color="var(--neu-error)" />
               <span className="small text-muted fw-semibold">Cancelled:</span>
               <span className="fs-5 fw-bold" style={{ color: 'var(--neu-error)', fontFamily: 'var(--font-display)' }}>

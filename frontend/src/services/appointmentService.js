@@ -35,11 +35,18 @@ export function normalizeAppointment(apt) {
     patientName,
     patientContact: patientObj.phone || '',
     patientEmail: patientObj.email || '',
+    patientBloodGroup: patientObj.blood_group || patientObj.bloodGroup || '',
+    patientGender: patientObj.gender || '',
+    bookedBy: apt.booked_by || null,
+    relationshipToPatient: apt.relationship_to_patient || apt.relationshipToPatient || 'Self',
     patient: {
       ...patientObj,
       fullName: patientName,
       mobile: patientObj.phone || '',
       email: patientObj.email || '',
+      bloodGroup: patientObj.blood_group || patientObj.bloodGroup || '',
+      gender: patientObj.gender || '',
+      dateOfBirth: patientObj.date_of_birth || patientObj.dateOfBirth || '',
     },
     doctorId: doctorObj.id,
     doctorSlug: doctorObj.slug,
@@ -92,6 +99,23 @@ export const appointmentService = {
     }
 
     return normalizeAppointment(data);
+  },
+
+  /**
+   * Retrieve list of authorized dependent patient profiles previously booked by the user
+   */
+  async getDependents() {
+    const token = (await authService.getValidAccessToken()) || authService.getAccessToken();
+    if (!token) return [];
+    const headers = { Authorization: `Bearer ${token}` };
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/appointments/dependents/`, { headers });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   /**

@@ -1385,8 +1385,13 @@ select.form-select option {
   }
   .admin-header-controls {
     width: 100%;
-    justify-content: flex-start;
-    gap: 0.4rem;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .admin-header-btn {
+    min-height: 44px;
+    padding: 0 0.65rem;
   }
   .admin-header-select {
     min-width: 120px;
@@ -1396,12 +1401,15 @@ select.form-select option {
 }
 
 @media (max-width: 480px) {
-  .admin-header-btn span {
-    display: none !important;
+  .admin-header-brand {
+    gap: 0.35rem;
+  }
+  .admin-header-controls {
+    gap: 0.25rem;
   }
   .admin-header-btn {
-    padding: 0 0.55rem;
-    min-width: 44px;
+    padding: 0 0.5rem;
+    min-width: 40px;
     min-height: 44px;
   }
   .admin-header-select {
@@ -1434,7 +1442,76 @@ select.form-select option {
   box-shadow: 3px 0 12px rgba(31, 55, 82, 0.04);
   display: flex;
   flex-direction: column;
-  transition: all var(--transition-normal);
+  transition: width var(--transition-normal), left var(--transition-normal);
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Desktop Collapsed Sidebar Rail (>= 992px) */
+@media (min-width: 992px) {
+  .admin-sidebar.collapsed {
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    overflow-x: hidden !important;
+  }
+  .admin-sidebar.collapsed .admin-sidebar-header {
+    padding: 0.75rem 0.5rem !important;
+    justify-content: center !important;
+  }
+  .admin-sidebar.collapsed .admin-sidebar-header-info,
+  .admin-sidebar.collapsed .admin-sidebar-heading,
+  .admin-sidebar.collapsed .admin-sidebar-role-text,
+  .admin-sidebar.collapsed .admin-sidebar-label,
+  .admin-sidebar.collapsed .admin-sidebar-badge,
+  .admin-sidebar.collapsed .admin-sidebar-footer-desc,
+  .admin-sidebar.collapsed .admin-sidebar-footer-title,
+  .admin-sidebar.collapsed .admin-sidebar-collapse-text {
+    display: none !important;
+  }
+  .admin-sidebar.collapsed .admin-sidebar-link {
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+    gap: 0;
+  }
+  .admin-sidebar.collapsed .admin-sidebar-icon {
+    margin: 0;
+  }
+  .admin-sidebar.collapsed .admin-sidebar-footer {
+    padding: 0.75rem 0.5rem !important;
+    justify-content: center;
+    display: flex;
+  }
+}
+
+.admin-sidebar-collapse-btn {
+  background: transparent;
+  border: 1px solid var(--hospital-border);
+  color: var(--hospital-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 40px;
+}
+.admin-sidebar-collapse-btn:hover {
+  background: var(--hospital-surface-subtle);
+  color: var(--hospital-medical-blue);
+  border-color: var(--hospital-medical-blue);
+}
+
+[data-theme="dark"] .admin-sidebar-collapse-btn,
+.theme-dark .admin-sidebar-collapse-btn {
+  border-color: #233B57 !important;
+  color: #A9BBD0 !important;
+}
+
+[data-theme="dark"] .admin-sidebar-collapse-btn:hover,
+.theme-dark .admin-sidebar-collapse-btn:hover {
+  background-color: #1B324F !important;
+  color: #5AA1ED !important;
+  border-color: rgba(90, 161, 237, 0.4) !important;
 }
 
 .admin-sidebar-header {
@@ -1664,7 +1741,9 @@ select.form-select option {
     position: fixed;
     top: 0;
     bottom: 0;
-    left: -280px;
+    left: -320px;
+    width: min(280px, 85vw);
+    max-width: 85vw;
     z-index: 1050;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
   }
@@ -5000,19 +5079,32 @@ textarea.form-control {
   }
 
   .modal-dialog {
-    margin: 0.5rem;
+    margin: 0.5rem auto;
     max-width: calc(100vw - 1rem) !important;
+    width: calc(100vw - 1rem);
+  }
+
+  .modal-body {
+    padding: 1rem !important;
+    max-height: calc(100vh - 150px) !important;
   }
 
   .modal-footer {
     flex-direction: column-reverse;
     gap: 0.5rem;
+    padding: 0.75rem 1rem !important;
   }
 
   .modal-footer > * {
     width: 100% !important;
     margin: 0 !important;
+    min-height: 44px;
   }
+}
+
+.neu-table-compact {
+  min-width: 100% !important;
+  width: 100% !important;
 }
 
 @media (min-width: 1440px) {

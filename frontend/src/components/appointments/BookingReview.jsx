@@ -62,13 +62,29 @@ export function BookingReview({
         {/* Patient Summary Section */}
         <div className="col-12 col-md-4">
           <div className="neu-inset p-3 rounded-4 h-100">
-            <div className="neu-eyebrow text-uppercase fw-bold text-primary mb-2">Patient Details</div>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="neu-eyebrow text-uppercase fw-bold text-primary">Patient Details</span>
+              {patient.bookingFor === 'SOMEONE_ELSE' ? (
+                <span className="badge bg-primary text-white" style={{ fontSize: '0.7rem' }}>
+                  {patient.relationshipToPatient || 'Dependent'}
+                </span>
+              ) : (
+                <span className="badge bg-secondary text-white" style={{ fontSize: '0.7rem' }}>
+                  Self
+                </span>
+              )}
+            </div>
             <div className="fw-bold text-body">{patient.fullName}</div>
             <div className="small text-muted">
               {patient.gender} &bull; DOB: {patient.dateOfBirth}
             </div>
+            {patient.bloodGroup ? (
+              <div className="small text-muted">
+                Blood Group: <strong className="text-body">{patient.bloodGroup}</strong>
+              </div>
+            ) : null}
             <div className="small text-muted">Phone: {patient.mobile}</div>
-            <div className="small text-muted">Email: {patient.email}</div>
+            <div className="small text-muted">Email: {patient.email || 'Not provided (Dependent)'}</div>
           </div>
         </div>
 

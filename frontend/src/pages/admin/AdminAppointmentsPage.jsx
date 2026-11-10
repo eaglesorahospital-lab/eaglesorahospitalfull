@@ -578,7 +578,7 @@ export function AdminAppointmentsPage() {
       </AdminFilterBar>
 
       {/* Appointments Table */}
-      <div className="neu-table-container">
+      <div className="neu-table-container d-none d-md-block">
         <table className="neu-table">
             <thead>
               <tr>
@@ -891,6 +891,7 @@ export function AdminAppointmentsPage() {
                         <span className="small text-muted fw-bold text-uppercase">Patient Demographics</span>
                       </div>
                       <div className="small mb-1"><strong>Name:</strong> {viewAppointment.patientName}</div>
+                      <div className="small mb-1"><strong>Blood Group:</strong> {viewAppointment.patientBloodGroup || viewAppointment.patient?.blood_group || viewAppointment.patient?.bloodGroup || 'Not Provided'}</div>
                       <div className="small mb-1"><strong>Mobile:</strong> {viewAppointment.patientContact}</div>
                       <div className="small mb-1"><strong>Email:</strong> {viewAppointment.patientEmail || 'Not specified'}</div>
                       <div className="small"><strong>Reason:</strong> {viewAppointment.reasonForVisit || 'General Clinical Consultation'}</div>

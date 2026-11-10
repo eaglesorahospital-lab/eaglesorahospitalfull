@@ -117,7 +117,7 @@ export function AdminPatientsPage() {
     email: '',
     address: '',
     emergencyContact: '',
-    bloodGroup: 'O+',
+    bloodGroup: '',
   });
 
   // Edit Patient Form State
@@ -127,7 +127,7 @@ export function AdminPatientsPage() {
     gender: 'MALE',
     contact: '',
     email: '',
-    bloodGroup: 'O+',
+    bloodGroup: '',
     emergencyContact: '',
     address: '',
   });
@@ -203,7 +203,7 @@ export function AdminPatientsPage() {
       email: '',
       address: '',
       emergencyContact: '',
-      bloodGroup: 'O+',
+      bloodGroup: '',
     });
   };
 
@@ -216,7 +216,7 @@ export function AdminPatientsPage() {
       gender: pat.gender ? pat.gender.toUpperCase() : 'MALE',
       contact: pat.contact || pat.phone || pat.mobile || '',
       email: pat.email || '',
-      bloodGroup: pat.bloodGroup || pat.blood_group || 'O+',
+      bloodGroup: pat.bloodGroup || pat.blood_group || '',
       emergencyContact: pat.emergencyContact || pat.emergency_contact || '',
       address: pat.address || '',
     });
@@ -398,7 +398,7 @@ export function AdminPatientsPage() {
                         {pat.mrn}
                       </span>
                       <div className="small text-muted mt-1" style={{ fontSize: '0.8rem' }}>
-                        Blood: <strong className="text-body">{pat.bloodGroup || 'O+'}</strong>
+                        Blood: <strong className="text-body">{pat.bloodGroup || pat.blood_group || 'Not Provided'}</strong>
                       </div>
                     </td>
                     <td className="col-patient">
@@ -506,7 +506,7 @@ export function AdminPatientsPage() {
                     {pat.name}
                   </div>
                   <span className="small text-muted d-block">
-                    Blood Group: <strong className="text-body">{pat.bloodGroup || 'O+'}</strong> &bull; {pat.gender} {pat.age ? `(${pat.age} yrs)` : ''}
+                    Blood Group: <strong className="text-body">{pat.bloodGroup || pat.blood_group || 'Not Provided'}</strong> &bull; {pat.gender} {pat.age ? `(${pat.age} yrs)` : ''}
                   </span>
                   <span className="small text-muted d-block mt-1">
                     {pat.contact} &bull; {pat.email}
@@ -594,7 +594,7 @@ export function AdminPatientsPage() {
                       <div className="small mb-1"><strong>Full Name:</strong> {viewPatient.name}</div>
                       <div className="small mb-1"><strong>Date of Birth:</strong> {viewPatient.dateOfBirth} {viewPatient.age ? `(${viewPatient.age} years)` : ''}</div>
                       <div className="small mb-1"><strong>Gender:</strong> {viewPatient.gender}</div>
-                      <div className="small mb-1"><strong>Blood Group:</strong> {viewPatient.bloodGroup}</div>
+                      <div className="small mb-1"><strong>Blood Group:</strong> {viewPatient.bloodGroup || viewPatient.blood_group || 'Not Provided'}</div>
                       <div className="small"><strong>File Status:</strong> {viewPatient.status}</div>
                     </div>
                   </div>
@@ -722,14 +722,15 @@ export function AdminPatientsPage() {
                         value={editPatientForm.bloodGroup}
                         onChange={(e) => setEditPatientForm({ ...editPatientForm, bloodGroup: e.target.value })}
                       >
+                        <option value="">Unknown / Not Provided</option>
                         <option value="A+">A+</option>
                         <option value="A-">A-</option>
                         <option value="B+">B+</option>
                         <option value="B-">B-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
                         <option value="AB+">AB+</option>
                         <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
                       </select>
                     </div>
 
@@ -823,6 +824,8 @@ export function AdminPatientsPage() {
                     className="neu-btn-icon"
                     style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
+                    aria-label="Close dialog"
+                    title="Close dialog"
                   >
                     <X size={16} />
                   </button>
@@ -844,7 +847,7 @@ export function AdminPatientsPage() {
                     />
                   </div>
                   <div className="row g-2 mb-3">
-                    <div className="col-6">
+                    <div className="col-12 col-sm-6">
                       <label className="neu-form-label">Date of Birth</label>
                       <input
                         type="date"
@@ -855,7 +858,7 @@ export function AdminPatientsPage() {
                         }
                       />
                     </div>
-                    <div className="col-6">
+                    <div className="col-12 col-sm-6">
                       <label className="neu-form-label">Gender</label>
                       <select
                         className="neu-select"
@@ -871,7 +874,7 @@ export function AdminPatientsPage() {
                     </div>
                   </div>
                   <div className="row g-2 mb-3">
-                    <div className="col-6">
+                    <div className="col-12 col-sm-6">
                       <label className="neu-form-label">
                         Phone <span className="text-danger">*</span>
                       </label>
@@ -886,7 +889,7 @@ export function AdminPatientsPage() {
                         required
                       />
                     </div>
-                    <div className="col-6">
+                    <div className="col-12 col-sm-6">
                       <label className="neu-form-label">Blood Group</label>
                       <select
                         className="neu-select"
@@ -895,14 +898,15 @@ export function AdminPatientsPage() {
                           setNewPatientForm({ ...newPatientForm, bloodGroup: e.target.value })
                         }
                       >
+                        <option value="">Unknown / Not Provided</option>
                         <option value="A+">A+</option>
                         <option value="A-">A-</option>
                         <option value="B+">B+</option>
                         <option value="B-">B-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
                         <option value="AB+">AB+</option>
                         <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
                       </select>
                     </div>
                   </div>

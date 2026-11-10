@@ -702,7 +702,7 @@ export function AdminSchedulesPage() {
               </div>
             </div>
 
-            <div className="neu-table-container">
+            <div className="neu-table-container d-none d-md-block">
               <table className="neu-table">
                 <thead>
                   <tr>
@@ -974,7 +974,7 @@ export function AdminSchedulesPage() {
 
                 {activeSchedule.leaves && activeSchedule.leaves.length > 0 ? (
                   <div className="neu-table-container">
-                    <table className="neu-table">
+                    <table className="neu-table neu-table-compact" style={{ minWidth: '100%' }}>
                       <thead>
                         <tr>
                           <th>Date</th>
@@ -1023,7 +1023,7 @@ export function AdminSchedulesPage() {
 
                 {activeSchedule.overrides && activeSchedule.overrides.length > 0 ? (
                   <div className="neu-table-container">
-                    <table className="neu-table">
+                    <table className="neu-table neu-table-compact" style={{ minWidth: '100%' }}>
                       <thead>
                         <tr>
                           <th>Date</th>
@@ -1110,7 +1110,7 @@ export function AdminSchedulesPage() {
 
                   {editShiftEnabled && (
                     <div className="row g-2 mb-3">
-                      <div className="col-6">
+                      <div className="col-12 col-sm-6">
                         <label className="neu-form-label">Start Time</label>
                         <input
                           type="time"
@@ -1120,7 +1120,7 @@ export function AdminSchedulesPage() {
                           required
                         />
                       </div>
-                      <div className="col-6">
+                      <div className="col-12 col-sm-6">
                         <label className="neu-form-label">End Time</label>
                         <input
                           type="time"
@@ -1249,7 +1249,7 @@ export function AdminSchedulesPage() {
                     </div>
                   ) : (
                     <div className="row g-2 mb-3">
-                      <div className="col-6">
+                      <div className="col-12 col-sm-6">
                         <label className="neu-form-label">Start Time</label>
                         <input
                           type="time"
@@ -1262,7 +1262,7 @@ export function AdminSchedulesPage() {
                           required={newOverrideType !== 'CLOSED'}
                         />
                       </div>
-                      <div className="col-6">
+                      <div className="col-12 col-sm-6">
                         <label className="neu-form-label">End Time</label>
                         <input
                           type="time"

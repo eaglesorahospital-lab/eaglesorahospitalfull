@@ -46,10 +46,10 @@ export function AdminFilterBar({
         {children}
 
         {hasActiveFilters && onClear && (
-          <div className="col-auto ms-auto">
+          <div className="col-12 col-sm-auto ms-sm-auto">
             <button
               type="button"
-              className="neu-btn neu-btn-outline neu-btn-sm d-inline-flex align-items-center gap-1"
+              className="neu-btn neu-btn-outline neu-btn-sm w-100 w-sm-auto d-inline-flex align-items-center justify-content-center gap-1"
               onClick={onClear}
             >
               <RotateCcw size={14} />

@@ -298,7 +298,7 @@ export function AdminDepartmentsPage() {
         className="neu-card p-0 mb-4 overflow-hidden" 
         style={{ borderRadius: '20px', background: 'var(--hospital-surface)' }}
       >
-        <div className="neu-table-container">
+        <div className="neu-table-container d-none d-md-block">
           <table className="neu-table">
             <thead>
               <tr>
@@ -712,6 +712,8 @@ export function AdminDepartmentsPage() {
                     className="neu-btn-icon"
                     style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
+                    aria-label="Close dialog"
+                    title="Close dialog"
                   >
                     <X size={16} />
                   </button>

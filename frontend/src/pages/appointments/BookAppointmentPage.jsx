@@ -30,6 +30,8 @@ export function BookAppointmentPage() {
     selectDate,
     selectTime,
     updatePatientField,
+    setBookingType,
+    selectDependent,
     nextStep,
     prevStep,
     goToStep,
@@ -151,6 +153,8 @@ export function BookAppointmentPage() {
             <PatientDetailsForm
               patient={patient}
               onChangeField={updatePatientField}
+              onSetBookingType={setBookingType}
+              onSelectDependent={selectDependent}
               errors={errors}
             />
 

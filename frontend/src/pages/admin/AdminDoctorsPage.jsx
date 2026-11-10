@@ -669,10 +669,10 @@ export function AdminDoctorsPage() {
           breadcrumbs={breadcrumbs}
           className="mb-0"
         />
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 w-100 w-sm-auto">
           <button 
             type="button" 
-            className="neu-btn neu-btn-primary d-inline-flex align-items-center gap-2"
+            className="neu-btn neu-btn-primary w-100 w-sm-auto d-inline-flex align-items-center justify-content-center gap-2"
             onClick={() => setShowAddModal(true)}
           >
             <Plus size={16} />
@@ -842,7 +842,7 @@ export function AdminDoctorsPage() {
           </AdminFilterBar>
 
           {/* Doctors Table */}
-          <div className="neu-table-container">
+          <div className="neu-table-container d-none d-md-block">
             <table className="neu-table">
                 <thead>
                   <tr>
@@ -1700,6 +1700,8 @@ export function AdminDoctorsPage() {
                     style={{ width: '44px', height: '44px', minWidth: '44px', minHeight: '44px', padding: 0 }}
                     onClick={() => setShowAddModal(false)}
                     disabled={isSubmitting}
+                    aria-label="Close dialog"
+                    title="Close dialog"
                   >
                     <X size={16} />
                   </button>
