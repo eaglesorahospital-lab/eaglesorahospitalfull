@@ -250,25 +250,29 @@ export function HomePage() {
                   </div>
                 </div>
                 <div className="p-3">
-                  <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                  <div className="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom flex-wrap gap-1">
                     <span className="small fw-bold text-body d-flex align-items-center gap-1">
-                      <Clock size={14} className="text-primary" />
+                      <Clock size={14} className="text-primary flex-shrink-0" />
                       {t('hero.hoursTitle')}
                     </span>
-                    <span className="small text-muted">Hospital Campus</span>
+                    <span className="small text-muted text-nowrap">Hospital Campus</span>
                   </div>
                   <div className="small text-muted mb-1 d-flex align-items-start gap-2">
-                    <strong className="text-body text-nowrap">OPD Hours:</strong>
-                    <span>{HOSPITAL_METADATA.visitingHours}</span>
+                    <strong className="text-body text-nowrap flex-shrink-0">OPD Hours:</strong>
+                    <span className="text-break">{HOSPITAL_METADATA.visitingHours}</span>
                   </div>
                   <div className="small text-muted mb-3 d-flex align-items-start gap-2">
                     <MapPin size={14} className="text-primary flex-shrink-0 mt-1" />
-                    <span>{HOSPITAL_METADATA.address}</span>
+                    <span className="text-break">{HOSPITAL_METADATA.address}</span>
                   </div>
-                  <div className="pt-1">
-                    <Link to="/contact" className="neu-btn neu-btn-outline w-100 text-center justify-content-center d-flex align-items-center gap-1">
-                      <span>{t('hero.directionsLink')}</span>
-                      <ChevronRight size={14} />
+                  <div className="pt-2">
+                    <Link
+                      to="/contact"
+                      className="hospital-directions-btn neu-btn neu-btn-outline w-100"
+                      aria-label={t('hero.directionsLink')}
+                    >
+                      <span className="hospital-directions-text">{t('hero.directionsLink')}</span>
+                      <ChevronRight size={16} className="hospital-directions-icon" aria-hidden="true" />
                     </Link>
                   </div>
                 </div>
@@ -291,9 +295,9 @@ export function HomePage() {
                     <div className="neu-inset p-3 rounded-3 text-primary d-flex align-items-center justify-content-center flex-shrink-0">
                       <Calendar size={22} />
                     </div>
-                    <div>
-                      <h3 className="h6 fw-bold mb-1 text-body">{t('quickActions.bookAppointment')}</h3>
-                      <p className="small text-muted mb-0">{t('quickActions.bookAppointmentSub')}</p>
+                    <div className="min-w-0 flex-grow-1">
+                      <h3 className="h6 fw-bold mb-1 text-body text-break">{t('quickActions.bookAppointment')}</h3>
+                      <p className="small text-muted mb-0 text-break">{t('quickActions.bookAppointmentSub')}</p>
                     </div>
                   </div>
                 </div>
@@ -307,9 +311,9 @@ export function HomePage() {
                     <div className="neu-inset p-3 rounded-3 text-info d-flex align-items-center justify-content-center flex-shrink-0">
                       <Users size={22} />
                     </div>
-                    <div>
-                      <h3 className="h6 fw-bold mb-1 text-body">{t('quickActions.findDoctor')}</h3>
-                      <p className="small text-muted mb-0">{t('quickActions.findDoctorSub')}</p>
+                    <div className="min-w-0 flex-grow-1">
+                      <h3 className="h6 fw-bold mb-1 text-body text-break">{t('quickActions.findDoctor')}</h3>
+                      <p className="small text-muted mb-0 text-break">{t('quickActions.findDoctorSub')}</p>
                     </div>
                   </div>
                 </div>
@@ -323,9 +327,9 @@ export function HomePage() {
                     <div className="neu-inset p-3 rounded-3 text-success d-flex align-items-center justify-content-center flex-shrink-0">
                       <FileText size={22} />
                     </div>
-                    <div>
-                      <h3 className="h6 fw-bold mb-1 text-body">{t('quickActions.patientPortal')}</h3>
-                      <p className="small text-muted mb-0">{t('quickActions.patientPortalSub')}</p>
+                    <div className="min-w-0 flex-grow-1">
+                      <h3 className="h6 fw-bold mb-1 text-body text-break">{t('quickActions.patientPortal')}</h3>
+                      <p className="small text-muted mb-0 text-break">{t('quickActions.patientPortalSub')}</p>
                     </div>
                   </div>
                 </div>
@@ -342,9 +346,9 @@ export function HomePage() {
                     <div className="neu-inset p-3 rounded-3 text-danger d-flex align-items-center justify-content-center flex-shrink-0">
                       <PhoneCall size={22} />
                     </div>
-                    <div>
-                      <h3 className="h6 fw-bold mb-1 text-danger">{t('quickActions.emergency')}</h3>
-                      <p className="small text-muted mb-0">{t('quickActions.emergencySub')}</p>
+                    <div className="min-w-0 flex-grow-1">
+                      <h3 className="h6 fw-bold mb-1 text-danger text-break">{t('quickActions.emergency')}</h3>
+                      <p className="small text-muted mb-0 text-break">{t('quickActions.emergencySub')}</p>
                     </div>
                   </div>
                 </div>
