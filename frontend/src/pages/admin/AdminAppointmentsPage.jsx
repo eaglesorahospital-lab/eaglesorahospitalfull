@@ -466,6 +466,24 @@ export function AdminAppointmentsPage() {
     }
   };
 
+  // Modal open helpers for consistent table and mobile card action invocation
+  const handleOpenStatusModal = (apt) => {
+    setStatusModalAppointment(apt);
+    setNewStatus(apt.status);
+  };
+
+  const handleOpenRescheduleModal = (apt) => {
+    setRescheduleModalAppointment(apt);
+    setRescheduleDate(apt.date || '2026-11-20');
+  };
+
+  const handleOpenAssignModal = (apt) => {
+    setAssignModalAppointment(apt);
+    setSelectedAssignDoctor(apt.doctorId ? String(apt.doctorId) : '');
+    setAssignReason('');
+    setAssignError(null);
+  };
+
   return (
     <div className="admin-appointments-view">
       <PageHeader
@@ -638,26 +656,26 @@ export function AdminAppointmentsPage() {
                       </div>
                     </td>
                     <td className="col-apt-patient">
-                      <div className="fw-semibold text-truncate" style={{ maxWidth: '190px' }}>
+                      <div className="fw-semibold text-break" style={{ minWidth: '150px' }}>
                         {apt.patientName}
                       </div>
-                      <div className="small text-muted d-block mt-0.5">{apt.patientContact}</div>
+                      <div className="small text-muted d-block mt-0.5 text-nowrap">{apt.patientContact}</div>
                     </td>
                     <td className="col-apt-doctor">
                       <div className="small fw-semibold text-primary">{apt.doctorName}</div>
                       <span className="small text-muted d-block mt-0.5">{apt.department}</span>
                     </td>
                     <td className="col-apt-slot">
-                      <div className="small fw-semibold text-body">{apt.date}</div>
-                      <span className="small text-muted d-block mt-0.5">{apt.time} ({apt.duration || '30m'})</span>
+                      <div className="small fw-semibold text-body text-nowrap">{apt.date}</div>
+                      <span className="small text-muted d-block mt-0.5 text-nowrap">{apt.time} ({apt.duration || '30m'})</span>
                     </td>
                     <td className="col-apt-type">
-                      <span className="small text-muted">{apt.type || 'Consultation'}</span>
+                      <span className="small text-muted text-nowrap">{apt.type || 'Consultation'}</span>
                     </td>
                     <td className="col-apt-status">
                       <AdminStatusBadge status={apt.status} />
                     </td>
-                    <td className="col-apt-actions text-end text-nowrap">
+                    <td className="col-apt-actions text-end">
                       <div className="neu-action-btns">
                         {apt.status === 'REQUESTED' && (
                           <button
@@ -688,10 +706,7 @@ export function AdminAppointmentsPage() {
                         <button
                           type="button"
                           className="neu-btn neu-btn-outline neu-btn-sm"
-                          onClick={() => {
-                            setStatusModalAppointment(apt);
-                            setNewStatus(apt.status);
-                          }}
+                          onClick={() => handleOpenStatusModal(apt)}
                           title="Change clinical status"
                         >
                           <Edit3 size={13} className="me-1" />
@@ -700,10 +715,7 @@ export function AdminAppointmentsPage() {
                         <button
                           type="button"
                           className="neu-btn neu-btn-outline neu-btn-sm"
-                          onClick={() => {
-                            setRescheduleModalAppointment(apt);
-                            setRescheduleDate(apt.date || '2026-11-20');
-                          }}
+                          onClick={() => handleOpenRescheduleModal(apt)}
                           title="Reschedule appointment date/time"
                         >
                           <CalendarClock size={13} className="me-1" />
@@ -713,12 +725,7 @@ export function AdminAppointmentsPage() {
                           <button
                             type="button"
                             className="neu-btn neu-btn-outline neu-btn-sm"
-                            onClick={() => {
-                              setAssignModalAppointment(apt);
-                              setSelectedAssignDoctor(apt.doctorId ? String(apt.doctorId) : '');
-                              setAssignReason('');
-                              setAssignError(null);
-                            }}
+                            onClick={() => handleOpenAssignModal(apt)}
                             title="Assign or reassign consultant"
                           >
                             <UserCheck size={13} className="me-1" />
@@ -756,6 +763,7 @@ export function AdminAppointmentsPage() {
             <div className="text-center py-4 text-muted">
               <AlertCircle size={28} className="mb-2 text-muted" />
               <div className="fw-semibold">No appointments match the selected filters.</div>
+              <div className="small text-muted mt-1">Try resetting your filters or search keywords.</div>
             </div>
           ) : (
             filteredAppointments.map((apt) => (
@@ -776,16 +784,25 @@ export function AdminAppointmentsPage() {
                 </div>
 
                 <div className="mt-2">
-                  <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
-                    {apt.patientName}
+                  <div className="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <div className="fw-bold fs-6" style={{ color: 'var(--hospital-primary-navy)' }}>
+                        {apt.patientName}
+                      </div>
+                      <span className="small text-muted d-block">{apt.patientContact}</span>
+                    </div>
+                    <span className="neu-badge neu-badge-secondary small text-nowrap">
+                      {apt.type || 'Consultation'}
+                    </span>
                   </div>
-                  <span className="small text-muted d-block">{apt.patientContact}</span>
                 </div>
 
-                <div className="small mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--glass-border)' }}>
+                <div className="small mt-2 pt-2 border-top d-flex justify-content-between align-items-center" style={{ borderColor: 'var(--hospital-border-light)' }}>
                   <div>
                     <div className="fw-semibold text-primary">{apt.doctorName}</div>
-                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>{apt.specialty}</span>
+                    <span className="text-muted" style={{ fontSize: '0.75rem' }}>
+                      {apt.department}{apt.specialty && apt.specialty !== apt.department ? ` • ${apt.specialty}` : ''}
+                    </span>
                   </div>
                   <div className="text-end">
                     <div className="fw-semibold text-body">{apt.time}</div>
@@ -794,6 +811,23 @@ export function AdminAppointmentsPage() {
                 </div>
 
                 <div className="admin-mobile-card-actions">
+                  {apt.status === 'REQUESTED' && (
+                    <button
+                      type="button"
+                      className="neu-btn neu-btn-primary neu-btn-sm admin-mobile-card-btn-full"
+                      style={{
+                        background: '#16845B',
+                        color: '#ffffff',
+                        boxShadow: '0 4px 10px rgba(22, 132, 91, 0.3)'
+                      }}
+                      onClick={() => handleQuickApprove(apt)}
+                      disabled={processingReference === apt.reference}
+                      title="Confirm slot & approve appointment"
+                    >
+                      <Check size={14} className="me-1" />
+                      {processingReference === apt.reference ? 'Approving...' : 'Approve Appointment'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="neu-btn neu-btn-outline neu-btn-sm"
@@ -821,15 +855,17 @@ export function AdminAppointmentsPage() {
                     <CalendarClock size={14} className="me-1" />
                     Reschedule
                   </button>
-                  <button
-                    type="button"
-                    className="neu-btn neu-btn-outline neu-btn-sm"
-                    onClick={() => handleOpenAssignModal(apt)}
-                    title="Assign/Reassign doctor"
-                  >
-                    <UserCheck size={14} className="me-1" />
-                    Doctor
-                  </button>
+                  {apt.status !== 'CANCELLED' && apt.status !== 'COMPLETED' && (
+                    <button
+                      type="button"
+                      className="neu-btn neu-btn-outline neu-btn-sm"
+                      onClick={() => handleOpenAssignModal(apt)}
+                      title="Assign or reassign doctor"
+                    >
+                      <UserCheck size={14} className="me-1" />
+                      Assign
+                    </button>
+                  )}
                   {apt.status !== 'CANCELLED' && (
                     <button
                       type="button"

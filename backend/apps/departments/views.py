@@ -37,6 +37,26 @@ class DepartmentViewSet(viewsets.ModelViewSet):
             return DepartmentDetailSerializer
         return DepartmentListSerializer
 
+    def get_object(self):
+        """
+        Supports lookup by string slug, integer ID, or case-insensitive slug.
+        """
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        lookup_val = self.kwargs.get(lookup_url_kwarg)
+
+        qs = self.get_queryset()
+        if lookup_val and str(lookup_val).isdigit():
+            obj = qs.filter(id=int(lookup_val)).first()
+            if obj:
+                self.check_object_permissions(self.request, obj)
+                return obj
+        if lookup_val:
+            obj = qs.filter(slug__iexact=lookup_val).first()
+            if obj:
+                self.check_object_permissions(self.request, obj)
+                return obj
+        return super().get_object()
+
     @action(
         detail=True,
         methods=['post'],

@@ -93,6 +93,7 @@ export function Footer() {
             <ul className="hospital-footer-links list-unstyled mb-0 d-flex flex-column gap-2 small">
               <li><Link to="/appointments/book" className="text-decoration-none text-muted hover-text-primary">{t('nav.bookConsultation') || 'Book Consultation'}</Link></li>
               <li><Link to="/my-appointments" className="text-decoration-none text-muted hover-text-primary">{t('nav.patientPortal')}</Link></li>
+              <li><Link to="/feedback" className="text-decoration-none text-muted hover-text-primary">Patient Feedback & Reviews</Link></li>
               <li><Link to="/profile" className="text-decoration-none text-muted hover-text-primary">{t('patient.profile')}</Link></li>
               <li><Link to="/departments" className="text-decoration-none text-muted hover-text-primary">{t('hero.exploreSpecialties')}</Link></li>
             </ul>

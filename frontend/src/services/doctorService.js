@@ -6,6 +6,7 @@
 
 import authService from './authService';
 import apiClient from './api';
+import { DEMO_DOCTORS } from '../data/hospitalData';
 
 /**
  * Normalizes a doctor object from the Django REST API into the shape
@@ -41,10 +42,10 @@ export function normalizeDoctor(doc) {
     specialty: doc.specialty_name || doc.specialty?.name || doc.specialty || 'General Medicine',
     specialty_name: doc.specialty_name || doc.specialty?.name || doc.specialty || 'General Medicine',
     specialtyId: doc.specialty?.id || doc.specialty,
-    department: doc.department?.id || doc.department,
-    departmentId: doc.department_slug || (doc.department?.slug) || (doc.department?.id ? String(doc.department.id) : String(doc.department || '')),
-    departmentSlug: doc.department_slug || doc.department?.slug || '',
-    departmentName: doc.department_name || doc.department?.name || doc.departmentName || 'Clinical Care',
+    department: doc.department?.id || (typeof doc.department === 'number' ? doc.department : null) || doc.departmentId || doc.department,
+    departmentId: doc.department_slug || doc.departmentSlug || (doc.department?.slug) || (doc.department?.id ? String(doc.department.id) : String(doc.departmentId || doc.department || '')),
+    departmentSlug: doc.department_slug || doc.departmentSlug || doc.department?.slug || '',
+    departmentName: doc.department_name || doc.department?.name || (typeof doc.department === 'string' ? doc.department : null) || doc.departmentName || 'Clinical Care',
     qualification: qualificationList,
     experience: doc.experience_years || doc.experience || 5,
     experience_years: doc.experience_years || doc.experience || 5,
@@ -91,12 +92,32 @@ export const doctorService = {
     if (params.specialty) queryParams.specialty__slug = params.specialty;
     if (params.is_active !== undefined) queryParams.is_active = String(params.is_active);
 
-    const data = await apiClient.get('/api/doctors/', { params: queryParams });
-    const rawList = Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []);
-    const doctors = rawList.map(normalizeDoctor);
+    try {
+      const data = await apiClient.get('/api/doctors/', { params: queryParams });
+      const rawList = Array.isArray(data.results) ? data.results : (Array.isArray(data) ? data : []);
+      if (rawList.length > 0) {
+        const doctors = rawList.map(normalizeDoctor);
+        return {
+          results: doctors,
+          count: data.count !== undefined ? data.count : doctors.length,
+        };
+      }
+    } catch (err) {
+      console.warn('Doctor API unreachable, using local doctor registry:', err);
+    }
+
+    let list = DEMO_DOCTORS.map(normalizeDoctor);
+    if (params.department) {
+      const deptSlug = String(params.department).toLowerCase();
+      list = list.filter(
+        (d) =>
+          (d.departmentSlug || '').toLowerCase() === deptSlug ||
+          String(d.departmentId).toLowerCase() === deptSlug
+      );
+    }
     return {
-      results: doctors,
-      count: data.count !== undefined ? data.count : doctors.length,
+      results: list,
+      count: list.length,
     };
   },
 
@@ -106,11 +127,22 @@ export const doctorService = {
   async getDoctor(idOrSlug) {
     try {
       const data = await apiClient.get(`/api/doctors/${idOrSlug}/`);
-      return normalizeDoctor(data);
+      if (data) return normalizeDoctor(data);
     } catch (err) {
-      if (err.status === 404) return null;
-      throw err;
+      console.warn(`Doctor API fetch failed for ${idOrSlug}, searching local registry:`, err);
     }
+
+    // Resilient fallback to local doctor registry
+    const needle = String(idOrSlug).toLowerCase().trim();
+    const localDoc = DEMO_DOCTORS.find(
+      (d) =>
+        String(d.slug || '').toLowerCase() === needle ||
+        String(d.id || '').toLowerCase() === needle
+    );
+    if (localDoc) {
+      return normalizeDoctor(localDoc);
+    }
+    return null;
   },
 
   /**

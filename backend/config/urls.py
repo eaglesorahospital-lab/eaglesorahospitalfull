@@ -16,6 +16,7 @@ from rest_framework.response import Response
 import config.throttling  # noqa: F401
 from apps.doctors.urls import specialties_router
 from apps.notifications.urls import audit_router
+from apps.hospital.urls import feedback_router
 
 
 @api_view(['GET'])
@@ -44,6 +45,7 @@ def api_root(request):
             "administrators": request.build_absolute_uri("administrators/"),
             "notifications": request.build_absolute_uri("notifications/"),
             "audit": request.build_absolute_uri("audit/"),
+            "feedback": request.build_absolute_uri("feedback/"),
         },
         "message": "Hospital Platform REST API Layer, Authentication & Async Processing operational."
     })
@@ -115,6 +117,7 @@ urlpatterns = [
     path('api/administrators/', include('apps.accounts.urls_admin')),
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/audit/', include(audit_router.urls)),
+    path('api/feedback/', include(feedback_router.urls)),
 ]
 
 import logging

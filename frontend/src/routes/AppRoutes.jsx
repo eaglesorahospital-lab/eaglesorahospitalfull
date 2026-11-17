@@ -48,6 +48,7 @@ import AdminSchedulesPage from '../pages/admin/AdminSchedulesPage';
 import AdminAppointmentsPage from '../pages/admin/AdminAppointmentsPage';
 import AdminPatientsPage from '../pages/admin/AdminPatientsPage';
 import AdminContentPage from '../pages/admin/AdminContentPage';
+import AdminFeedbackPage from '../pages/admin/AdminFeedbackPage';
 import AdminNotificationsPage from '../pages/admin/AdminNotificationsPage';
 import AdminAdministratorsPage from '../pages/admin/AdminAdministratorsPage';
 import AdminAuditPage from '../pages/admin/AdminAuditPage';
@@ -93,6 +94,7 @@ export function AppRoutes() {
         <Route path="/patient/login" element={<PatientLoginPage />} />
         <Route path="/login" element={<PatientLoginPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/feedback" element={<ContactPage defaultTab="feedback" />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsConditionsPage />} />
         <Route path="*" element={<NotFoundPage />} />
@@ -128,6 +130,7 @@ export function AppRoutes() {
           <Route path="schedules" element={<AdminSchedulesPage />} />
           <Route path="appointments" element={<AdminAppointmentsPage />} />
           <Route path="patients" element={<AdminPatientsPage />} />
+          <Route path="feedback" element={<AdminFeedbackPage />} />
           <Route path="content" element={<AdminContentPage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="administrators" element={<AdminAdministratorsPage />} />

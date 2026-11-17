@@ -2,13 +2,18 @@ from rest_framework import viewsets, response, status
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import HospitalProfile, HospitalFacility, HospitalAnnouncement, HospitalFAQ
+from django.utils import timezone
+from django.db.models import Avg, Count
+from .models import HospitalProfile, HospitalFacility, HospitalAnnouncement, HospitalFAQ, PatientFeedback
 from .serializers import (
     HospitalProfileSerializer,
     HospitalFacilitySerializer,
     HospitalAnnouncementSerializer,
     HospitalFAQSerializer,
+    PatientFeedbackCreateSerializer,
+    PatientFeedbackAdminSerializer,
 )
 from config.pagination import StandardResultsSetPagination
 from config.media_service import MediaService, CLOUDINARY_FOLDERS
@@ -258,3 +263,90 @@ class HospitalFAQViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['question', 'answer']
     ordering_fields = ['order', 'id']
     ordering = ['order', 'id']
+
+
+class PatientFeedbackViewSet(viewsets.ModelViewSet):
+    """
+    Patient and visitor feedback management API.
+    - POST /api/feedback/ (or /api/hospital/feedback/): Open to all patients and visitors to submit experience ratings and messages.
+    - GET, PATCH, DELETE: Strictly restricted to Super Admins and Hospital Admins.
+    """
+    queryset = PatientFeedback.objects.all()
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields = ['patient_name', 'email', 'phone', 'message', 'admin_notes']
+    ordering_fields = ['created_at', 'rating', 'status', 'category']
+    ordering = ['-created_at']
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAdminOrHospitalAdmin()]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return PatientFeedbackCreateSerializer
+        return PatientFeedbackAdminSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        status_param = self.request.query_params.get('status')
+        if status_param and status_param.upper() != 'ALL':
+            qs = qs.filter(status=status_param.upper())
+
+        category_param = self.request.query_params.get('category')
+        if category_param and category_param.upper() != 'ALL':
+            qs = qs.filter(category=category_param.upper())
+
+        rating_param = self.request.query_params.get('rating')
+        if rating_param and rating_param.upper() != 'ALL':
+            try:
+                qs = qs.filter(rating=int(rating_param))
+            except (ValueError, TypeError):
+                pass
+
+        return qs
+
+    @action(detail=True, methods=['post'], url_path='mark-reviewed')
+    def mark_reviewed(self, request, pk=None):
+        """
+        Marks a feedback record as REVIEWED, logging the reviewing administrator and timestamp.
+        """
+        feedback = self.get_object()
+        admin_notes = request.data.get('admin_notes')
+        if admin_notes is not None:
+            feedback.admin_notes = str(admin_notes).strip()
+
+        feedback.status = 'REVIEWED'
+        feedback.reviewed_by = request.user if request.user.is_authenticated else None
+        feedback.reviewed_at = timezone.now()
+        feedback.save(update_fields=['status', 'admin_notes', 'reviewed_by', 'reviewed_at', 'updated_at'])
+
+        serializer = PatientFeedbackAdminSerializer(feedback)
+        return response.Response({
+            "message": f"Feedback #{feedback.id} from {feedback.patient_name} marked as reviewed.",
+            "feedback": serializer.data,
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def summary(self, request):
+        """
+        Returns high-level feedback metrics for administration dashboards.
+        """
+        total = PatientFeedback.objects.count()
+        new_count = PatientFeedback.objects.filter(status='NEW').count()
+        reviewed_count = PatientFeedback.objects.filter(status='REVIEWED').count()
+        avg_rating = PatientFeedback.objects.aggregate(avg=Avg('rating'))['avg'] or 0.0
+
+        distribution = {
+            str(i): PatientFeedback.objects.filter(rating=i).count()
+            for i in range(1, 6)
+        }
+
+        return response.Response({
+            "total": total,
+            "new": new_count,
+            "reviewed": reviewed_count,
+            "average_rating": round(float(avg_rating), 1),
+            "distribution": distribution,
+        })

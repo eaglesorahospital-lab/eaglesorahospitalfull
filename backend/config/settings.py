@@ -27,7 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 try:
     from dotenv import load_dotenv
     load_dotenv(BASE_DIR.parent / '.env')
+    load_dotenv(BASE_DIR.parent / '.env.local', override=True)
     load_dotenv(BASE_DIR / '.env')
+    load_dotenv(BASE_DIR / '.env.local', override=True)
 except ImportError:
     pass
 
@@ -167,7 +169,12 @@ ASGI_APPLICATION = 'config.asgi.application'
 # Database Configuration (PostgreSQL) — Phase 22 Deployment Compatibility
 # ==============================================================================
 # PostgreSQL is the mandatory platform database. SQLite is explicitly prohibited.
-_raw_db_url = os.environ.get('DATABASE_URL', '').strip()
+_raw_db_url = (
+    os.environ.get('DATABASE_URL') or
+    os.environ.get('POSTGRES_URL') or
+    os.environ.get('NEON_DATABASE_URL') or
+    ''
+).strip()
 
 if _raw_db_url:
     if dj_database_url is None:

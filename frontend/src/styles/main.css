@@ -1102,13 +1102,13 @@ select.form-select option {
 .col-related-ref { min-width: 150px; }
 .col-dispatch-time { min-width: 165px; }
 
-.col-apt-ref { min-width: 125px; }
-.col-apt-patient { min-width: 155px; }
-.col-apt-doctor { min-width: 165px; }
-.col-apt-slot { min-width: 135px; }
-.col-apt-type { min-width: 90px; }
-.col-apt-status { min-width: 100px; }
-.col-apt-actions { min-width: 310px; text-align: right; white-space: nowrap; }
+.col-apt-ref { min-width: 130px; }
+.col-apt-patient { min-width: 175px; }
+.col-apt-doctor { min-width: 170px; }
+.col-apt-slot { min-width: 140px; white-space: nowrap; }
+.col-apt-type { min-width: 95px; }
+.col-apt-status { min-width: 115px; }
+.col-apt-actions { min-width: 270px; width: 290px; text-align: right; }
 
 .col-dept-name { min-width: 240px; }
 .col-dept-specialty { min-width: 180px; }
@@ -1140,14 +1140,23 @@ select.form-select option {
 .col-admin-joined { min-width: 140px; }
 .col-admin-actions { min-width: 160px; text-align: right; }
 
+.col-feedback-date { min-width: 140px; }
+.col-feedback-patient { min-width: 180px; }
+.col-feedback-category { min-width: 170px; }
+.col-feedback-rating { min-width: 135px; white-space: nowrap; }
+.col-feedback-message { min-width: 260px; }
+.col-feedback-status { min-width: 120px; }
+.col-feedback-actions { min-width: 200px; text-align: right; }
+
 /* Table Action Button Layout */
 .neu-action-btns {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.35rem;
   justify-content: flex-end;
-  flex-wrap: nowrap;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  max-width: 320px;
+  margin-left: auto;
 }
 
 .neu-action-btns .neu-btn {
@@ -1156,25 +1165,22 @@ select.form-select option {
   font-size: 0.775rem;
   padding: 0.28rem 0.55rem;
   line-height: 1.25;
+  min-height: 28px;
+  box-sizing: border-box;
 }
 
-/* Optional Desktop Sticky Action Column */
-@media (min-width: 1200px) {
-  .neu-table th.col-apt-actions,
-  .neu-table td.col-apt-actions {
-    position: sticky;
-    right: 0;
-    background-color: var(--hospital-surface);
-    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
-    z-index: 2;
-  }
-  .neu-table th.col-apt-actions {
-    background-color: var(--hospital-surface-subtle);
-    z-index: 3;
-  }
-  .neu-table tr:hover td.col-apt-actions {
-    background-color: var(--hospital-surface-subtle);
-  }
+/* Ensure table action columns follow document flow to prevent cross-column overlaps */
+.neu-table th.col-apt-actions,
+.neu-table td.col-apt-actions,
+.neu-table th.col-actions,
+.neu-table td.col-actions,
+.neu-table th.col-dept-actions,
+.neu-table td.col-dept-actions,
+.neu-table th.col-content-actions,
+.neu-table td.col-content-actions {
+  position: static;
+  right: auto;
+  box-shadow: none;
 }
 
 /* ------------------------------------------------------------------------------
@@ -3562,17 +3568,34 @@ select.form-select option {
 }
 
 .admin-mobile-card-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid var(--glass-border);
+  border-top: 1px solid var(--hospital-border-light);
 }
 
 .admin-mobile-card-actions .neu-btn {
-  flex: 1 1 auto;
-  min-height: 44px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8125rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.admin-mobile-card-actions .neu-btn.admin-mobile-card-btn-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 340px) {
+  .admin-mobile-card-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 23.6. Mobile-First Responsiveness for Admin Portal (< 768px) */

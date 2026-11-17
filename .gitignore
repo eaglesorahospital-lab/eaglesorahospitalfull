@@ -112,3 +112,4 @@ scratch/
 frontend_backup_20261014/
 redis-backup/
 
+.neon

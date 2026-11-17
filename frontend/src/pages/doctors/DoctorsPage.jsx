@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Container from '../../components/common/Container';
 import PageHeader from '../../components/common/PageHeader';
 import DoctorCard from '../../components/doctors/DoctorCard';
@@ -23,9 +24,21 @@ export function DoctorsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('ALL');
-  const [selectedDepartment, setSelectedDepartment] = useState('ALL');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
+  const initialDept = searchParams.get('department') || 'ALL';
+  const initialSpecialty = searchParams.get('specialty') || 'ALL';
+
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedSpecialty, setSelectedSpecialty] = useState(initialSpecialty);
+  const [selectedDepartment, setSelectedDepartment] = useState(initialDept);
+
+  useEffect(() => {
+    const deptParam = searchParams.get('department');
+    if (deptParam) {
+      setSelectedDepartment(deptParam);
+    }
+  }, [searchParams]);
 
   const fetchDirectory = () => {
     setIsLoading(true);
@@ -128,6 +141,11 @@ export function DoctorsPage() {
     setSearchQuery('');
     setSelectedSpecialty('ALL');
     setSelectedDepartment('ALL');
+    try {
+      setSearchParams({});
+    } catch {
+      // ignore
+    }
   };
 
   const hasActiveFilters =

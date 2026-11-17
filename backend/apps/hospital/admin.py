@@ -5,7 +5,7 @@ from django.urls import path
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
-from .models import HospitalProfile, HospitalFacility, HospitalAnnouncement, HospitalFAQ
+from .models import HospitalProfile, HospitalFacility, HospitalAnnouncement, HospitalFAQ, PatientFeedback
 
 
 @admin.register(HospitalProfile)
@@ -201,3 +201,32 @@ class HospitalFAQAdmin(admin.ModelAdmin):
     list_editable = ('order', 'is_active')
     search_fields = ('question', 'answer')
     ordering = ('order', 'id')
+
+
+@admin.register(PatientFeedback)
+class PatientFeedbackAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'patient_name',
+        'email',
+        'category',
+        'rating',
+        'status',
+        'created_at',
+        'reviewed_by',
+    )
+    list_filter = ('status', 'category', 'rating', 'created_at')
+    search_fields = ('patient_name', 'email', 'phone', 'message', 'admin_notes')
+    readonly_fields = ('created_at', 'updated_at', 'reviewed_at')
+    ordering = ('-created_at',)
+    actions = ['mark_as_reviewed']
+
+    @admin.action(description="Mark selected feedback as Reviewed")
+    def mark_as_reviewed(self, request, queryset):
+        from django.utils import timezone
+        updated = queryset.update(
+            status='REVIEWED',
+            reviewed_by=request.user,
+            reviewed_at=timezone.now(),
+        )
+        self.message_user(request, f"{updated} feedback record(s) successfully marked as Reviewed.")

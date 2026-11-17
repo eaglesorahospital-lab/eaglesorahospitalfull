@@ -42,6 +42,8 @@ class DepartmentListSerializer(serializers.ModelSerializer):
     """
     image_url = serializers.SerializerMethodField()
     image_public_id = serializers.CharField(read_only=True)
+    doctor_count = serializers.SerializerMethodField()
+    services = DepartmentServiceSerializer(many=True, read_only=True)
 
     class Meta:
         model = Department
@@ -60,9 +62,17 @@ class DepartmentListSerializer(serializers.ModelSerializer):
             'image_url',
             'image_public_id',
             'is_active',
+            'doctor_count',
+            'services',
             'created_at',
         ]
-        read_only_fields = ['id', 'slug', 'image_url', 'image_public_id', 'created_at']
+        read_only_fields = ['id', 'slug', 'image_url', 'image_public_id', 'created_at', 'doctor_count', 'services']
+
+    def get_doctor_count(self, obj):
+        try:
+            return obj.doctors.filter(is_active=True).count()
+        except Exception:
+            return 0
 
     def get_image_url(self, obj):
         if not obj.image:
@@ -84,6 +94,7 @@ class DepartmentDetailSerializer(serializers.ModelSerializer):
     faqs = DepartmentFAQSerializer(many=True, read_only=True)
     image_url = serializers.SerializerMethodField()
     image_public_id = serializers.CharField(read_only=True)
+    doctor_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Department
@@ -103,12 +114,19 @@ class DepartmentDetailSerializer(serializers.ModelSerializer):
             'image_url',
             'image_public_id',
             'is_active',
+            'doctor_count',
             'services',
             'faqs',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'slug', 'image_url', 'image_public_id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'slug', 'image_url', 'image_public_id', 'created_at', 'updated_at', 'doctor_count']
+
+    def get_doctor_count(self, obj):
+        try:
+            return obj.doctors.filter(is_active=True).count()
+        except Exception:
+            return 0
 
     def get_image_url(self, obj):
         if not obj.image:

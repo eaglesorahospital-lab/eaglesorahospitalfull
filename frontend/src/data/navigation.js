@@ -20,6 +20,7 @@ export const ADMIN_NAV_LINKS = [
   { label: 'Schedules', path: '/admin/schedules' },
   { label: 'Appointments', path: '/admin/appointments' },
   { label: 'Patients', path: '/admin/patients' },
+  { label: 'Feedback', path: '/admin/feedback' },
   { label: 'Content', path: '/admin/content' },
   { label: 'Notifications', path: '/admin/notifications' },
   { label: 'Administrators', path: '/admin/administrators' },

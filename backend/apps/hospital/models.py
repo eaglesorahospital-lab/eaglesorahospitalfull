@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.conf import settings
 
 
 class HospitalProfile(models.Model):
@@ -191,3 +193,67 @@ class HospitalFAQ(models.Model):
 
     def __str__(self):
         return self.question
+
+
+class PatientFeedback(models.Model):
+    """
+    Patient and visitor clinical experience feedback, satisfaction scores, and institutional inquiries.
+    """
+    CATEGORY_CHOICES = [
+        ('CLINICAL_CARE', _('Clinical Care & Consultation')),
+        ('FACILITY_CLEANLINESS', _('Facility & Cleanliness')),
+        ('STAFF_BEHAVIOR', _('Nursing & Staff Behavior')),
+        ('APPOINTMENT_SCHEDULING', _('Appointment & Waiting Time')),
+        ('BILLING', _('Billing & Insurance')),
+        ('GENERAL', _('General Hospital Experience')),
+    ]
+
+    STATUS_CHOICES = [
+        ('NEW', _('New / Unreviewed')),
+        ('REVIEWED', _('Reviewed')),
+    ]
+
+    patient_name = models.CharField(_('patient / visitor name'), max_length=200)
+    email = models.EmailField(_('contact email'))
+    phone = models.CharField(_('contact phone'), max_length=50, blank=True)
+    category = models.CharField(
+        _('feedback category'),
+        max_length=50,
+        choices=CATEGORY_CHOICES,
+        default='GENERAL',
+        db_index=True,
+    )
+    rating = models.PositiveSmallIntegerField(
+        _('experience rating (1 to 5)'),
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text=_('Patient satisfaction score from 1 (poor) to 5 (excellent).'),
+        db_index=True,
+    )
+    message = models.TextField(_('feedback message / inquiry'))
+    status = models.CharField(
+        _('review status'),
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='NEW',
+        db_index=True,
+    )
+    admin_notes = models.TextField(_('administrative review notes'), blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('reviewed by'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='reviewed_feedbacks',
+    )
+    reviewed_at = models.DateTimeField(_('reviewed at timestamp'), null=True, blank=True)
+    created_at = models.DateTimeField(_('submission timestamp'), auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('patient feedback')
+        verbose_name_plural = _('patient feedback entries')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.patient_name} - {self.rating}★ [{self.get_category_display()}] ({self.status})"
