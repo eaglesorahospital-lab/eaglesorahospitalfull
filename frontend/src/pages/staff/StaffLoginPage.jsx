@@ -24,6 +24,11 @@ export function StaffLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  React.useEffect(() => {
+    // Pre-warm backend service immediately on page view so cold-start latency is absorbed
+    authService.prewarmBackend();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage(null);

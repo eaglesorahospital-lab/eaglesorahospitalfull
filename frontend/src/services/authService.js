@@ -89,12 +89,18 @@ async function safeParseJsonResponse(response) {
  */
 function formatAuthErrorMessage(response, data, fallback = 'Operation failed.') {
   if (response.status >= 500) {
+    if (response.status === 502 || response.status === 503 || response.status === 504) {
+      return 'The hospital server is waking from sleep. Please try again in a few seconds.';
+    }
     return 'The authentication service is temporarily unavailable. Please try again shortly.';
   }
 
   if (data && typeof data === 'object') {
     if (typeof data.detail === 'string') {
       return data.detail;
+    }
+    if (Array.isArray(data.detail) && data.detail.length > 0) {
+      return data.detail.join(' ');
     }
     if (Array.isArray(data.non_field_errors) && data.non_field_errors.length > 0) {
       return data.non_field_errors.join(' ');
@@ -120,13 +126,36 @@ export const authService = {
   _refreshPromise: null,
 
   /**
+   * Pre-warm backend service to prevent cold-start delays on login submission
+   */
+  async prewarmBackend() {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      await fetch('/api/health/', {
+        method: 'GET',
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' },
+      }).catch(() => null);
+      clearTimeout(timer);
+    } catch {
+      // Non-blocking best-effort prewarm
+    }
+  },
+
+  /**
    * Authenticate user against Django backend with optional portal enforcement
+   * Includes automated retry and fallback to direct backend for cold-start resilience.
    */
   async login(email, password, portal = null) {
-    let response;
-    const endpoint = portal === 'patient'
-      ? `${API_BASE_URL}/api/auth/patient-login/`
-      : `${API_BASE_URL}/api/auth/login/`;
+    const primaryBase = resolveApiBaseUrl();
+    const fallbackBase = (typeof window !== 'undefined' && window.location && window.location.hostname && (window.location.hostname.includes('netlify.app') || window.location.hostname.includes('eaglesorahospital') || window.location.hostname.includes('eglesorahospital')))
+      ? 'https://eaglesorahospitalfull.onrender.com'
+      : '';
+
+    const path = portal === 'patient'
+      ? '/api/auth/patient-login/'
+      : '/api/auth/login/';
 
     const requestBody = {
       email: email.trim().toLowerCase(),
@@ -134,17 +163,49 @@ export const authService = {
       ...(portal ? { portal } : {}),
     };
 
-    try {
-      response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-    } catch {
-      throw new Error('Unable to connect to the authentication server. Please check your network.');
+    let response = null;
+    let lastError = null;
+    const endpointsToTry = [
+      `${primaryBase}${path}`,
+      ...(fallbackBase && fallbackBase !== primaryBase ? [`${fallbackBase}${path}`] : []),
+    ];
+
+    for (let attempt = 0; attempt < endpointsToTry.length; attempt++) {
+      const endpoint = endpointsToTry[attempt];
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        // If gateway error (502/503/504) and we have fallback or retry, wait and try next
+        if ((response.status === 502 || response.status === 503 || response.status === 504) && attempt < endpointsToTry.length - 1) {
+          await new Promise((r) => setTimeout(r, 1500));
+          continue;
+        }
+
+        // If response received, stop retrying
+        break;
+      } catch (err) {
+        lastError = err;
+        if (attempt < endpointsToTry.length - 1) {
+          await new Promise((r) => setTimeout(r, 1500));
+          continue;
+        }
+      }
+    }
+
+    if (!response) {
+      throw new Error(lastError?.message || 'Unable to connect to the authentication server. Please check your network.');
     }
 
     const data = await safeParseJsonResponse(response);

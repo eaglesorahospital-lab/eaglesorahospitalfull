@@ -38,6 +38,11 @@ export function PatientLoginPage() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  React.useEffect(() => {
+    // Pre-warm backend service immediately on page view so cold-start latency is absorbed
+    authService.prewarmBackend();
+  }, []);
+
   const redirectPath = sanitizeRedirectUrl(searchParams.get('redirect'), '/my-appointments');
 
   const handleLogin = async (e) => {

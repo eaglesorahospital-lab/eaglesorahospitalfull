@@ -381,7 +381,7 @@ CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         'CORS_ALLOWED_ORIGINS',
-        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost,http://127.0.0.1,https://eglesorahospital.netlify.app,https://eaglesora-hospital-frontend.onrender.com',
+        'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost,http://127.0.0.1,https://eglesorahospital.netlify.app,https://eaglesorahospital.netlify.app,https://eaglesora-hospital-frontend.onrender.com',
     ).split(',')
     if origin.strip()
 ]
@@ -392,7 +392,7 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         'CSRF_TRUSTED_ORIGINS',
-        'http://localhost,http://127.0.0.1,http://localhost:80,http://localhost:3000,http://localhost:5173,https://eaglesora-hospital-frontend.onrender.com,https://eaglesorahospitalfull.onrender.com'
+        'http://localhost,http://127.0.0.1,http://localhost:80,http://localhost:3000,http://localhost:5173,https://eglesorahospital.netlify.app,https://eaglesorahospital.netlify.app,https://eaglesora-hospital-frontend.onrender.com,https://eaglesorahospitalfull.onrender.com'
     ).split(',')
     if origin.strip()
 ]
