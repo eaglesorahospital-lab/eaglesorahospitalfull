@@ -386,6 +386,15 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 
+# Guarantee official production frontends are always permitted regardless of environment overrides
+for _prod_origin in [
+    'https://eaglesorahospital.netlify.app',
+    'https://eglesorahospital.netlify.app',
+    'https://eaglesora-hospital-frontend.onrender.com',
+]:
+    if _prod_origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(_prod_origin)
+
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
@@ -396,6 +405,15 @@ CSRF_TRUSTED_ORIGINS = [
     ).split(',')
     if origin.strip()
 ]
+
+for _prod_csrf in [
+    'https://eaglesorahospital.netlify.app',
+    'https://eglesorahospital.netlify.app',
+    'https://eaglesora-hospital-frontend.onrender.com',
+    'https://eaglesorahospitalfull.onrender.com',
+]:
+    if _prod_csrf not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_prod_csrf)
 
 # ==============================================================================
 # Security Hardening & HTTP Headers (Phase 16 & 17)
