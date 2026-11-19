@@ -216,8 +216,9 @@ export function HomePage() {
                 </span>
                 <span>24/7 Trauma Desk:</span>
                 <a
-                  href={`tel:${HOSPITAL_METADATA.emergencyPhone.replace(/[^0-9+]/g, '')}`}
+                  href={`tel:${(HOSPITAL_METADATA.emergencyPhone || '+91 7232 245108').replace(/\(0\)/g, '').replace(/[^0-9+]/g, '')}`}
                   className="fw-bold text-body text-decoration-none d-inline-flex align-items-center gap-1"
+                  aria-label={`Call 24/7 Trauma Desk: ${HOSPITAL_METADATA.emergencyPhone}`}
                 >
                   <PhoneCall size={14} className="text-danger" />
                   {HOSPITAL_METADATA.emergencyPhone}
@@ -338,8 +339,21 @@ export function HomePage() {
 
             <div className="col-12 col-sm-6 col-lg-3">
               <a
-                href={`tel:${HOSPITAL_METADATA.emergencyPhone.replace(/[^0-9+]/g, '')}`}
-                className="text-decoration-none text-body h-100 d-block"
+                href={`tel:${(HOSPITAL_METADATA.emergencyPhone || '+91 7232 245108').replace(/\(0\)/g, '').replace(/[^0-9+]/g, '')}`}
+                className="emergency-desk-card-link text-decoration-none text-body h-100 d-block"
+                role="link"
+                tabIndex={0}
+                aria-label={`${t('quickActions.emergency', '24/7 Emergency Desk')}: Call ${HOSPITAL_METADATA.emergencyPhone}`}
+                title={`Call ${HOSPITAL_METADATA.emergencyPhone}`}
+                onClick={() => {
+                  window.location.href = `tel:${(HOSPITAL_METADATA.emergencyPhone || '+91 7232 245108').replace(/\(0\)/g, '').replace(/[^0-9+]/g, '')}`;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    window.location.href = `tel:${(HOSPITAL_METADATA.emergencyPhone || '+91 7232 245108').replace(/\(0\)/g, '').replace(/[^0-9+]/g, '')}`;
+                  }
+                }}
               >
                 <div className="neu-raised neu-surface p-3 rounded-4 h-100 transition-all hover-lift border-start border-4 border-danger">
                   <div className="d-flex align-items-center gap-3">
